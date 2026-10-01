@@ -1,0 +1,279 @@
+# CS4337 Fall 2026 — Course Code
+
+This repository holds the code for CS4337, Fall 2026. Each top-level folder
+(for example `TrainingBasicConvnet/`) is a **self-contained project**: a small
+Python package that you can either
+
+- import and run from a notebook (e.g. Google Colab), or
+- run from the terminal on your own machine.
+
+New projects will be added over the semester. To get them, run `git pull`
+inside your copy of the repository.
+
+## Projects
+
+| Project | Description |
+| --- | --- |
+| [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST |
+
+## Repository structure
+
+```
+CodeCS4337Fall2026/
+├── README.md              # This file
+├── ruff.toml              # Code style settings (you can ignore this for now, see below)
+├── .gitignore             # Files git should not track (data, runs, .env, virtualenvs, ...)
+├── .venv/                 # Your local Python virtual environment (you create it, not in git)
+├── data/                  # Datasets shared by all projects (created on first run, not in git)
+└── TrainingBasicConvnet/  # One project = one Python package
+    ├── __init__.py        # Makes the folder importable: from TrainingBasicConvnet import main
+    ├── __main__.py        # Makes `python -m TrainingBasicConvnet` work
+    ├── main.py            # Entry point: main(config) runs a full experiment
+    ├── configs/           # Experiment settings (config01.yaml, ...)
+    ├── dataloaders/       # Dataset loading
+    ├── models/            # Network definitions
+    ├── trainers/          # Training and evaluation loop
+    ├── utils/             # Helpers (paths, seeding, run folders)
+    ├── runs/              # Your experiment results (created on first run, not in git)
+    ├── .env               # Local settings: where data and results go
+    ├── .envcolab          # Google Colab settings (renamed to .env in Colab)
+    └── requirements.txt   # Python packages this project needs
+```
+
+Every project follows the same layout, so once you know one you know them all.
+
+### Configs
+
+An experiment is described by a YAML file in the project's `configs/` folder
+(learning rate, batch size, number of epochs, ...). To try your own settings,
+copy a config, give it a new name (e.g. `config02.yaml`), edit it, and pass
+that name when you run the project. You never need to edit the Python code to
+change hyperparameters.
+
+### The `.venv/` folder (local only)
+
+`.venv/` is a Python *virtual environment*: a private folder holding its own
+Python interpreter and the packages you install with `pip`. It keeps this
+course's packages (and their exact versions) separate from the rest of your
+system, so installing them cannot break other Python projects on your machine,
+and vice versa.
+
+- It does **not** come with the repository. You create it yourself once, at the
+  repo root (see [Running locally](#running-locally)), and all projects share it.
+- It is listed in `.gitignore`: it is large (several GB with PyTorch) and
+  specific to your machine, so it is never committed.
+- Activate it in every new terminal before running a project
+  (`source .venv/bin/activate`, or `.venv\Scripts\activate` on Windows). Your
+  prompt then starts with `(.venv)`. Run `deactivate` to leave it.
+- Don't move or rename it: virtual environments store absolute paths and stop
+  working when moved. If it breaks, delete the `.venv/` folder and create it
+  again.
+- In editors like VS Code or Cursor, select `.venv` as the Python interpreter
+  so the editor uses the same packages.
+- **Not needed in Colab**: Colab already provides its own Python environment.
+
+### The `data/` folder
+
+- Datasets are downloaded automatically the first time you run a project, then
+  reused on later runs.
+- **Locally**, all projects share one `data/` folder at the repo root, so a
+  dataset used by several projects is downloaded only once. This is set by
+  `DATA_DIR=../data` in each project's `.env` (relative paths are resolved
+  against the project folder, not the folder you run from).
+- **In Colab**, `.envcolab` uses `DATA_DIR=/content/data`, the fast local disk
+  of the Colab machine. This disk is wiped when the runtime resets, so the
+  dataset is re-downloaded each session (this only takes a few seconds for the
+  datasets used here). See [Keeping your work in Google Drive](#keeping-your-work-in-google-drive)
+  if you prefer to keep the dataset in Drive.
+- `data/` is listed in `.gitignore`: datasets are never committed.
+
+### The `runs/` folder
+
+Each time you run an experiment, a new folder named after the current date and
+time is created, so no run ever overwrites another:
+
+```
+runs/
+└── config01/                          # One folder per config name
+    ├── runs_summary.csv               # One row per run: accuracy, lr, epochs, ...
+    └── 2026-10-01_12-46-45/           # One folder per run (timestamp)
+        ├── config.yaml                # Exact copy of the config used
+        ├── history.json               # Loss and accuracy for every epoch
+        ├── best_epoch09_valacc0.9243.pt   # Model state with the best validation accuracy
+        ├── last_epoch10_valacc0.9193.pt   # Model state after the last epoch
+        └── results_epoch09_valacc0.9243_testacc0.9186.json  # Final metrics
+```
+
+- **Locally**, results go to `<Project>/runs/` (`OUTPUT_DIR=runs` in `.env`).
+- **In Colab**, results go to your Google Drive (see below).
+- `runs/` is listed in `.gitignore`: your results are never committed.
+
+Open `runs_summary.csv` to compare runs of the same config at a glance.
+
+## Running in Google Colab
+
+### 1. Choose a GPU runtime
+
+In Colab, open **Runtime → Change runtime type** and select a GPU. Training
+works on CPU too, just much slower.
+
+### 2. Clone the repository and mount Google Drive
+
+Run in a notebook cell:
+
+```python
+!git clone https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git
+%cd CodeCS4337Fall2026
+
+from google.colab import drive
+drive.mount("/content/drive")
+```
+
+If you already cloned it in this session, just `%cd /content/CodeCS4337Fall2026`
+and run `!git pull` to get the latest changes.
+
+### 3. Use the Colab settings for the project
+
+```python
+!mv TrainingBasicConvnet/.envcolab TrainingBasicConvnet/.env
+```
+
+This replaces the local `.env` with the Colab one, which saves results to
+`/content/drive/MyDrive/CodeCS4337Fall2026/TrainingBasicConvnet/runs/`.
+
+### 4. Install only the missing requirements
+
+Colab already comes with most packages (PyTorch, torchvision, NumPy, ...)
+preinstalled. **Do not** run `pip install -r requirements.txt` in Colab: the
+versions pinned there would replace Colab's own versions, which is slow and can
+break other preinstalled packages.
+
+Instead, run this cell. It installs only the packages that are not already
+installed in Colab and skips everything else:
+
+```bash
+%%bash
+grep -vE '^\s*(#|$)' TrainingBasicConvnet/requirements.txt \
+  | sed -E 's/[<>=!~;[ ].*//' \
+  | while read -r pkg; do
+      if pip show "$pkg" > /dev/null 2>&1; then
+        echo "skip $pkg (already installed)"
+      else
+        pip install -q "$pkg" && echo "installed $pkg"
+      fi
+    done
+```
+
+It strips the version numbers, so a package installed this way gets the latest
+version rather than the pinned one, and a preinstalled package keeps Colab's
+version. These version differences are expected and fine for this course. For
+another project, replace `TrainingBasicConvnet` with that project's folder name.
+
+### 5. Run the experiment
+
+```python
+from TrainingBasicConvnet import main
+
+main("config01")
+```
+
+### Keeping your work in Google Drive
+
+Anything stored under `/content/` (outside `/content/drive/`) is **deleted**
+when the Colab runtime disconnects or resets. That includes the cloned repo,
+the dataset in `/content/data`, and any edits you made to configs.
+
+- **Model checkpoints and results** are already saved to Drive by `.envcolab`
+  (`OUTPUT_DIR=/content/drive/MyDrive/...`). Always mount Drive *before* calling
+  `main()`. Otherwise the results are silently written to a local folder named
+  `/content/drive/...` that is deleted with the runtime (and that folder then
+  also prevents Drive from mounting until you remove it).
+- **Datasets** are kept on the local disk by default because it is faster and
+  they re-download quickly. To keep a dataset in Drive instead (useful for large
+  datasets later in the course), edit `TrainingBasicConvnet/.env` in Colab
+  and set:
+
+  ```
+  DATA_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/data
+  ```
+
+- **Your own configs or code changes**: save copies to Drive (or push them to
+  your own GitHub fork), since the cloned repo disappears with the runtime.
+
+## Running locally
+
+### 1. Clone and create a virtual environment
+
+You need Python 3.13. Create **one** virtual environment (`.venv/`, see
+[The `.venv/` folder](#the-venv-folder-local-only)) at the repo root and reuse
+it for every project:
+
+```bash
+git clone https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git
+cd CodeCS4337Fall2026
+python3.13 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+```
+
+### 2. Install the project's requirements
+
+Each project has its own `requirements.txt`, and **each project may need
+different packages**. Install the requirements of every project you want to
+run (locally, the pinned versions are the ones the code was tested with):
+
+```bash
+pip install -r TrainingBasicConvnet/requirements.txt
+```
+
+When a new project is added, install its requirements the same way.
+
+### 3. Run the experiment
+
+Either from inside the project folder:
+
+```bash
+cd TrainingBasicConvnet
+python main.py --config config01
+```
+
+or from the repo root:
+
+```bash
+python -m TrainingBasicConvnet --config config01
+```
+
+`--config` accepts a name (`config01`), a file name (`config01.yaml`), or a
+path (`configs/config01.yaml`). Results are written to
+`TrainingBasicConvnet/runs/config01/<timestamp>/`, and the dataset is stored in
+the shared `data/` folder at the repo root.
+
+You can also call it from Python or a local Jupyter notebook started at the
+repo root:
+
+```python
+from TrainingBasicConvnet import main
+
+main("config01")
+```
+
+## About `ruff.toml` (you can ignore it for now)
+
+[Ruff](https://docs.astral.sh/ruff/) is a tool that checks Python code for
+common mistakes (unused imports, undefined names, ...) and formats it in a
+consistent style. `ruff.toml` holds its settings for the whole repository.
+You do **not** need Ruff to run any project.
+
+Why it matters: consistent, lint-free code is easier to read, review, and
+debug, and many bugs (like a typo in a variable name) are caught before you
+even run the code. If you want to try it:
+
+```bash
+pip install ruff
+ruff check .          # Report problems
+ruff check . --fix    # Fix the ones that can be fixed automatically
+ruff format .         # Reformat code in a consistent style
+```
+
+The only setting in `ruff.toml` allows CamelCase folder names such as
+`TrainingBasicConvnet`, which Ruff would otherwise flag. We use CamelCase
+names so each project can be imported as `from TrainingBasicConvnet import main`.
