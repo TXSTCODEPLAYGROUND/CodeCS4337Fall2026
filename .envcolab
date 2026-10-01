@@ -1,0 +1,11 @@
+# Google Colab environment, shared by every project in this repo.
+# In Colab, copy this file to .env so main() picks it up automatically.
+# From the repo root (%cd CodeCS4337Fall2026):
+#   !cp .envcolab .env
+# (starternotebook.ipynb does this for you.)
+# Dataset lives on the fast local VM disk (re-downloaded each session).
+# Outputs go to Google Drive so they survive runtime resets; requires
+#   from google.colab import drive; drive.mount("/content/drive")
+# Each project writes to <OUTPUT_DIR>/<ProjectName>/<config>/<timestamp>/.
+DATA_DIR=/content/data
+OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs

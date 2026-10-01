@@ -4,9 +4,9 @@ __pycache__/
 .ruff_cache/
 .vscode/
 
-# Local environment. Each project's .envcolab stays tracked (renamed to .env in Colab).
+# Local environment. .envcolab stays tracked (renamed to .env in Colab).
 .env
 
-# Datasets (shared ./data) and experiment outputs (<Project>/runs/).
+# Datasets (./data) and experiment outputs (./runs/<Project>/), shared by all projects.
 data/
 runs/

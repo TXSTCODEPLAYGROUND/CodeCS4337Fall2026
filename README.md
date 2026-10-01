@@ -21,10 +21,14 @@ inside your copy of the repository.
 ```
 CodeCS4337Fall2026/
 ├── README.md              # This file
+├── starternotebook.ipynb  # Ready-to-run Google Colab notebook (start here in Colab)
 ├── ruff.toml              # Code style settings (you can ignore this for now, see below)
 ├── .gitignore             # Files git should not track (data, runs, .env, virtualenvs, ...)
+├── .env                   # Local settings for all projects: where data and results go (not in git)
+├── .envcolab              # Google Colab settings for all projects (copied to .env in Colab)
 ├── .venv/                 # Your local Python virtual environment (you create it, not in git)
 ├── data/                  # Datasets shared by all projects (created on first run, not in git)
+├── runs/                  # Experiment results, one subfolder per project (not in git)
 └── TrainingBasicConvnet/  # One project = one Python package
     ├── __init__.py        # Makes the folder importable: from TrainingBasicConvnet import main
     ├── __main__.py        # Makes `python -m TrainingBasicConvnet` work
@@ -34,13 +38,27 @@ CodeCS4337Fall2026/
     ├── models/            # Network definitions
     ├── trainers/          # Training and evaluation loop
     ├── utils/             # Helpers (paths, seeding, run folders)
-    ├── runs/              # Your experiment results (created on first run, not in git)
-    ├── .env               # Local settings: where data and results go
-    ├── .envcolab          # Google Colab settings (renamed to .env in Colab)
     └── requirements.txt   # Python packages this project needs
 ```
 
 Every project follows the same layout, so once you know one you know them all.
+
+### The `.env` and `.envcolab` files
+
+One settings file at the repo root is shared by every project:
+
+- `DATA_DIR`: where datasets are stored.
+- `OUTPUT_DIR`: where experiment results are written.
+
+Relative paths (like `data` or `runs`) are resolved against the repo root, so
+it does not matter which folder you run from. Absolute paths are used as-is.
+
+- **`.env`** holds the local settings (`DATA_DIR=data`, `OUTPUT_DIR=runs`). It
+  is not tracked by git, so you can change it freely. If it is missing (for
+  example after a fresh clone), the same defaults are used.
+- **`.envcolab`** holds the Colab settings. In Colab it is copied to `.env`
+  (the starter notebook does this for you, see
+  [Running in Google Colab](#running-in-google-colab)).
 
 ### Configs
 
@@ -77,9 +95,8 @@ and vice versa.
 - Datasets are downloaded automatically the first time you run a project, then
   reused on later runs.
 - **Locally**, all projects share one `data/` folder at the repo root, so a
-  dataset used by several projects is downloaded only once. This is set by
-  `DATA_DIR=../data` in each project's `.env` (relative paths are resolved
-  against the project folder, not the folder you run from).
+  dataset used by several projects is downloaded only once (`DATA_DIR=data`
+  in `.env`).
 - **In Colab**, `.envcolab` uses `DATA_DIR=/content/data`, the fast local disk
   of the Colab machine. This disk is wiped when the runtime resets, so the
   dataset is re-downloaded each session (this only takes a few seconds for the
@@ -89,22 +106,25 @@ and vice versa.
 
 ### The `runs/` folder
 
-Each time you run an experiment, a new folder named after the current date and
-time is created, so no run ever overwrites another:
+Results of all projects go into one `runs/` folder, separated by project name
+and then by config name. Each time you run an experiment, a new folder named
+after the current date and time is created, so no run ever overwrites another:
 
 ```
 runs/
-└── config01/                          # One folder per config name
-    ├── runs_summary.csv               # One row per run: accuracy, lr, epochs, ...
-    └── 2026-10-01_12-46-45/           # One folder per run (timestamp)
-        ├── config.yaml                # Exact copy of the config used
-        ├── history.json               # Loss and accuracy for every epoch
-        ├── best_epoch09_valacc0.9243.pt   # Model state with the best validation accuracy
-        ├── last_epoch10_valacc0.9193.pt   # Model state after the last epoch
-        └── results_epoch09_valacc0.9243_testacc0.9186.json  # Final metrics
+└── TrainingBasicConvnet/                  # One folder per project
+    └── config01/                          # One folder per config name
+        ├── runs_summary.csv               # One row per run: accuracy, lr, epochs, ...
+        └── 2026-10-01_12-46-45/           # One folder per run (timestamp)
+            ├── config.yaml                # Exact copy of the config used
+            ├── history.json               # Loss and accuracy for every epoch
+            ├── best_epoch09_valacc0.9243.pt   # Model state with the best validation accuracy
+            ├── last_epoch10_valacc0.9193.pt   # Model state after the last epoch
+            └── results_epoch09_valacc0.9243_testacc0.9186.json  # Final metrics
 ```
 
-- **Locally**, results go to `<Project>/runs/` (`OUTPUT_DIR=runs` in `.env`).
+- **Locally**, results go to `runs/` at the repo root (`OUTPUT_DIR=runs` in
+  `.env`).
 - **In Colab**, results go to your Google Drive (see below).
 - `runs/` is listed in `.gitignore`: your results are never committed.
 
@@ -112,64 +132,74 @@ Open `runs_summary.csv` to compare runs of the same config at a glance.
 
 ## Running in Google Colab
 
-### 1. Choose a GPU runtime
+The easiest way is the ready-made notebook
+[`starternotebook.ipynb`](starternotebook.ipynb). It sets everything up for you;
+you only need to open it in Colab and run the cells from top to bottom.
 
-In Colab, open **Runtime → Change runtime type** and select a GPU. Training
-works on CPU too, just much slower.
+### 1. Open the starter notebook in Colab
 
-### 2. Clone the repository and mount Google Drive
+Either:
 
-Run in a notebook cell:
+- **Open it directly from GitHub:**
+  [Open starternotebook.ipynb in Colab](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/starternotebook.ipynb),
+  then **File → Save a copy in Drive** so your changes to the notebook are kept, or
+- **Upload it:** download
+  [`starternotebook.ipynb`](starternotebook.ipynb) from this repository, then in
+  [Colab](https://colab.research.google.com) choose **File → Upload notebook**.
+  Uploaded notebooks are saved automatically in the `Colab Notebooks` folder of
+  your Google Drive.
 
-```python
-!git clone https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git
-%cd CodeCS4337Fall2026
+The notebook asks Colab for a GPU. If it does not get one, open
+**Runtime → Change runtime type** and select a GPU. Training works on CPU too,
+just much slower.
 
-from google.colab import drive
-drive.mount("/content/drive")
-```
+### 2. Run the cells from top to bottom
 
-If you already cloned it in this session, just `%cd /content/CodeCS4337Fall2026`
-and run `!git pull` to get the latest changes.
+| Cell | What it does |
+| --- | --- |
+| Mount Google Drive | Connects your Drive at `/content/drive` so results survive runtime resets. Colab asks you to allow access. |
+| Setup (`%%bash`) | Clones the repo into `/content/CodeCS4337Fall2026` (or runs `git pull` if it is already there), copies `.envcolab` to `.env`, and installs only the missing requirements. |
+| `%cd` | Moves the notebook into the repo folder so the projects can be imported. |
+| Run | `from TrainingBasicConvnet import main` and `main("config01")` |
+| Results | Shows `runs_summary.csv` from your Drive. |
 
-### 3. Use the Colab settings for the project
+The setup cell is safe to run again at any time, for example to get new
+projects after they are added. To run a different project, change
+`PROJECT=TrainingBasicConvnet` in the setup cell and the import in the run cell.
 
-```python
-!mv TrainingBasicConvnet/.envcolab TrainingBasicConvnet/.env
-```
+Results are saved to
+`/content/drive/MyDrive/CodeCS4337Fall2026/runs/<ProjectName>/<config>/<timestamp>/`.
 
-This replaces the local `.env` with the Colab one, which saves results to
-`/content/drive/MyDrive/CodeCS4337Fall2026/TrainingBasicConvnet/runs/`.
-
-### 4. Install only the missing requirements
+### Why only the *missing* requirements are installed
 
 Colab already comes with most packages (PyTorch, torchvision, NumPy, ...)
 preinstalled. **Do not** run `pip install -r requirements.txt` in Colab: the
 versions pinned there would replace Colab's own versions, which is slow and can
 break other preinstalled packages.
 
-Instead, run this cell. It installs only the packages that are not already
-installed in Colab and skips everything else:
+The setup cell reads the project's `requirements.txt`, strips the version
+numbers, and runs `pip install` only for packages that are not installed yet.
+A package installed this way gets the latest version rather than the pinned
+one, and a preinstalled package keeps Colab's version. These version
+differences are expected and fine for this course.
 
-```bash
-%%bash
-grep -vE '^\s*(#|$)' TrainingBasicConvnet/requirements.txt \
-  | sed -E 's/[<>=!~;[ ].*//' \
-  | while read -r pkg; do
-      if pip show "$pkg" > /dev/null 2>&1; then
-        echo "skip $pkg (already installed)"
-      else
-        pip install -q "$pkg" && echo "installed $pkg"
-      fi
-    done
+### Without the notebook
+
+If you prefer to set things up yourself in any Colab notebook, these cells do
+the same as the starter notebook:
+
+```python
+from google.colab import drive
+
+drive.mount("/content/drive")
+
+!git clone https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git /content/CodeCS4337Fall2026
+%cd /content/CodeCS4337Fall2026
+!cp .envcolab .env
 ```
 
-It strips the version numbers, so a package installed this way gets the latest
-version rather than the pinned one, and a preinstalled package keeps Colab's
-version. These version differences are expected and fine for this course. For
-another project, replace `TrainingBasicConvnet` with that project's folder name.
-
-### 5. Run the experiment
+Then run the requirements loop from the setup cell of
+[`starternotebook.ipynb`](starternotebook.ipynb), and finally:
 
 ```python
 from TrainingBasicConvnet import main
@@ -190,8 +220,8 @@ the dataset in `/content/data`, and any edits you made to configs.
   also prevents Drive from mounting until you remove it).
 - **Datasets** are kept on the local disk by default because it is faster and
   they re-download quickly. To keep a dataset in Drive instead (useful for large
-  datasets later in the course), edit `TrainingBasicConvnet/.env` in Colab
-  and set:
+  datasets later in the course), edit `.env` at the repo root in Colab and
+  set:
 
   ```
   DATA_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/data
@@ -244,8 +274,8 @@ python -m TrainingBasicConvnet --config config01
 
 `--config` accepts a name (`config01`), a file name (`config01.yaml`), or a
 path (`configs/config01.yaml`). Results are written to
-`TrainingBasicConvnet/runs/config01/<timestamp>/`, and the dataset is stored in
-the shared `data/` folder at the repo root.
+`runs/TrainingBasicConvnet/config01/<timestamp>/`, and the dataset is stored in
+the shared `data/` folder, both at the repo root.
 
 You can also call it from Python or a local Jupyter notebook started at the
 repo root:

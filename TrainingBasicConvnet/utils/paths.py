@@ -1,23 +1,25 @@
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
+PROJECT_NAME = PROJECT_DIR.name
+REPO_DIR = PROJECT_DIR.parent
 CONFIGS_DIR = PROJECT_DIR / "configs"
 
 
-def resolve_project_path(path: str | Path) -> Path:
-    """Resolve ``path`` against the project directory unless it is absolute.
+def resolve_repo_path(path: str | Path) -> Path:
+    """Resolve ``path`` against the repo root unless it is absolute.
 
-    This keeps outputs in the same place whether the code is run from inside
-    the project folder, from the repo root, or imported from a notebook.
+    This keeps data and outputs in the same place whether the code is run from
+    inside the project folder, from the repo root, or imported from a notebook.
 
     Args:
-        path: An absolute path, or a path relative to the project directory.
+        path: An absolute path, or a path relative to the repo root.
 
     Returns:
         The absolute path.
     """
     path = Path(path).expanduser()
-    return path if path.is_absolute() else PROJECT_DIR / path
+    return path if path.is_absolute() else REPO_DIR / path
 
 
 def resolve_config_path(config: str | Path) -> Path:
