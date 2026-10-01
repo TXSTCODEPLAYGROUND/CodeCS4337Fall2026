@@ -35,12 +35,13 @@ from .dataloaders import get_dataloaders
 from .models import ConvNet
 from .trainers import Trainer
 from .utils import (
-    PROJECT_DIR,
+    PROJECT_NAME,
+    REPO_DIR,
     append_run_summary,
     create_run_dir,
     get_device,
     resolve_config_path,
-    resolve_project_path,
+    resolve_repo_path,
     set_seed,
 )
 
@@ -63,15 +64,16 @@ def parse_args() -> argparse.Namespace:
 def main(config_path: str | Path | None = None) -> None:
     """Run a full training experiment from a YAML config.
 
-    Each invocation creates ``<OUTPUT_DIR>/<config_name>/<timestamp>/`` holding
-    the config snapshot, checkpoints, per-epoch history, and a results file
-    whose name includes the test accuracy. A row is also appended to
-    ``<OUTPUT_DIR>/<config_name>/runs_summary.csv`` for comparing runs.
+    Each invocation creates ``<OUTPUT_DIR>/<project_name>/<config_name>/<timestamp>/``
+    holding the config snapshot, checkpoints, per-epoch history, and a results
+    file whose name includes the test accuracy. A row is also appended to
+    ``<OUTPUT_DIR>/<project_name>/<config_name>/runs_summary.csv`` for
+    comparing runs.
 
-    Environment variables are read from this project's ``.env`` file.
-    Relative ``DATA_DIR`` and ``OUTPUT_DIR`` values are resolved against the
-    project folder, so results land in the same place regardless of the
-    current working directory.
+    Environment variables are read from the ``.env`` file at the repo root,
+    shared by all projects. Relative ``DATA_DIR`` and ``OUTPUT_DIR`` values are
+    resolved against the repo root, so data and results land in the same place
+    regardless of the current working directory.
 
     Args:
         config_path: Config name or path, e.g. ``"config01"``. When given (as
@@ -79,7 +81,7 @@ def main(config_path: str | Path | None = None) -> None:
             When omitted, it is read from the required ``--config`` CLI flag.
             See ``utils.resolve_config_path`` for the lookup rules.
     """
-    load_dotenv(PROJECT_DIR / ".env")
+    load_dotenv(REPO_DIR / ".env")
     if config_path is None:
         config_path = parse_args().config
 
@@ -88,8 +90,8 @@ def main(config_path: str | Path | None = None) -> None:
         config = yaml.safe_load(f)
 
     experiment_name = config_path.stem
-    experiment_dir = resolve_project_path(os.getenv("OUTPUT_DIR", "runs"))
-    experiment_dir /= experiment_name
+    experiment_dir = resolve_repo_path(os.getenv("OUTPUT_DIR", "runs"))
+    experiment_dir = experiment_dir / PROJECT_NAME / experiment_name
     run_id, run_dir = create_run_dir(experiment_dir)
     shutil.copy(config_path, run_dir / "config.yaml")
 
@@ -101,7 +103,7 @@ def main(config_path: str | Path | None = None) -> None:
 
     data_cfg = config["data"]
     train_loader, val_loader, test_loader = get_dataloaders(
-        data_dir=str(resolve_project_path(os.getenv("DATA_DIR", "data"))),
+        data_dir=str(resolve_repo_path(os.getenv("DATA_DIR", "data"))),
         batch_size=data_cfg["batch_size"],
         val_split=data_cfg["val_split"],
         num_workers=data_cfg["num_workers"],
