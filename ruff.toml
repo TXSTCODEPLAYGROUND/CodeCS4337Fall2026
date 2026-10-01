@@ -1,0 +1,4 @@
+[lint]
+# Project folders use CamelCase names (e.g. TrainingBasicConvnet) so they can be
+# imported as `from TrainingBasicConvnet import main`.
+extend-ignore = ["N999"]

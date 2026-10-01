@@ -1,0 +1,12 @@
+# Patterns without a leading slash match at any depth, so they cover every project.
+.venv/
+__pycache__/
+.ruff_cache/
+.vscode/
+
+# Local environment. Each project's .envcolab stays tracked (renamed to .env in Colab).
+.env
+
+# Datasets (shared ./data) and experiment outputs (<Project>/runs/).
+data/
+runs/
