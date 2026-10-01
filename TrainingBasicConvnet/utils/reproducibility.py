@@ -20,12 +20,17 @@ def get_device(requested: str) -> torch.device:
     """Resolve the device to train on.
 
     Args:
-        requested: ``"auto"`` to pick CUDA when available (otherwise CPU), or an
-            explicit device string such as ``"cpu"`` or ``"cuda:0"``.
+        requested: ``"auto"`` to pick the best available device (CUDA, then
+            Apple Silicon GPU via MPS, then CPU), or an explicit device string
+            such as ``"cpu"``, ``"cuda:0"``, or ``"mps"``.
 
     Returns:
         The resolved ``torch.device``.
     """
     if requested == "auto":
-        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+        return torch.device("cpu")
     return torch.device(requested)
