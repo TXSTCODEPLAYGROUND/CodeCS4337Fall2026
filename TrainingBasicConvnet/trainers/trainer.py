@@ -168,7 +168,7 @@ class Trainer:
         """Save model and optimizer state to ``run_dir / filename``.
 
         The config is stored inside the checkpoint so it can be reloaded
-        without the original YAML file.
+        without the original config file.
 
         Args:
             filename: Name of the checkpoint file.

@@ -35,7 +35,7 @@ CodeCS4337Fall2026/
     ├── __init__.py        # Makes the folder importable: from TrainingBasicConvnet import main
     ├── __main__.py        # Makes `python -m TrainingBasicConvnet` work
     ├── main.py            # Entry point: main(config) runs a full experiment
-    ├── configs/           # Experiment settings (config01.yaml, ...)
+    ├── configs/           # Experiment settings (config01.json, ...)
     ├── dataloaders/       # Dataset loading
     ├── models/            # Network definitions
     ├── trainers/          # Training and evaluation loop
@@ -64,11 +64,28 @@ it does not matter which folder you run from. Absolute paths are used as-is.
 
 ### Configs
 
-An experiment is described by a YAML file in the project's `configs/` folder
+An experiment is described by a JSON file in the project's `configs/` folder
 (learning rate, batch size, number of epochs, ...). To try your own settings,
-copy a config, give it a new name (e.g. `config02.yaml`), edit it, and pass
+copy a config, give it a new name (e.g. `config02.json`), edit it, and pass
 that name when you run the project. You never need to edit the Python code to
 change hyperparameters.
+
+```json
+{
+  "seed": 42,
+  "device": "auto",
+  "data": {"batch_size": 256, "val_split": 0.1, "num_workers": 2},
+  "model": {"dropout": 0.25},
+  "training": {"epochs": 10, "lr": 0.001, "weight_decay": 0.0}
+}
+```
+
+- `device` is `"auto"` (use a GPU if available), `"cuda"`, or `"cpu"`.
+- JSON is strict: keys and text values need double quotes, there is no comma
+  after the last item in a block, and comments are not allowed.
+- In Colab, double-click a config in the file browser (left sidebar) to edit it,
+  then save with Ctrl+S. Edits under `/content/` are lost when the runtime
+  resets, so keep a copy of configs you care about in your Drive.
 
 ### The `.venv/` folder (local only)
 
@@ -118,7 +135,7 @@ runs/
     └── config01/                          # One folder per config name
         ├── runs_summary.csv               # One row per run: accuracy, lr, epochs, ...
         └── 2026-10-01_12-46-45/           # One folder per run (timestamp)
-            ├── config.yaml                # Exact copy of the config used
+            ├── config.json                # Exact copy of the config used
             ├── history.json               # Loss and accuracy for every epoch
             ├── best_epoch09_valacc0.9243.pt   # Model state with the best validation accuracy
             ├── last_epoch10_valacc0.9193.pt   # Model state after the last epoch
@@ -276,8 +293,8 @@ or from the repo root:
 python -m TrainingBasicConvnet --config config01
 ```
 
-`--config` accepts a name (`config01`), a file name (`config01.yaml`), or a
-path (`configs/config01.yaml`). Results are written to
+`--config` accepts a name (`config01`), a file name (`config01.json`), or a
+path (`configs/config01.json`). Results are written to
 `runs/TrainingBasicConvnet/config01/<timestamp>/`, and the dataset is stored in
 the shared `data/` folder, both at the repo root.
 
