@@ -176,35 +176,40 @@ just much slower.
 
 ### 2. Run the cells from top to bottom
 
-| Cell | What it does |
-| --- | --- |
-| Mount Google Drive | Connects your Drive at `/content/drive` so results survive runtime resets. Colab asks you to allow access. |
-| Setup (`%%bash`) | Clones the repo into `/content/CodeCS4337Fall2026` (or runs `git pull` if it is already there), copies `.envcolab` to `.env`, and installs only the missing requirements. |
-| `%cd` | Moves the notebook into the repo folder so the projects can be imported. |
-| Run | `from TrainingBasicConvnet import main` and `main("config01")` |
-| Or run from the terminal | The same run as a shell command (optional, see below). |
-| Results | Shows `runs_summary.csv` from your Drive. |
+The notebook has three parts:
 
-The setup cell is safe to run again at any time, for example to get new
+| Part | What it does |
+| --- | --- |
+| **1. Setup** | Mounts Google Drive (Colab asks you to allow access), clones the repo into `/content/CodeCS4337Fall2026` (or runs `git pull` if it is already there), copies `.envcolab` to `.env`, installs only the missing requirements, and moves the notebook into the repo folder. |
+| **2. Run a project** | Choose **Option A** (terminal command) or **Option B** (from Python), see below. |
+| **3. Results** | Shows `runs_summary.csv` from your Drive. |
+
+It ends with [pro tips](#pro-tips-keep-training-running) for keeping long
+training runs alive.
+
+The setup cells are safe to run again at any time, for example to get new
 projects after they are added. To run a different project, change
-`PROJECT=TrainingBasicConvnet` in the setup cell and the import in the run cell.
+`PROJECT=TrainingBasicConvnet` in the setup cell and the project name in the
+run cells.
 
 Results are saved to
 `/content/drive/MyDrive/CodeCS4337Fall2026/runs/<ProjectName>/<config>/<timestamp>/`.
 
-### Running from the Colab terminal
+### Option A: run as a terminal command
 
-You can also run a project as a terminal command in Colab, just like
-[running locally](#3-run-the-experiment). The terminal runs on the same Colab
-machine as the notebook, so it sees the same files, installed packages, and
-Drive mount.
+This is the same command you would use on your own machine (see
+[Running locally](#3-run-the-experiment)). There are two ways to run it in
+Colab:
 
-**First run the notebook's setup cells** (mount Drive, then the `%%bash` setup
-cell). These steps are still needed, and Drive can only be mounted from a
-notebook cell, not from the terminal.
+**A1. From a notebook cell (everyone).** A line starting with `!` is sent to
+the shell:
 
-Then open the terminal with the **Terminal** button at the bottom left of the
-Colab window and run:
+```python
+!cd /content/CodeCS4337Fall2026 && python -m TrainingBasicConvnet --config config01
+```
+
+**A2. From Colab's terminal (Colab Pro).** Open the terminal with the
+**Terminal** button at the bottom left of the Colab window and run:
 
 ```bash
 cd /content/CodeCS4337Fall2026
@@ -218,17 +223,59 @@ cd /content/CodeCS4337Fall2026/TrainingBasicConvnet
 python main.py --config config01
 ```
 
-You can also run the same command from a notebook cell by prefixing it with
-`!` (the starter notebook has a cell for this):
+The terminal runs on the same Colab machine as the notebook, so it sees the
+same files, installed packages, and Drive mount. **Run the notebook's setup
+cells first**: Drive can only be mounted from a notebook cell, not from the
+terminal. While training runs in the terminal, the notebook stays free.
+
+### Option B: run from Python
 
 ```python
-!cd /content/CodeCS4337Fall2026 && python -m TrainingBasicConvnet --config config01
+from TrainingBasicConvnet import main
+
+main("config01")
 ```
 
-The terminal is handy for long runs: you can keep using the notebook while
-training runs. Results go to the same Drive folder either way. If the runtime
-disconnects or resets, both the notebook and the terminal stop, and you need to
-run the setup cells again.
+Both options run the same training and save results to the same Drive folder.
+
+### Pro tips: keep training running
+
+Colab disconnects runtimes that look idle (no interaction for a while, often
+around 90 minutes) and caps the total runtime (around 12 hours on the free
+tier, longer on paid plans). The exact limits vary and are not guaranteed. A
+disconnect stops training and deletes everything under `/content/` outside
+your Drive.
+
+**Save your state in Google Drive**
+
+- Always mount Drive *before* training, so results go straight to Drive.
+- The best model so far (`best_epochXX_valaccY.pt`) is saved to Drive
+  *during* training, every time validation accuracy improves. If the runtime
+  disconnects mid-run, that checkpoint is kept.
+- The last checkpoint, `history.json`, the results file, and the row in
+  `runs_summary.csv` are written only when the run finishes, so an interrupted
+  run has only its best checkpoint.
+- Keep your notebook and any configs you edited in Drive too.
+
+**Avoid idle disconnects**
+
+- Keep the Colab tab open and don't let your computer sleep (plug in your
+  laptop and turn off sleep while training).
+- Check on the notebook now and then. Running in the terminal does *not*
+  prevent disconnects: it shares the same runtime.
+- Don't use scripts or extensions that fake activity (auto-clickers); they can
+  get your Colab usage restricted.
+- With Colab Pro+, *background execution* keeps the runtime alive after you
+  close the browser.
+
+**Plan your runs**
+
+- Test a new config with few epochs first (e.g. `"epochs": 1`), then start the
+  full run.
+- Prefer several shorter runs over one very long run.
+- After a disconnect, re-run the setup cells, then start the run again.
+- When done, use *Runtime → Disconnect and delete runtime* to save your GPU
+  quota (or compute units on paid plans).
 
 ### Why only the *missing* requirements are installed
 
