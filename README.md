@@ -1,5 +1,7 @@
 # CS4337 Fall 2026 — Course Code
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/starternotebook.ipynb)
+
 This repository holds the code for CS4337, Fall 2026. Each top-level folder
 (for example `TrainingBasicConvnet/`) is a **self-contained project**: a small
 Python package that you can either
@@ -140,9 +142,11 @@ you only need to open it in Colab and run the cells from top to bottom.
 
 Either:
 
-- **Open it directly from GitHub:**
-  [Open starternotebook.ipynb in Colab](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/starternotebook.ipynb),
-  then **File → Save a copy in Drive** so your changes to the notebook are kept, or
+- **Open it directly from GitHub:** click
+  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/starternotebook.ipynb)
+  (also at the top of this page), then **File → Save a copy in Drive** so your
+  changes to the notebook are kept. This always opens the latest version of the
+  notebook, or
 - **Upload it:** download
   [`starternotebook.ipynb`](starternotebook.ipynb) from this repository, then in
   [Colab](https://colab.research.google.com) choose **File → Upload notebook**.
