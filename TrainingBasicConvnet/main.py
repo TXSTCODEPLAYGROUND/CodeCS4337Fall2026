@@ -1,10 +1,10 @@
 """Train a ConvNet on Fashion-MNIST.
 
 Usage:
-    From inside this folder:     python main.py --config config01.yaml
-    From the repo root:          python -m TrainingBasicConvnet --config config01.yaml
+    From inside this folder:     python main.py --config config01
+    From the repo root:          python -m TrainingBasicConvnet --config config01
     From Python or a notebook:   from TrainingBasicConvnet import main
-                                 main("config01.yaml")
+                                 main("config01")
 """
 
 import argparse
@@ -28,7 +28,6 @@ if __name__ == "__main__" and not __package__:
     importlib.import_module(__package__)
 
 import torch
-import yaml
 from dotenv import load_dotenv
 
 from .dataloaders import get_dataloaders
@@ -56,13 +55,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         required=True,
-        help="Config name or path, e.g. config01, config01.yaml, or configs/config01.yaml",
+        help="Config name or path, e.g. config01, config01.json, or configs/config01.json",
     )
     return parser.parse_args()
 
 
 def main(config_path: str | Path | None = None) -> None:
-    """Run a full training experiment from a YAML config.
+    """Run a full training experiment from a JSON config.
 
     Each invocation creates ``<OUTPUT_DIR>/<project_name>/<config_name>/<timestamp>/``
     holding the config snapshot, checkpoints, per-epoch history, and a results
@@ -87,13 +86,13 @@ def main(config_path: str | Path | None = None) -> None:
 
     config_path = resolve_config_path(config_path)
     with open(config_path) as f:
-        config = yaml.safe_load(f)
+        config = json.load(f)
 
     experiment_name = config_path.stem
     experiment_dir = resolve_repo_path(os.getenv("OUTPUT_DIR", "runs"))
     experiment_dir = experiment_dir / PROJECT_NAME / experiment_name
     run_id, run_dir = create_run_dir(experiment_dir)
-    shutil.copy(config_path, run_dir / "config.yaml")
+    shutil.copy(config_path, run_dir / "config.json")
 
     seed = config.get("seed", 42)
     set_seed(seed)

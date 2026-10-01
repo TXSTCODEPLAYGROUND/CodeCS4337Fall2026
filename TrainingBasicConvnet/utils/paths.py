@@ -23,12 +23,12 @@ def resolve_repo_path(path: str | Path) -> Path:
 
 
 def resolve_config_path(config: str | Path) -> Path:
-    """Locate a YAML config file.
+    """Locate a JSON config file.
 
     Lookup order: ``config`` as given (absolute, or relative to the current
     working directory), then relative to the project directory, then inside
-    ``configs/``. The ``.yaml`` extension may be omitted, so ``"config01"``,
-    ``"config01.yaml"``, and ``"configs/config01.yaml"`` all work.
+    ``configs/``. The ``.json`` extension may be omitted, so ``"config01"``,
+    ``"config01.json"``, and ``"configs/config01.json"`` all work.
 
     Args:
         config: Config name or path.
@@ -41,13 +41,13 @@ def resolve_config_path(config: str | Path) -> Path:
             available configs.
     """
     config = Path(config).expanduser()
-    names = [config] if config.suffix else [config.with_suffix(".yaml"), config]
+    names = [config] if config.suffix else [config.with_suffix(".json"), config]
     for name in names:
         for candidate in (name, PROJECT_DIR / name, CONFIGS_DIR / name):
             if candidate.is_file():
                 return candidate.resolve()
 
-    available = sorted(p.name for p in CONFIGS_DIR.glob("*.yaml"))
+    available = sorted(p.name for p in CONFIGS_DIR.glob("*.json"))
     raise FileNotFoundError(
         f"Config {str(config)!r} not found. Available in {CONFIGS_DIR}: {available}"
     )
