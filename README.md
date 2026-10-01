@@ -182,6 +182,7 @@ just much slower.
 | Setup (`%%bash`) | Clones the repo into `/content/CodeCS4337Fall2026` (or runs `git pull` if it is already there), copies `.envcolab` to `.env`, and installs only the missing requirements. |
 | `%cd` | Moves the notebook into the repo folder so the projects can be imported. |
 | Run | `from TrainingBasicConvnet import main` and `main("config01")` |
+| Or run from the terminal | The same run as a shell command (optional, see below). |
 | Results | Shows `runs_summary.csv` from your Drive. |
 
 The setup cell is safe to run again at any time, for example to get new
@@ -190,6 +191,44 @@ projects after they are added. To run a different project, change
 
 Results are saved to
 `/content/drive/MyDrive/CodeCS4337Fall2026/runs/<ProjectName>/<config>/<timestamp>/`.
+
+### Running from the Colab terminal
+
+You can also run a project as a terminal command in Colab, just like
+[running locally](#3-run-the-experiment). The terminal runs on the same Colab
+machine as the notebook, so it sees the same files, installed packages, and
+Drive mount.
+
+**First run the notebook's setup cells** (mount Drive, then the `%%bash` setup
+cell). These steps are still needed, and Drive can only be mounted from a
+notebook cell, not from the terminal.
+
+Then open the terminal with the **Terminal** button at the bottom left of the
+Colab window and run:
+
+```bash
+cd /content/CodeCS4337Fall2026
+python -m TrainingBasicConvnet --config config01
+```
+
+or, from inside the project folder:
+
+```bash
+cd /content/CodeCS4337Fall2026/TrainingBasicConvnet
+python main.py --config config01
+```
+
+You can also run the same command from a notebook cell by prefixing it with
+`!` (the starter notebook has a cell for this):
+
+```python
+!cd /content/CodeCS4337Fall2026 && python -m TrainingBasicConvnet --config config01
+```
+
+The terminal is handy for long runs: you can keep using the notebook while
+training runs. Results go to the same Drive folder either way. If the runtime
+disconnects or resets, both the notebook and the terminal stop, and you need to
+run the setup cells again.
 
 ### Why only the *missing* requirements are installed
 
