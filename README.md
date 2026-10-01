@@ -80,7 +80,8 @@ change hyperparameters.
 }
 ```
 
-- `device` is `"auto"` (use a GPU if available), `"cuda"`, or `"cpu"`.
+- `device` is `"auto"` (use the best available: an NVIDIA GPU, then an Apple
+  Silicon GPU, then the CPU), `"cuda"`, `"mps"` (Apple Silicon GPU), or `"cpu"`.
 - JSON is strict: keys and text values need double quotes, there is no comma
   after the last item in a block, and comments are not allowed.
 - In Colab, double-click a config in the file browser (left sidebar) to edit it,
@@ -383,6 +384,19 @@ python -m TrainingBasicConvnet --config config01
 path (`configs/config01.json`). Results are written to
 `runs/TrainingBasicConvnet/config01/<timestamp>/`, and the dataset is stored in
 the shared `data/` folder, both at the repo root.
+
+The first line of output shows which device is used (e.g. `device: cuda`).
+With the default `"device": "auto"`:
+
+- **NVIDIA GPU (Linux/Windows):** uses CUDA if your PyTorch install supports
+  it. On Windows, the default `pip` install of PyTorch is CPU-only; for GPU
+  support, use the install command from
+  [pytorch.org](https://pytorch.org/get-started/locally/).
+- **Mac with Apple Silicon (M1/M2/M3/M4):** uses the Apple GPU (`mps`) with the
+  regular `pip` install. This needs macOS 12.3 or newer and a native (arm64)
+  Python. If you hit an error saying an operation is not implemented for MPS,
+  run with `PYTORCH_ENABLE_MPS_FALLBACK=1` set, or set `"device": "cpu"`.
+- **Otherwise:** trains on the CPU. That is fine for this project, just slower.
 
 You can also call it from Python or a local Jupyter notebook started at the
 repo root:
