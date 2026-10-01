@@ -1,7 +1,5 @@
 # CS4337 Fall 2026 — Course Code
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/starternotebook.ipynb)
-
 This repository holds the code for CS4337, Fall 2026. Each top-level folder
 (for example `TrainingBasicConvnet/`) is a **self-contained project**: a small
 Python package that you can either
