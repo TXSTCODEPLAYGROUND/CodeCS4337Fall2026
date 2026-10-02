@@ -7,8 +7,8 @@ Python package that you can either
 - import and run from a notebook (e.g. Google Colab), or
 - run from the terminal on your own machine.
 
-New projects will be added over the semester. To get them, run `git pull`
-inside your copy of the repository.
+New projects will be added over the semester. To get them, see
+[Getting updates](#getting-updates).
 
 Function and class details are in the
 [documentation](https://txstcodeplayground.github.io/CodeCS4337Fall2026/).
@@ -17,13 +17,15 @@ Function and class details are in the
 
 | Project | Description |
 | --- | --- |
-| [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
+| [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST, with the training loop written in plain PyTorch. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
+| [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same experiment with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/), which provides the training loop, logging, and checkpointing. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) |
 
 ## Repository structure
 
 ```
 CodeCS4337Fall2026/
 ├── README.md              # This file
+├── requirements.txt       # Python packages for every project (one shared .venv)
 ├── starternotebook.ipynb  # Ready-to-run Google Colab notebook (start here in Colab)
 ├── ruff.toml              # Code style settings (you can ignore this for now, see below)
 ├── .gitignore             # Files git should not track (data, runs, .env, virtualenvs, ...)
@@ -32,19 +34,26 @@ CodeCS4337Fall2026/
 ├── .venv/                 # Your local Python virtual environment (you create it, not in git)
 ├── data/                  # Datasets shared by all projects (created on first run, not in git)
 ├── runs/                  # Experiment results, one subfolder per project (not in git)
-└── TrainingBasicConvnet/  # One project = one Python package
-    ├── __init__.py        # Makes the folder importable: from TrainingBasicConvnet import main
-    ├── __main__.py        # Makes `python -m TrainingBasicConvnet` work
-    ├── main.py            # Entry point: main(config) runs a full experiment
-    ├── configs/           # Experiment settings (config01.json, ...)
-    ├── dataloaders/       # Dataset loading
-    ├── models/            # Network definitions
-    ├── trainers/          # Training and evaluation loop
-    ├── utils/             # Helpers (paths, seeding, run folders)
-    └── requirements.txt   # Python packages this project needs
+├── docs/                  # Source of the online documentation (built automatically, see below)
+├── TrainingBasicConvnet/  # One project = one Python package
+│   ├── __init__.py        # Makes the folder importable: from TrainingBasicConvnet import main
+│   ├── __main__.py        # Makes `python -m TrainingBasicConvnet` work
+│   ├── main.py            # Entry point: main(config) runs a full experiment
+│   ├── configs/           # Experiment settings (config01.json, ...)
+│   ├── dataloaders/       # Dataset loading
+│   ├── models/            # Network definitions
+│   ├── trainers/          # Training and evaluation loop
+│   └── utils/             # Helpers (paths, seeding, run folders)
+└── LitTrainingBasicConvnet/  # Same experiment with PyTorch Lightning
+    ├── __init__.py, __main__.py, main.py, configs/  # Same roles as above
+    ├── model.py           # LitConvNet: the network and what to do with one batch
+    └── data.py            # FashionMNISTDataModule: download, split, dataloaders
 ```
 
-Every project follows the same layout, so once you know one you know them all.
+Every project has the same entry points (`main.py`, `configs/`) and is run the
+same way. Lightning projects are flatter:
+Lightning supplies the training loop, logging, and checkpointing, so the model
+and data each fit in one file.
 
 ### The `.env` and `.envcolab` files
 
@@ -83,6 +92,8 @@ change hyperparameters.
 
 - `device` is `"auto"` (use the best available: an NVIDIA GPU, then an Apple
   Silicon GPU, then the CPU), `"cuda"`, `"mps"` (Apple Silicon GPU), or `"cpu"`.
+  Lightning projects use Lightning's name for this field, `"accelerator"`, with
+  the values `"auto"`, `"gpu"`, `"mps"`, or `"cpu"`.
 - JSON is strict: keys and text values need double quotes, there is no comma
   after the last item in a block, and comments are not allowed.
 - In Colab, double-click a config in the file browser (left sidebar) to edit it,
@@ -144,6 +155,23 @@ runs/
             └── results_epoch09_valacc0.9243_testacc0.9186.json  # Final metrics
 ```
 
+Lightning projects write their own files into the run folder:
+
+```
+runs/LitTrainingBasicConvnet/config01/
+├── runs_summary.csv
+└── 2026-10-02_11-00-57/
+    ├── config.json                    # Exact copy of the config used
+    ├── metrics.csv                    # Loss and accuracy for every epoch (Lightning's CSVLogger)
+    ├── hparams.yaml                   # Model and data settings
+    ├── best_epoch08_valacc0.9240.ckpt # Checkpoint with the best validation accuracy
+    └── last.ckpt                      # Checkpoint after the last epoch
+```
+
+Lightning counts epochs from 0, so `best_epoch08` is the ninth epoch. A
+Lightning checkpoint can be reloaded with
+`LitConvNet.load_from_checkpoint("path/to/file.ckpt")`.
+
 - **Locally**, results go to `runs/` at the repo root (`OUTPUT_DIR=runs` in
   `.env`).
 - **In Colab**, results go to your Google Drive (see below).
@@ -190,9 +218,9 @@ It ends with [pro tips](#pro-tips-keep-training-running) for keeping long
 training runs alive.
 
 The setup cells are safe to run again at any time, for example to get new
-projects after they are added. To run a different project, change
-`PROJECT=TrainingBasicConvnet` in the setup cell and the project name in the
-run cells.
+projects after they are added. The setup cell installs the packages for every
+project, so to run a different project you only change the project name in the
+run cells (e.g. `LitTrainingBasicConvnet` instead of `TrainingBasicConvnet`).
 
 Results are saved to
 `/content/drive/MyDrive/CodeCS4337Fall2026/runs/<ProjectName>/<config>/<timestamp>/`.
@@ -286,7 +314,7 @@ preinstalled. **Do not** run `pip install -r requirements.txt` in Colab: the
 versions pinned there would replace Colab's own versions, which is slow and can
 break other preinstalled packages.
 
-The setup cell reads the project's `requirements.txt`, strips the version
+The setup cell reads `requirements.txt` at the repo root, strips the version
 numbers, and runs `pip install` only for packages that are not installed yet.
 A package installed this way gets the latest version rather than the pinned
 one, and a preinstalled package keeps Colab's version. These version
@@ -354,17 +382,18 @@ python3.13 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 ```
 
-### 2. Install the project's requirements
+### 2. Install the requirements
 
-Each project has its own `requirements.txt`, and **each project may need
-different packages**. Install the requirements of every project you want to
-run (locally, the pinned versions are the ones the code was tested with):
+One `requirements.txt` at the repo root lists the packages for **every**
+project, at the versions the code was tested with. All projects share the same
+`.venv`, so one install covers them all:
 
 ```bash
-pip install -r TrainingBasicConvnet/requirements.txt
+pip install -r requirements.txt
 ```
 
-When a new project is added, install its requirements the same way.
+When projects are added later, run this again after `git pull` (see
+[Getting updates](#getting-updates)).
 
 ### 3. Run the experiment
 
@@ -407,6 +436,43 @@ from TrainingBasicConvnet import main
 
 main("config01")
 ```
+
+`LitTrainingBasicConvnet` is run only from the repo root:
+
+```bash
+python -m LitTrainingBasicConvnet --config config01.json
+```
+
+or, from Python or a notebook started at the repo root,
+`from LitTrainingBasicConvnet import main` and `main("config01.json")`.
+Lightning prints the device it picked at the start of training (e.g.
+`GPU available: True (cuda), used: True`).
+
+## Getting updates
+
+New projects and fixes are added during the semester. To update your local
+copy, run from the repo root:
+
+```bash
+git pull
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Run `pip install -r requirements.txt` after **every** `git pull`. It installs
+packages that new projects need and switches any changed versions to the pinned
+ones. Packages that are already correct are left alone, so it finishes quickly
+when nothing changed.
+
+- **If `git pull` refuses to update** because you edited a file that is in the
+  repo (for example `configs/config01.json`): keep your own settings in a new
+  file such as `config02.json` instead, since `git pull` never touches files you
+  created. To keep an edit you already made, run `git stash`, then `git pull`,
+  then `git stash pop`.
+- `data/`, `runs/`, and `.env` are not in git, so pulling never changes your
+  datasets, results, or local settings.
+- **In Colab**, just re-run the setup cells of the starter notebook. They run
+  `git pull` and install any missing packages.
 
 ## About `ruff.toml` (you can ignore it for now)
 
