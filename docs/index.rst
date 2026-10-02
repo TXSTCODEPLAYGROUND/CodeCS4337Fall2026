@@ -13,6 +13,11 @@ the docstrings in that package.
    LitTrainingBasicConvnet
    LitWBTrainingBasicConvnet
 
+.. toctree::
+   :caption: Links
+
+   GitHub repository <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026>
+
 Building these pages
 --------------------
 
