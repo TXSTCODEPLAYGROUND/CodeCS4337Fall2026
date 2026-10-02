@@ -1,17 +1,25 @@
+"""The Fashion-MNIST LightningDataModule and the dataset's constants."""
+
 import lightning as L
 import torch
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision import datasets, transforms
 
 FASHION_MNIST_MEAN = (0.2860,)
+"""Mean pixel value of the training images, used to normalize them."""
 FASHION_MNIST_STD = (0.3530,)
+"""Standard deviation of the training pixels, used to normalize them."""
+FASHION_MNIST_CLASSES = datasets.FashionMNIST.classes
+"""The 10 class names, in label order: ``"T-shirt/top"``, ``"Trouser"``, ..."""
 
 
 class FashionMNISTDataModule(L.LightningDataModule):
     """Fashion-MNIST train, validation, and test dataloaders.
 
-    The official training set is split into train and validation subsets with a
-    seeded generator, so the split is the same in every run.
+    The dataset files live in ``data_dir`` (the shared ``data/`` folder at the
+    repo root by default), not in this package. The official training set is
+    split into train and validation subsets with a seeded generator, so the
+    split is the same in every run.
     """
 
     def __init__(
@@ -32,7 +40,7 @@ class FashionMNISTDataModule(L.LightningDataModule):
             seed: Random seed for the train/validation split.
         """
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(logger=False)
         self.transform = transforms.Compose(
             [
                 transforms.ToTensor(),
@@ -60,15 +68,6 @@ class FashionMNISTDataModule(L.LightningDataModule):
             self.hparams.data_dir, train=False, transform=self.transform
         )
 
-    def _loader(self, dataset, shuffle: bool = False) -> DataLoader:
-        return DataLoader(
-            dataset,
-            batch_size=self.hparams.batch_size,
-            shuffle=shuffle,
-            num_workers=self.hparams.num_workers,
-            persistent_workers=self.hparams.num_workers > 0,
-        )
-
     def train_dataloader(self) -> DataLoader:
         """Shuffled training batches."""
         return self._loader(self.train_set, shuffle=True)
@@ -80,3 +79,25 @@ class FashionMNISTDataModule(L.LightningDataModule):
     def test_dataloader(self) -> DataLoader:
         """Test batches, in a fixed order."""
         return self._loader(self.test_set)
+
+    def predict_dataloader(self) -> DataLoader:
+        """The test set again, used by ``trainer.predict`` for example predictions."""
+        return self._loader(self.test_set)
+
+    def _loader(self, dataset: Dataset, shuffle: bool = False) -> DataLoader:
+        """Build a DataLoader with the batch size and workers from the config.
+
+        Args:
+            dataset: The dataset to batch.
+            shuffle: Whether to reshuffle the samples every epoch.
+
+        Returns:
+            The DataLoader.
+        """
+        return DataLoader(
+            dataset,
+            batch_size=self.hparams.batch_size,
+            shuffle=shuffle,
+            num_workers=self.hparams.num_workers,
+            persistent_workers=self.hparams.num_workers > 0,
+        )

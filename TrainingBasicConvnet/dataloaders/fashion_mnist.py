@@ -1,3 +1,5 @@
+"""Fashion-MNIST: download, normalize, split, and batch the images."""
+
 import torch
 from torch.utils.data import DataLoader, random_split
 from torchvision import datasets, transforms

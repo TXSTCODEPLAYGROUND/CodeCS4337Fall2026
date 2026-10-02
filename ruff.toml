@@ -1,4 +1,12 @@
+[format]
+# Code examples in the READMEs align their comments for readability.
+exclude = ["*.md"]
+
 [lint]
 # Project folders use CamelCase names (e.g. TrainingBasicConvnet) so they can be
 # imported as `from TrainingBasicConvnet import main`.
 extend-ignore = ["N999"]
+
+[lint.per-file-ignores]
+# main.py reruns itself as a package before its relative imports (see the top of the file).
+"*/main.py" = ["E402"]

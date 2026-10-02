@@ -1,7 +1,8 @@
 """Sphinx configuration for the course code repository.
 
-Heavy libraries (PyTorch, Lightning, torchvision, NumPy, tqdm, python-dotenv)
-are mocked, so ``sphinx-build`` does not need them installed.
+Heavy libraries (PyTorch, Lightning, torchvision, torchmetrics, Matplotlib,
+NumPy, tqdm, python-dotenv) are mocked, so ``sphinx-build`` does not need them
+installed.
 """
 
 import sys
@@ -32,6 +33,8 @@ autodoc_mock_imports = [
     "lightning",
     "torch",
     "torchvision",
+    "torchmetrics",
+    "matplotlib",
     "numpy",
     "dotenv",
     "tqdm",

@@ -5,7 +5,7 @@ Example:
 .. code-block:: python
 
     from TrainingBasicConvnet import main
-    main("config01")
+    main("config01.json")
 """
 
 from .main import main

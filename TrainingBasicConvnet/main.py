@@ -4,31 +4,32 @@ Usage:
 
 .. code-block:: text
 
-    From inside this folder:     python main.py --config config01
-    From the repo root:          python -m TrainingBasicConvnet --config config01
-    From Python or a notebook:   from TrainingBasicConvnet import main
-                                 main("config01")
+    From the repo root:        python -m TrainingBasicConvnet --config config01.json
+    From this folder:          python main.py --config config01.json
+    Python or a notebook:      from TrainingBasicConvnet import main
+                               main("config01.json")
 """
 
+if __name__ == "__main__" and not __package__:
+    # Run as `python main.py`: relative imports need the package, so rerun as `python -m`.
+    import runpy
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    runpy.run_module(
+        Path(__file__).resolve().parent.name, run_name="__main__", alter_sys=True
+    )
+    sys.exit()
+
 import argparse
-import importlib
 import json
 import os
 import platform
 import shutil
-import sys
 import time
 from datetime import datetime
 from pathlib import Path
-
-if __name__ == "__main__" and not __package__:
-    # Run as a plain script (`python main.py`): expose this folder as a package
-    # so the relative imports below work. Replacing sys.path[0] also stops the
-    # subpackages (models, utils, ...) from shadowing top-level modules.
-    _project_dir = Path(__file__).resolve().parent
-    sys.path[0] = str(_project_dir.parent)
-    __package__ = _project_dir.name
-    importlib.import_module(__package__)
 
 import torch
 from dotenv import load_dotenv
@@ -58,7 +59,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         required=True,
-        help="Config name or path, e.g. config01, config01.json, or configs/config01.json",
+        help="Config name or path, e.g. config01.json",
     )
     return parser.parse_args()
 
@@ -78,7 +79,7 @@ def main(config_path: str | Path | None = None) -> None:
     regardless of the current working directory.
 
     Args:
-        config_path: Config name or path, e.g. ``"config01"``. When given (as
+        config_path: Config name or path, e.g. ``"config01.json"``. When given (as
             when calling from a notebook), command-line arguments are ignored.
             When omitted, it is read from the required ``--config`` CLI flag.
             See ``utils.resolve_config_path`` for the lookup rules.
@@ -178,7 +179,3 @@ def main(config_path: str | Path | None = None) -> None:
             "best_checkpoint": trainer.best_checkpoint.name,
         },
     )
-
-
-if __name__ == "__main__":
-    main()

@@ -9,3 +9,28 @@
 # Each project writes to <OUTPUT_DIR>/<ProjectName>/<config>/<timestamp>/.
 DATA_DIR=/content/data
 OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs
+
+# -----Lit Logger setup-----:
+# LitLogger (optional, LitTrainingBasicConvnet with "litlogger": true):
+# You get the key from your Lightning AI account in the browser.
+# 1. Sign in at lightning.ai.
+# 2. Click your profile picture in the top-right corner and open Global Settings.
+# 3. Choose Keys in the left sidebar.
+# 4. Under Programmatic access, the Login via CLI box shows both values.
+# 5. Copy them into .env at the repo root:
+
+# You need to setup following if you are using litlogger
+# LIGHTNING_USER_ID=your-user-id
+# LIGHTNING_API_KEY=your-api-key
+
+# Do NOT put your Lightning AI keys in this file: it is tracked by git, so they
+# would be pushed to GitHub. In Colab, store them as Secrets instead (key icon
+# in the left sidebar), named LIGHTNING_USER_ID and LIGHTNING_API_KEY, with the
+# values from lightning.ai -> profile picture -> Global Settings -> Keys ->
+# "Login via CLI". Then run this cell before main():
+#   import os
+#   from google.colab import userdata
+#   for key in ("LIGHTNING_USER_ID", "LIGHTNING_API_KEY"):
+#       os.environ[key] = userdata.get(key)
+# Locally, put the two lines in .env instead (not tracked by git).
+# -----Lit Logger setup ends here-----:

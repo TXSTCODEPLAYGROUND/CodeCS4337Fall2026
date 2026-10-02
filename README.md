@@ -17,8 +17,12 @@ Function and class details are in the
 
 | Project | Description |
 | --- | --- |
-| [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST, with the training loop written in plain PyTorch. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
-| [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same experiment with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/), which provides the training loop, logging, and checkpointing. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) |
+| [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST with a training loop written in plain PyTorch, and organize the code into modules and packages. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
+| [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same experiment with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): the Lightning-Hydra-Template project layout, torchmetrics (precision, recall, per-class accuracy), learning-curve and prediction plots, and optional LitLogger tracking. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) |
+
+Each project folder has its own `README.md` explaining what the project is
+about and what it teaches. This README covers what all projects share: setup,
+running, configs, and where data and results go.
 
 ## Repository structure
 
@@ -36,6 +40,7 @@ CodeCS4337Fall2026/
 ├── runs/                  # Experiment results, one subfolder per project (not in git)
 ├── docs/                  # Source of the online documentation (built automatically, see below)
 ├── TrainingBasicConvnet/  # One project = one Python package
+│   ├── README.md          # What this project is about
 │   ├── __init__.py        # Makes the folder importable: from TrainingBasicConvnet import main
 │   ├── __main__.py        # Makes `python -m TrainingBasicConvnet` work
 │   ├── main.py            # Entry point: main(config) runs a full experiment
@@ -45,15 +50,16 @@ CodeCS4337Fall2026/
 │   ├── trainers/          # Training and evaluation loop
 │   └── utils/             # Helpers (paths, seeding, run folders)
 └── LitTrainingBasicConvnet/  # Same experiment with PyTorch Lightning
-    ├── __init__.py, __main__.py, main.py, configs/  # Same roles as above
-    ├── model.py           # LitConvNet: the network and what to do with one batch
-    └── data.py            # FashionMNISTDataModule: download, split, dataloaders
+    ├── README.md, __init__.py, __main__.py, main.py, configs/  # Same roles as above
+    ├── models/            # LightningModule, and plain networks in models/components/
+    ├── dataloaders/       # LightningDataModule: download, split, batch
+    └── utils/             # Helpers (paths, run summaries, plots)
 ```
 
 Every project has the same entry points (`main.py`, `configs/`) and is run the
-same way. Lightning projects are flatter:
-Lightning supplies the training loop, logging, and checkpointing, so the model
-and data each fit in one file.
+same way. Lightning projects have no `trainers/` folder, because Lightning's
+`Trainer` replaces the hand-written training loop; their layout is explained
+in the [LitTrainingBasicConvnet README](LitTrainingBasicConvnet/README.md).
 
 ### The `.env` and `.envcolab` files
 
@@ -61,6 +67,10 @@ One settings file at the repo root is shared by every project:
 
 - `DATA_DIR`: where datasets are stored.
 - `OUTPUT_DIR`: where experiment results are written.
+- `LIGHTNING_USER_ID` and `LIGHTNING_API_KEY` (optional): your Lightning AI
+  keys, only needed for LitLogger (see the
+  [LitTrainingBasicConvnet README](LitTrainingBasicConvnet/README.md#litlogger-optional)).
+  Add them to `.env` only, never to `.envcolab`, which is tracked by git.
 
 Relative paths (like `data` or `runs`) are resolved against the repo root, so
 it does not matter which folder you run from. Absolute paths are used as-is.
@@ -155,22 +165,9 @@ runs/
             └── results_epoch09_valacc0.9243_testacc0.9186.json  # Final metrics
 ```
 
-Lightning projects write their own files into the run folder:
-
-```
-runs/LitTrainingBasicConvnet/config01/
-├── runs_summary.csv
-└── 2026-10-02_11-00-57/
-    ├── config.json                    # Exact copy of the config used
-    ├── metrics.csv                    # Loss and accuracy for every epoch (Lightning's CSVLogger)
-    ├── hparams.yaml                   # Model and data settings
-    ├── best_epoch08_valacc0.9240.ckpt # Checkpoint with the best validation accuracy
-    └── last.ckpt                      # Checkpoint after the last epoch
-```
-
-Lightning counts epochs from 0, so `best_epoch08` is the ninth epoch. A
-Lightning checkpoint can be reloaded with
-`LitConvNet.load_from_checkpoint("path/to/file.ckpt")`.
+Lightning projects use the same folders but write their own files into each
+run (metrics, checkpoints, and plots); see the
+[LitTrainingBasicConvnet README](LitTrainingBasicConvnet/README.md#run-folder).
 
 - **Locally**, results go to `runs/` at the repo root (`OUTPUT_DIR=runs` in
   `.env`).
@@ -235,7 +232,7 @@ Colab:
 the shell:
 
 ```python
-!cd /content/CodeCS4337Fall2026 && python -m TrainingBasicConvnet --config config01
+!cd /content/CodeCS4337Fall2026 && python -m TrainingBasicConvnet --config config01.json
 ```
 
 **A2. From Colab's terminal (Colab Pro).** Open the terminal with the
@@ -243,14 +240,7 @@ the shell:
 
 ```bash
 cd /content/CodeCS4337Fall2026
-python -m TrainingBasicConvnet --config config01
-```
-
-or, from inside the project folder:
-
-```bash
-cd /content/CodeCS4337Fall2026/TrainingBasicConvnet
-python main.py --config config01
+python -m TrainingBasicConvnet --config config01.json
 ```
 
 The terminal runs on the same Colab machine as the notebook, so it sees the
@@ -263,7 +253,7 @@ terminal. While training runs in the terminal, the notebook stays free.
 ```python
 from TrainingBasicConvnet import main
 
-main("config01")
+main("config01.json")
 ```
 
 Both options run the same training and save results to the same Drive folder.
@@ -341,7 +331,7 @@ Then run the requirements loop from the setup cell of
 ```python
 from TrainingBasicConvnet import main
 
-main("config01")
+main("config01.json")
 ```
 
 ### Keeping your work in Google Drive
@@ -397,26 +387,32 @@ When projects are added later, run this again after `git pull` (see
 
 ### 3. Run the experiment
 
-Either from inside the project folder:
+From the repo root, use `python -m` and the project name:
+
+```bash
+python -m TrainingBasicConvnet --config config01.json
+python -m LitTrainingBasicConvnet --config config01.json
+```
+
+or, from inside a project folder:
 
 ```bash
 cd TrainingBasicConvnet
-python main.py --config config01
+python main.py --config config01.json
 ```
 
-or from the repo root:
-
-```bash
-python -m TrainingBasicConvnet --config config01
-```
+Both do the same thing. The projects are packages, so when `main.py` is run
+directly it puts the repo root on the import path and reruns itself as
+`python -m <Project>`. Outputs and data still go to the repo root.
 
 `--config` accepts a name (`config01`), a file name (`config01.json`), or a
 path (`configs/config01.json`). Results are written to
 `runs/TrainingBasicConvnet/config01/<timestamp>/`, and the dataset is stored in
 the shared `data/` folder, both at the repo root.
 
-The first line of output shows which device is used (e.g. `device: cuda`).
-With the default `"device": "auto"`:
+The first line of output shows which device is used (e.g. `device: cuda`;
+Lightning projects print `GPU available: True (cuda), used: True`). With the
+default `"device": "auto"` (`"accelerator": "auto"` in Lightning projects):
 
 - **NVIDIA GPU (Linux/Windows):** uses CUDA if your PyTorch install supports
   it. On Windows, the default `pip` install of PyTorch is CPU-only; for GPU
@@ -428,25 +424,14 @@ With the default `"device": "auto"`:
   run with `PYTORCH_ENABLE_MPS_FALLBACK=1` set, or set `"device": "cpu"`.
 - **Otherwise:** trains on the CPU. That is fine for this project, just slower.
 
-You can also call it from Python or a local Jupyter notebook started at the
-repo root:
+You can also call a project from Python or a local Jupyter notebook started at
+the repo root:
 
 ```python
-from TrainingBasicConvnet import main
+from TrainingBasicConvnet import main          # or: from LitTrainingBasicConvnet import main
 
-main("config01")
+main("config01.json")
 ```
-
-`LitTrainingBasicConvnet` is run only from the repo root:
-
-```bash
-python -m LitTrainingBasicConvnet --config config01.json
-```
-
-or, from Python or a notebook started at the repo root,
-`from LitTrainingBasicConvnet import main` and `main("config01.json")`.
-Lightning prints the device it picked at the start of training (e.g.
-`GPU available: True (cuda), used: True`).
 
 ## Getting updates
 
@@ -492,6 +477,8 @@ ruff check . --fix    # Fix the ones that can be fixed automatically
 ruff format .         # Reformat code in a consistent style
 ```
 
-The only setting in `ruff.toml` allows CamelCase folder names such as
-`TrainingBasicConvnet`, which Ruff would otherwise flag. We use CamelCase
-names so each project can be imported as `from TrainingBasicConvnet import main`.
+`ruff.toml` allows CamelCase folder names such as `TrainingBasicConvnet`,
+which Ruff would otherwise flag. We use CamelCase names so each project can be
+imported as `from TrainingBasicConvnet import main`. It also allows imports
+below the short block at the top of each `main.py` that makes
+`python main.py` work from inside a project folder.

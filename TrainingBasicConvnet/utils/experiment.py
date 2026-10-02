@@ -1,3 +1,5 @@
+"""Run folders and the ``runs_summary.csv`` file that compares runs."""
+
 import csv
 from datetime import datetime
 from pathlib import Path

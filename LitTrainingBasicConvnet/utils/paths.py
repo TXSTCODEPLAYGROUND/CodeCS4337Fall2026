@@ -3,7 +3,7 @@
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parents[1]
-"""The project folder, e.g. ``.../CodeCS4337Fall2026/TrainingBasicConvnet``."""
+"""The project folder, e.g. ``.../CodeCS4337Fall2026/LitTrainingBasicConvnet``."""
 PROJECT_NAME = PROJECT_DIR.name
 """The project folder's name, used as the subfolder of ``OUTPUT_DIR``."""
 REPO_DIR = PROJECT_DIR.parent
@@ -15,8 +15,8 @@ CONFIGS_DIR = PROJECT_DIR / "configs"
 def resolve_repo_path(path: str | Path) -> Path:
     """Resolve ``path`` against the repo root unless it is absolute.
 
-    This keeps data and outputs in the same place whatever the current working
-    directory is, e.g. for a notebook started outside the repo.
+    Data and results then land in the same place whatever the current working
+    directory is.
 
     Args:
         path: An absolute path, or a path relative to the repo root.
@@ -31,9 +31,8 @@ def resolve_repo_path(path: str | Path) -> Path:
 def resolve_config_path(config: str | Path) -> Path:
     """Locate a JSON config file.
 
-    Lookup order: ``config`` as given (absolute, or relative to the current
-    working directory), then relative to the project directory, then inside
-    ``configs/``. The ``.json`` extension may be omitted, so ``"config01"``,
+    ``config`` is tried as given, then relative to the project folder, then
+    inside ``configs/``, each with and without ``.json``. So ``"config01"``,
     ``"config01.json"``, and ``"configs/config01.json"`` all work.
 
     Args:
@@ -47,13 +46,9 @@ def resolve_config_path(config: str | Path) -> Path:
             available configs.
     """
     config = Path(config).expanduser()
-    names = [config] if config.suffix else [config.with_suffix(".json"), config]
-    for name in names:
-        for candidate in (name, PROJECT_DIR / name, CONFIGS_DIR / name):
+    for base in (config, PROJECT_DIR / config, CONFIGS_DIR / config):
+        for candidate in (base, base.with_suffix(".json")):
             if candidate.is_file():
                 return candidate.resolve()
-
     available = sorted(p.name for p in CONFIGS_DIR.glob("*.json"))
-    raise FileNotFoundError(
-        f"Config {str(config)!r} not found. Available in {CONFIGS_DIR}: {available}"
-    )
+    raise FileNotFoundError(f"Config {str(config)!r} not found. Available: {available}")

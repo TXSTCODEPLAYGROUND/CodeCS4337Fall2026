@@ -1,3 +1,5 @@
+"""The hand-written training loop: train, validate, checkpoint, and record history."""
+
 import json
 from pathlib import Path
 from typing import Any

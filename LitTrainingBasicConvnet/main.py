@@ -1,70 +1,81 @@
 """Train a ConvNet on Fashion-MNIST with PyTorch Lightning.
 
-Run from the repo root:
+Usage:
 
 .. code-block:: text
 
-    Terminal:                  python -m LitTrainingBasicConvnet --config config01.json
+    From the repo root:        python -m LitTrainingBasicConvnet --config config01.json
+    From this folder:          python main.py --config config01.json
     Python or a notebook:      from LitTrainingBasicConvnet import main
                                main("config01.json")
 """
 
+if __name__ == "__main__" and not __package__:
+    # Run as `python main.py`: relative imports need the package, so rerun as `python -m`.
+    import runpy
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    runpy.run_module(
+        Path(__file__).resolve().parent.name, run_name="__main__", alter_sys=True
+    )
+    sys.exit()
+
 import argparse
-import csv
 import json
 import os
 import shutil
+import warnings
 from datetime import datetime
 from pathlib import Path
 
 import lightning as L
+import torch
 from dotenv import load_dotenv
 from lightning.pytorch.callbacks import ModelCheckpoint
-from lightning.pytorch.loggers import CSVLogger
+from lightning.pytorch.loggers import CSVLogger, LitLogger
 
-from .data import FashionMNISTDataModule
-from .model import LitConvNet
-
-PROJECT_DIR = Path(__file__).resolve().parent
-REPO_DIR = PROJECT_DIR.parent
-
-
-def resolve_repo_path(path: str | Path) -> Path:
-    """Return ``path`` unchanged if absolute, otherwise relative to the repo root."""
-    path = Path(path).expanduser()
-    return path if path.is_absolute() else REPO_DIR / path
-
-
-def resolve_config_path(config: str | Path) -> Path:
-    """Find a config given as ``config01``, ``config01.json``, or ``configs/config01.json``.
-
-    Raises:
-        FileNotFoundError: If no matching file exists.
-    """
-    config = Path(config).expanduser()
-    for base in (config, PROJECT_DIR / config, PROJECT_DIR / "configs" / config):
-        for candidate in (base, base.with_suffix(".json")):
-            if candidate.is_file():
-                return candidate.resolve()
-    available = sorted(p.name for p in (PROJECT_DIR / "configs").glob("*.json"))
-    raise FileNotFoundError(f"Config {str(config)!r} not found. Available: {available}")
+from .dataloaders import (
+    FASHION_MNIST_CLASSES,
+    FASHION_MNIST_MEAN,
+    FASHION_MNIST_STD,
+    FashionMNISTDataModule,
+)
+from .models import ConvNet, LitConvNet
+from .utils import (
+    PROJECT_NAME,
+    REPO_DIR,
+    append_run_summary,
+    resolve_config_path,
+    resolve_repo_path,
+    save_run_plots,
+)
 
 
 def main(config_path: str | Path | None = None) -> dict[str, float]:
     """Train, then test the best checkpoint, using a JSON config.
 
     Results go to ``<OUTPUT_DIR>/LitTrainingBasicConvnet/<config_name>/<timestamp>/``:
-    a copy of the config, ``metrics.csv`` (per-epoch metrics), ``hparams.yaml``,
-    and the best and last checkpoints. A row is appended to ``runs_summary.csv``
-    next to the run folders. ``DATA_DIR`` and ``OUTPUT_DIR`` come from the
-    ``.env`` file at the repo root.
+    a copy of the config, ``metrics.csv`` (per-epoch metrics), ``hparams.json``,
+    the best and last checkpoints, and PNG plots (learning curves and example
+    predictions). A row is appended to ``runs_summary.csv`` next to the run
+    folders. ``DATA_DIR`` and ``OUTPUT_DIR`` come from the ``.env`` file at the
+    repo root.
+
+    When the config sets ``"litlogger": true``, metrics and plots are also sent
+    to `LitLogger <https://lightning.ai/docs/pytorch/stable/visualize/experiment_managers.html>`__
+    on lightning.ai. This needs ``LIGHTNING_USER_ID`` and ``LIGHTNING_API_KEY``
+    in ``.env``; if they are missing or it can't connect, the run continues with
+    local logs only.
 
     Args:
         config_path: Config name or path, e.g. ``"config01.json"``. When
             omitted, it is read from the required ``--config`` command-line flag.
 
     Returns:
-        Test metrics of the best checkpoint: ``test_loss`` and ``test_acc``.
+        Test metrics of the best checkpoint, e.g. ``test_loss``, ``test_acc``,
+        ``test_precision``, ``test_recall``, and the per-class accuracies.
     """
     load_dotenv(REPO_DIR / ".env")
     if config_path is None:
@@ -83,18 +94,23 @@ def main(config_path: str | Path | None = None) -> dict[str, float]:
         **data_cfg,
     )
     model = LitConvNet(
-        dropout=model_cfg["dropout"],
+        net=ConvNet(dropout=model_cfg["dropout"]),
+        class_names=list(FASHION_MNIST_CLASSES),
         lr=train_cfg["lr"],
         weight_decay=train_cfg["weight_decay"],
     )
 
-    # Logs land in <OUTPUT_DIR>/<project>/<config_name>/<timestamp>/.
-    experiment_dir = (
-        resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_DIR.name
-    )
     run_id = datetime.now().astimezone().strftime("%Y-%m-%d_%H-%M-%S")
-    logger = CSVLogger(save_dir=experiment_dir, name=config_path.stem, version=run_id)
-    run_dir = Path(logger.log_dir)
+    csv_logger = CSVLogger(
+        save_dir=resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_NAME,
+        name=config_path.stem,
+        version=run_id,
+    )
+    run_dir = Path(csv_logger.log_dir)
+    lit_logger = None
+    if config["litlogger"]:
+        lit_logger = _connect_litlogger(run_dir, f"{PROJECT_NAME}-{config_path.stem}")
+    loggers = [csv_logger] + ([lit_logger] if lit_logger else [])
     checkpoint = ModelCheckpoint(
         dirpath=run_dir,
         filename="best_epoch{epoch:02d}_valacc{val_acc:.4f}",
@@ -107,35 +123,77 @@ def main(config_path: str | Path | None = None) -> dict[str, float]:
     trainer = L.Trainer(
         max_epochs=train_cfg["epochs"],
         accelerator=config["accelerator"],
-        logger=logger,
+        logger=loggers,
         callbacks=[checkpoint],
     )
     trainer.fit(model, datamodule=data)
     (test_metrics,) = trainer.test(datamodule=data, ckpt_path="best")
+    preds = torch.cat(trainer.predict(datamodule=data, ckpt_path="best"))
 
     shutil.copy(config_path, run_dir / "config.json")
-    summary_path = run_dir.parent / "runs_summary.csv"
-    row = {
-        "run_id": run_id,
-        "epochs": train_cfg["epochs"],
-        "best_val_acc": f"{checkpoint.best_model_score.item():.4f}",
-        "test_acc": f"{test_metrics['test_acc']:.4f}",
-        "test_loss": f"{test_metrics['test_loss']:.4f}",
-        "lr": train_cfg["lr"],
-        "weight_decay": train_cfg["weight_decay"],
-        "batch_size": data_cfg["batch_size"],
-        "dropout": model_cfg["dropout"],
-        "seed": config["seed"],
-        "best_checkpoint": Path(checkpoint.best_model_path).name,
-    }
-    is_new = not summary_path.exists()
-    with summary_path.open("a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=list(row))
-        if is_new:
-            writer.writeheader()
-        writer.writerow(row)
+    hparams = {"model": dict(model.hparams), "data": dict(data.hparams)}
+    (run_dir / "hparams.json").write_text(json.dumps(hparams, indent=2))
+    plots = save_run_plots(
+        run_dir,
+        class_names=model.hparams.class_names,
+        metric_class_names=model.metric_class_names,
+        test_set=data.test_set,
+        preds=preds,
+        mean=FASHION_MNIST_MEAN[0],
+        std=FASHION_MNIST_STD[0],
+    )
+    if lit_logger:
+        for path in [run_dir / "config.json", run_dir / "hparams.json", *plots]:
+            lit_logger.log_file(str(path))
+        print(f"LitLogger run: {lit_logger.url}")
+    append_run_summary(
+        run_dir.parent / "runs_summary.csv",
+        {
+            "run_id": run_id,
+            "epochs": train_cfg["epochs"],
+            "best_val_acc": f"{checkpoint.best_model_score.item():.4f}",
+            "test_acc": f"{test_metrics['test_acc']:.4f}",
+            "test_precision": f"{test_metrics['test_precision']:.4f}",
+            "test_recall": f"{test_metrics['test_recall']:.4f}",
+            "test_loss": f"{test_metrics['test_loss']:.4f}",
+            "lr": train_cfg["lr"],
+            "weight_decay": train_cfg["weight_decay"],
+            "batch_size": data_cfg["batch_size"],
+            "dropout": model_cfg["dropout"],
+            "seed": config["seed"],
+            "best_checkpoint": Path(checkpoint.best_model_path).name,
+        },
+    )
     return test_metrics
 
 
-if __name__ == "__main__":
-    main()
+def _connect_litlogger(run_dir: Path, name: str) -> "LitLogger | None":
+    """Create a LitLogger and connect now, so a failure doesn't stop training later.
+
+    Credentials come only from ``LIGHTNING_USER_ID`` and ``LIGHTNING_API_KEY``
+    (loaded from ``.env``). Without them the Lightning SDK would fall back to a
+    browser login, which hangs in Colab and over SSH, so LitLogger is skipped.
+
+    Args:
+        run_dir: Run folder; LitLogger keeps its local files in ``run_dir/litlogger``.
+        name: Experiment name on lightning.ai (a timestamp is added to it).
+
+    Returns:
+        The connected logger, or ``None`` if it is not configured or can't connect.
+    """
+    keys = ("LIGHTNING_USER_ID", "LIGHTNING_API_KEY")
+    missing = [key for key in keys if not os.getenv(key)]
+    if missing:
+        warnings.warn(
+            f"LitLogger disabled: add {' and '.join(missing)} to .env", stacklevel=2
+        )
+        return None
+    try:
+        # save_logs=True would record the terminal by relaunching the script from
+        # sys.argv, which breaks `python -m` and notebooks.
+        logger = LitLogger(root_dir=run_dir / "litlogger", name=name, save_logs=False)
+        _ = logger.experiment
+        return logger
+    except (RuntimeError, OSError) as err:
+        warnings.warn(f"LitLogger disabled, logging locally only: {err}", stacklevel=2)
+        return None
