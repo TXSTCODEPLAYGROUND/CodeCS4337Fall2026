@@ -13,6 +13,7 @@ the docstrings in that package.
    TrainingBasicConvnet
    LitTrainingBasicNeuralNetwork
    LitTrainingBasicConvnet
+   LitWBTrainingBasicNeuralNetwork
    LitWBTrainingBasicConvnet
 
 .. toctree::
