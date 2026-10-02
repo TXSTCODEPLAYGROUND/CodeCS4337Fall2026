@@ -11,6 +11,7 @@ the docstrings in that package.
 
    TrainingBasicConvnet
    LitTrainingBasicConvnet
+   LitWBTrainingBasicConvnet
 
 Building these pages
 --------------------

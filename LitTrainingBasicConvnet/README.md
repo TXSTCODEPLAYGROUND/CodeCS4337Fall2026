@@ -163,19 +163,12 @@ It is off by default, because it needs a Lightning AI account. To turn it on:
    is ever pushed by mistake, create a new one on the same page.
 
    **In Colab**, the setup cell overwrites `.env`, so store the two values as
-   Colab *Secrets* instead (key icon in the left sidebar), and run this cell
-   before starting the run:
-
-   ```python
-   import os
-   from google.colab import userdata
-
-   for key in ("LIGHTNING_USER_ID", "LIGHTNING_API_KEY"):
-       os.environ[key] = userdata.get(key)
-   ```
-
-   Then run the project with Option B (from Python) in the same notebook; an
-   Option A `!` command also sees these variables.
+   Colab *Secrets* named `LIGHTNING_USER_ID` and `LIGHTNING_API_KEY` instead
+   (key icon in the left sidebar). Then run the **Load API keys** cell of
+   [`starternotebook.ipynb`](../starternotebook.ipynb), after the setup cells
+   and before running the project. It copies the keys from your Secrets to the
+   notebook's environment and to `.env`, so every way of running works: from
+   the notebook (Option A1 or B) and from Colab's terminal (A2).
 3. Set `"litlogger": true` in your config.
 
 The run prints a link to its page on lightning.ai. If the keys are missing

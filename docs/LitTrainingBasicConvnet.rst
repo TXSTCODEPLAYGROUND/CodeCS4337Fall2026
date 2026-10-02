@@ -130,7 +130,9 @@ of each run also appear on lightning.ai, where runs can be watched live and
 compared. It needs a free Lightning AI account, so it is off by default. To
 turn it on, copy ``LIGHTNING_USER_ID`` and ``LIGHTNING_API_KEY`` from
 lightning.ai (profile picture, *Global Settings*, *Keys*, *Login via CLI*)
-into ``.env`` and set ``"litlogger": true`` in the config. Without the keys it
+into ``.env`` (in Colab: add them as Colab Secrets and run the starter
+notebook's *Load API keys* cell) and set ``"litlogger": true`` in the config.
+Without the keys it
 is skipped with a warning. The local ``metrics.csv`` and plots are written
 either way.
 

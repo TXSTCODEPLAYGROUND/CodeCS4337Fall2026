@@ -19,6 +19,7 @@ Function and class details are in the
 | --- | --- |
 | [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST with a training loop written in plain PyTorch, and organize the code into modules and packages. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
 | [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same experiment with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): the Lightning-Hydra-Template project layout, torchmetrics (precision, recall, per-class accuracy), learning-curve and prediction plots, and optional LitLogger tracking. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) |
+| [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | The Lightning experiment tracked with [Weights & Biases](https://wandb.ai): live charts, a test-prediction table, and a confusion matrix on wandb.ai instead of plotting code, with an offline mode when there is no key or the login fails. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) |
 
 Each project folder has its own `README.md` explaining what the project is
 about and what it teaches. This README covers what all projects share: setup,
@@ -49,11 +50,14 @@ CodeCS4337Fall2026/
 │   ├── models/            # Network definitions
 │   ├── trainers/          # Training and evaluation loop
 │   └── utils/             # Helpers (paths, seeding, run folders)
-└── LitTrainingBasicConvnet/  # Same experiment with PyTorch Lightning
-    ├── README.md, __init__.py, __main__.py, main.py, configs/  # Same roles as above
-    ├── models/            # LightningModule, and plain networks in models/components/
-    ├── dataloaders/       # LightningDataModule: download, split, batch
-    └── utils/             # Helpers (paths, run summaries, plots)
+├── LitTrainingBasicConvnet/  # Same experiment with PyTorch Lightning
+│   ├── README.md, __init__.py, __main__.py, main.py, configs/  # Same roles as above
+│   ├── models/            # LightningModule, and plain networks in models/components/
+│   ├── dataloaders/       # LightningDataModule: download, split, batch
+│   └── utils/             # Helpers (paths, run summaries, plots)
+└── LitWBTrainingBasicConvnet/  # Same Lightning experiment, tracked with W&B
+    ├── ...                # Same as LitTrainingBasicConvnet, without utils/plots.py
+    └── callbacks/         # Logs test predictions and a confusion matrix to W&B
 ```
 
 Every project has the same entry points (`main.py`, `configs/`) and is run the
@@ -70,7 +74,14 @@ One settings file at the repo root is shared by every project:
 - `LIGHTNING_USER_ID` and `LIGHTNING_API_KEY` (optional): your Lightning AI
   keys, only needed for LitLogger (see the
   [LitTrainingBasicConvnet README](LitTrainingBasicConvnet/README.md#litlogger-optional)).
-  Add them to `.env` only, never to `.envcolab`, which is tracked by git.
+- `WANDB_API_KEY` (optional): your Weights & Biases key, used by
+  LitWBTrainingBasicConvnet (see its
+  [README](LitWBTrainingBasicConvnet/README.md#set-up-your-wb-key)). Without
+  it, or if the login fails, W&B logs locally and the run can be uploaded later.
+
+Add keys to `.env` only, never to `.envcolab`, which is tracked by git. In
+Colab, store them as Colab Secrets instead and run the starter notebook's
+**Load API keys** cell (see [Running in Google Colab](#running-in-google-colab)).
 
 Relative paths (like `data` or `runs`) are resolved against the repo root, so
 it does not matter which folder you run from. Absolute paths are used as-is.
@@ -207,7 +218,7 @@ The notebook has three parts:
 
 | Part | What it does |
 | --- | --- |
-| **1. Setup** | Mounts Google Drive (Colab asks you to allow access), clones the repo into `/content/CodeCS4337Fall2026` (or runs `git pull` if it is already there), copies `.envcolab` to `.env`, installs only the missing requirements, and moves the notebook into the repo folder. |
+| **1. Setup** | Mounts Google Drive (Colab asks you to allow access), clones the repo into `/content/CodeCS4337Fall2026` (or runs `git pull` if it is already there), copies `.envcolab` to `.env`, installs only the missing requirements, and moves the notebook into the repo folder. Then the optional **Load API keys** cell loads `.env` and copies any missing tracker keys (`WANDB_API_KEY`, `LIGHTNING_USER_ID`, `LIGHTNING_API_KEY`) from your Colab Secrets into the environment and `.env`, printing which keys were found. Run it before any project, from the notebook or from Colab's terminal. |
 | **2. Run a project** | Choose **Option A** (terminal command) or **Option B** (from Python), see below. |
 | **3. Results** | Shows `runs_summary.csv` from your Drive. |
 
@@ -215,7 +226,8 @@ It ends with [pro tips](#pro-tips-keep-training-running) for keeping long
 training runs alive.
 
 The setup cells are safe to run again at any time, for example to get new
-projects after they are added. The setup cell installs the packages for every
+projects after they are added (the setup cell rewrites `.env`, so run the
+API-key cell again after it). The setup cell installs the packages for every
 project, so to run a different project you only change the project name in the
 run cells (e.g. `LitTrainingBasicConvnet` instead of `TrainingBasicConvnet`).
 
@@ -246,7 +258,10 @@ python -m TrainingBasicConvnet --config config01.json
 The terminal runs on the same Colab machine as the notebook, so it sees the
 same files, installed packages, and Drive mount. **Run the notebook's setup
 cells first**: Drive can only be mounted from a notebook cell, not from the
-terminal. While training runs in the terminal, the notebook stays free.
+terminal. The same goes for Colab Secrets: if a project needs an API key, run
+the **Load API keys** cell too, which saves the keys to `.env` where the
+terminal finds them. While training runs in the terminal, the notebook stays
+free.
 
 ### Option B: run from Python
 
@@ -293,7 +308,8 @@ your Drive.
 - Test a new config with few epochs first (e.g. `"epochs": 1`), then start the
   full run.
 - Prefer several shorter runs over one very long run.
-- After a disconnect, re-run the setup cells, then start the run again.
+- After a disconnect, re-run the setup cells (and the **Load API keys** cell,
+  if you use W&B or LitLogger), then start the run again.
 - When done, use *Runtime → Disconnect and delete runtime* to save your GPU
   quota (or compute units on paid plans).
 
@@ -457,7 +473,8 @@ when nothing changed.
 - `data/`, `runs/`, and `.env` are not in git, so pulling never changes your
   datasets, results, or local settings.
 - **In Colab**, just re-run the setup cells of the starter notebook. They run
-  `git pull` and install any missing packages.
+  `git pull` and install any missing packages. The setup cell rewrites `.env`,
+  so run the **Load API keys** cell again afterwards if you use API keys.
 
 ## About `ruff.toml` (you can ignore it for now)
 
