@@ -1,3 +1,5 @@
+"""Seeding for reproducible runs, and choosing the device to train on."""
+
 import random
 
 import numpy as np

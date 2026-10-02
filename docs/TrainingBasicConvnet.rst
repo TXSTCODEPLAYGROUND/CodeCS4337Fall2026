@@ -3,18 +3,26 @@ TrainingBasicConvnet
 
 Train a small convolutional network on Fashion-MNIST.
 
+Run from the repository root:
+
+.. code-block:: bash
+
+   python -m TrainingBasicConvnet --config config01.json
+
+or, from inside the project folder:
+
+.. code-block:: bash
+
+   cd TrainingBasicConvnet
+   python main.py --config config01.json
+
+or, from Python or a notebook started at the repository root:
+
 .. code-block:: python
 
    from TrainingBasicConvnet import main
 
-   main("config01")
-
-The same experiment can be started from the terminal, from the repository
-root:
-
-.. code-block:: bash
-
-   python -m TrainingBasicConvnet --config config01
+   main("config01.json")
 
 ``--config`` accepts a name (``config01``), a file name (``config01.json``),
 or a path (``configs/config01.json``). Hyperparameters live in
