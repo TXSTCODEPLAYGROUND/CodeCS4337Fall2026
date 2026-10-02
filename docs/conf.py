@@ -28,6 +28,17 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = []
 html_baseurl = "https://txstcodeplayground.github.io/CodeCS4337Fall2026/"
 
+# GitHub link at the top right of every page; "blob" opens the source file for
+# reading, not GitHub's editor.
+html_context = {
+    "display_github": True,
+    "github_user": "TXSTCODEPLAYGROUND",
+    "github_repo": "CodeCS4337Fall2026",
+    "github_version": "main",
+    "conf_py_path": "/docs/",
+    "vcs_pageview_mode": "blob",
+}
+
 # Import names, not pip names: python-dotenv is imported as ``dotenv``.
 autodoc_mock_imports = [
     "lightning",
