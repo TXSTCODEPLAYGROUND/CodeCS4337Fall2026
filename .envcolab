@@ -11,7 +11,7 @@ DATA_DIR=/content/data
 OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs
 
 # -----Lit Logger setup-----:
-# LitLogger (optional, LitTrainingBasicConvnet with "litlogger": true):
+# LitLogger (optional, LitTraining* projects with "litlogger": true):
 # You get the key from your Lightning AI account in the browser.
 # 1. Sign in at lightning.ai.
 # 2. Click your profile picture in the top-right corner and open Global Settings.
@@ -33,7 +33,7 @@ OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs
 # -----Lit Logger setup ends here-----:
 
 # -----W&B setup-----:
-# W&B (optional, LitWBTrainingBasicConvnet). Without a key, or if the login
+# W&B (optional, LitWBTraining* projects). Without a key, or if the login
 # fails, runs are logged offline and print a `wandb sync ...` command to
 # upload them later.
 # You get the key from your W&B account in the browser:
