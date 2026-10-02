@@ -19,6 +19,7 @@ Function and class details are in the
 | --- | --- |
 | [TrainingBasicNeuralNetwork](TrainingBasicNeuralNetwork/) | Start here: train a fully connected neural network (only `nn.Linear` layers, no convolutions) on Fashion-MNIST in plain PyTorch, and see what layers, activations, dropout, and parameters are. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicNeuralNetwork.html) |
 | [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST with a training loop written in plain PyTorch, and organize the code into modules and packages. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
+| [LitTrainingBasicNeuralNetwork](LitTrainingBasicNeuralNetwork/) | The fully connected network of TrainingBasicNeuralNetwork trained with PyTorch Lightning, with the same layout, metrics, plots, and optional LitLogger tracking as LitTrainingBasicConvnet. Shows that swapping the network changes nothing else. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicNeuralNetwork.html) |
 | [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same experiment with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): the Lightning-Hydra-Template project layout, torchmetrics (precision, recall, per-class accuracy), learning-curve and prediction plots, and optional LitLogger tracking. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) |
 | [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | The Lightning experiment tracked with [Weights & Biases](https://wandb.ai): live charts, a test-prediction table, and a confusion matrix on wandb.ai instead of plotting code, with an offline mode when there is no key or the login fails. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) |
 
@@ -57,6 +58,7 @@ CodeCS4337Fall2026/
 │   ├── models/            # LightningModule, and plain networks in models/components/
 │   ├── dataloaders/       # LightningDataModule: download, split, batch
 │   └── utils/             # Helpers (paths, run summaries, plots)
+├── LitTrainingBasicNeuralNetwork/  # Same as LitTrainingBasicConvnet, with an MLP in models/components/
 └── LitWBTrainingBasicConvnet/  # Same Lightning experiment, tracked with W&B
     ├── ...                # Same as LitTrainingBasicConvnet, without utils/plots.py
     └── callbacks/         # Logs test predictions and a confusion matrix to W&B
