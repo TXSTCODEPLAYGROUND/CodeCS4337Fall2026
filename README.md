@@ -17,6 +17,7 @@ Function and class details are in the
 
 | Project | Description |
 | --- | --- |
+| [TrainingBasicNeuralNetwork](TrainingBasicNeuralNetwork/) | Start here: train a fully connected neural network (only `nn.Linear` layers, no convolutions) on Fashion-MNIST in plain PyTorch, and see what layers, activations, dropout, and parameters are. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicNeuralNetwork.html) |
 | [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST with a training loop written in plain PyTorch, and organize the code into modules and packages. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
 | [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same experiment with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): the Lightning-Hydra-Template project layout, torchmetrics (precision, recall, per-class accuracy), learning-curve and prediction plots, and optional LitLogger tracking. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) |
 | [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | The Lightning experiment tracked with [Weights & Biases](https://wandb.ai): live charts, a test-prediction table, and a confusion matrix on wandb.ai instead of plotting code, with an offline mode when there is no key or the login fails. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) |
@@ -50,6 +51,7 @@ CodeCS4337Fall2026/
 │   ├── models/            # Network definitions
 │   ├── trainers/          # Training and evaluation loop
 │   └── utils/             # Helpers (paths, seeding, run folders)
+├── TrainingBasicNeuralNetwork/  # Same layout, with a fully connected network (models/mlp.py)
 ├── LitTrainingBasicConvnet/  # Same experiment with PyTorch Lightning
 │   ├── README.md, __init__.py, __main__.py, main.py, configs/  # Same roles as above
 │   ├── models/            # LightningModule, and plain networks in models/components/
@@ -115,6 +117,9 @@ change hyperparameters.
   Silicon GPU, then the CPU), `"cuda"`, `"mps"` (Apple Silicon GPU), or `"cpu"`.
   Lightning projects use Lightning's name for this field, `"accelerator"`, with
   the values `"auto"`, `"gpu"`, `"mps"`, or `"cpu"`.
+- `model` holds the settings of the project's network, so it differs between
+  projects. TrainingBasicNeuralNetwork, for example, also sets the hidden
+  layers: `"model": {"hidden_sizes": [256, 128], "dropout": 0.2}`.
 - JSON is strict: keys and text values need double quotes, there is no comma
   after the last item in a block, and comments are not allowed.
 - In Colab, double-click a config in the file browser (left sidebar) to edit it,

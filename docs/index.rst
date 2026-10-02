@@ -9,6 +9,7 @@ the docstrings in that package.
    :maxdepth: 2
    :caption: Projects
 
+   TrainingBasicNeuralNetwork
    TrainingBasicConvnet
    LitTrainingBasicConvnet
    LitWBTrainingBasicConvnet

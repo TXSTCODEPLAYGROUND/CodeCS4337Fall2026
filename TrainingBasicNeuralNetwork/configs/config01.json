@@ -1,0 +1,18 @@
+{
+  "seed": 42,
+  "device": "auto",
+  "data": {
+    "batch_size": 256,
+    "val_split": 0.1,
+    "num_workers": 2
+  },
+  "model": {
+    "hidden_sizes": [256, 128],
+    "dropout": 0.2
+  },
+  "training": {
+    "epochs": 10,
+    "lr": 0.001,
+    "weight_decay": 0.0
+  }
+}
