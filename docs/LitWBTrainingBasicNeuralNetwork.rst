@@ -3,7 +3,8 @@ LitWBTrainingBasicNeuralNetwork
 
 The fully connected network of :doc:`LitTrainingBasicNeuralNetwork`, tracked
 with `Weights & Biases <https://wandb.ai>`__ (W&B) exactly like
-:doc:`LitWBTrainingBasicConvnet`; only the network differs.
+:doc:`LitWBTrainingBasicConvnet`; only the network differs. Lightning + W&B is
+the recommended pattern for your own experiments.
 
 Run from the repository root:
 

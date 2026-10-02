@@ -5,7 +5,9 @@ The same experiment as :doc:`LitTrainingBasicConvnet` (the same network,
 LightningModule, DataModule, and metrics), tracked with
 `Weights & Biases <https://wandb.ai>`__ (W&B) through Lightning's
 ``WandbLogger``. W&B charts and tables replace the plotting code, so there is
-no ``utils/plots.py``.
+no ``utils/plots.py``. Lightning + W&B is the recommended pattern for your own
+experiments; :doc:`LitWBTrainingBasicNeuralNetwork` is the same setup with a
+fully connected network.
 
 Running
 -------
