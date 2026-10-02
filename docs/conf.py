@@ -1,7 +1,7 @@
 """Sphinx configuration for the course code repository.
 
-Heavy libraries (PyTorch, torchvision, NumPy, tqdm, python-dotenv) are mocked,
-so ``sphinx-build`` does not need them installed.
+Heavy libraries (PyTorch, Lightning, torchvision, NumPy, tqdm, python-dotenv)
+are mocked, so ``sphinx-build`` does not need them installed.
 """
 
 import sys
@@ -29,6 +29,7 @@ html_baseurl = "https://txstcodeplayground.github.io/CodeCS4337Fall2026/"
 
 # Import names, not pip names: python-dotenv is imported as ``dotenv``.
 autodoc_mock_imports = [
+    "lightning",
     "torch",
     "torchvision",
     "numpy",

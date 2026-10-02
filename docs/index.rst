@@ -10,12 +10,13 @@ the docstrings in that package.
    :caption: Projects
 
    TrainingBasicConvnet
+   LitTrainingBasicConvnet
 
 Building these pages
 --------------------
 
 From the repository root, with only the documentation requirements installed
-(PyTorch is not required):
+(PyTorch and Lightning are not required):
 
 .. code-block:: bash
 
