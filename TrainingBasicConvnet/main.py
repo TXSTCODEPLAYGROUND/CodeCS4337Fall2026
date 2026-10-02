@@ -1,6 +1,9 @@
 """Train a ConvNet on Fashion-MNIST.
 
 Usage:
+
+.. code-block:: text
+
     From inside this folder:     python main.py --config config01
     From the repo root:          python -m TrainingBasicConvnet --config config01
     From Python or a notebook:   from TrainingBasicConvnet import main

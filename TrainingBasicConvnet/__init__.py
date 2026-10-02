@@ -1,6 +1,9 @@
 """Train a basic ConvNet on Fashion-MNIST.
 
 Example:
+
+.. code-block:: python
+
     from TrainingBasicConvnet import main
     main("config01")
 """
