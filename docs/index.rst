@@ -15,7 +15,7 @@ PyTorch to PyTorch Lightning to Lightning with Weights & Biases tracking. The
 
    TrainingBasicNeuralNetwork
    LitTrainingBasicNeuralNetwork
-   LitWBTrainingBasicNeuralNetwork
+   LitWBTrainingBasicNeuralNetwork (recommended) <LitWBTrainingBasicNeuralNetwork>
 
 .. toctree::
    :maxdepth: 2
@@ -23,7 +23,7 @@ PyTorch to PyTorch Lightning to Lightning with Weights & Biases tracking. The
 
    TrainingBasicConvnet
    LitTrainingBasicConvnet
-   LitWBTrainingBasicConvnet
+   LitWBTrainingBasicConvnet (recommended) <LitWBTrainingBasicConvnet>
 
 .. toctree::
    :caption: Links
