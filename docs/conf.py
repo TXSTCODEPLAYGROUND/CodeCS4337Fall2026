@@ -47,6 +47,7 @@ autodoc_mock_imports = [
     "torchmetrics",
     "matplotlib",
     "numpy",
+    "optuna",
     "dotenv",
     "tqdm",
     "wandb",

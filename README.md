@@ -15,11 +15,10 @@ Function and class details are in the
 
 ## Projects
 
-| Project | Description |
-| --- | --- |
 The projects come in two series, one per network. Each series goes through
 the same three steps: plain PyTorch, then PyTorch Lightning, then Lightning
-with Weights & Biases tracking.
+with Weights & Biases tracking. A third section then searches for good
+hyperparameters automatically.
 
 | Project | Description |
 | --- | --- |
@@ -31,6 +30,8 @@ with Weights & Biases tracking.
 | [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST with a training loop written in plain PyTorch, and organize the code into modules and packages. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
 | [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same ConvNet trained with PyTorch Lightning; its README explains the Lightning project layout used by all `Lit...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) |
 | [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | **Recommended pattern.** The Lightning ConvNet tracked with W&B, with an offline mode when there is no key or the login fails; its README explains the W&B setup and dashboard used by all `LitWB...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) |
+| **Hyperparameter search (Optuna)** | |
+| [LitWBHSTrainingBasicNeuralNetwork](LitWBHSTrainingBasicNeuralNetwork/) | LitWBTrainingBasicNeuralNetwork plus a hyperparameter search with [Optuna](https://optuna.org): network size, activation, dropout, batch size, epochs, optimizer, learning rate, L1/L2 regularization, learning-rate scheduler, and early stopping. Every trial is logged to W&B, and the best one is saved as a config to train. Comes with its own Colab notebook. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBHSTrainingBasicNeuralNetwork.html) |
 
 The `LitWB...` projects are the **recommended pattern** for your own
 experiments: Lightning removes the training-loop boilerplate, and W&B records
@@ -76,7 +77,12 @@ CodeCS4337Fall2026/
 │   └── callbacks/         # Logs test predictions and a confusion matrix to W&B
 ├── TrainingBasicConvnet/      # Same three steps with a ConvNet (models/convnet.py)
 ├── LitTrainingBasicConvnet/   # Same layout as LitTrainingBasicNeuralNetwork
-└── LitWBTrainingBasicConvnet/ # Same layout as LitWBTrainingBasicNeuralNetwork (recommended)
+├── LitWBTrainingBasicConvnet/ # Same layout as LitWBTrainingBasicNeuralNetwork (recommended)
+└── LitWBHSTrainingBasicNeuralNetwork/  # LitWBTrainingBasicNeuralNetwork plus an Optuna search
+    ├── ...                    # Same layout as LitWBTrainingBasicNeuralNetwork
+    ├── search.py              # Second entry point: search(config) runs the Optuna study
+    ├── configs/search01.json  # Search space and study settings
+    └── hyperparameter_search.ipynb  # Colab notebook: search, plots, train the best config
 ```
 
 Every project has the same entry points (`main.py`, `configs/`) and is run the
@@ -94,7 +100,7 @@ One settings file at the repo root is shared by every project:
   keys, only needed for LitLogger in the `LitTraining...` projects (see the
   [LitTrainingBasicConvnet README](LitTrainingBasicConvnet/README.md#litlogger-optional)).
 - `WANDB_API_KEY` (optional): your Weights & Biases key, used by
-  LitWBTrainingBasicNeuralNetwork and LitWBTrainingBasicConvnet (see the
+  the `LitWB...` projects (see the
   [LitWBTrainingBasicConvnet README](LitWBTrainingBasicConvnet/README.md#set-up-your-wb-key)). Without
   it, or if the login fails, W&B logs locally and the run can be uploaded later.
 

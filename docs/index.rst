@@ -8,6 +8,7 @@ the docstrings in that package.
 The projects come in two series, one per network, each going from plain
 PyTorch to PyTorch Lightning to Lightning with Weights & Biases tracking. The
 ``LitWB...`` projects are the recommended pattern for your own experiments.
+The last section adds an automatic hyperparameter search with Optuna.
 
 .. toctree::
    :maxdepth: 2
@@ -24,6 +25,12 @@ PyTorch to PyTorch Lightning to Lightning with Weights & Biases tracking. The
    TrainingBasicConvnet
    LitTrainingBasicConvnet
    LitWBTrainingBasicConvnet (recommended) <LitWBTrainingBasicConvnet>
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Hyperparameter search (Optuna)
+
+   LitWBHSTrainingBasicNeuralNetwork
 
 .. toctree::
    :caption: Links
