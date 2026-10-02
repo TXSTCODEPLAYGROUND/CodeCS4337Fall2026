@@ -1,7 +1,7 @@
 # CS4337 Fall 2026 — Course Code
 
 This repository holds the code for CS4337, Fall 2026. Each top-level folder
-(for example `TrainingBasicConvnet/`) is a **self-contained project**: a small
+(for example `TrainingBasicNeuralNetwork/`) is a **self-contained project**: a small
 Python package that you can either
 
 - import and run from a notebook (e.g. Google Colab), or
@@ -17,12 +17,25 @@ Function and class details are in the
 
 | Project | Description |
 | --- | --- |
+The projects come in two series, one per network. Each series goes through
+the same three steps: plain PyTorch, then PyTorch Lightning, then Lightning
+with Weights & Biases tracking.
+
+| Project | Description |
+| --- | --- |
+| **Fully connected network (MLP)** | |
 | [TrainingBasicNeuralNetwork](TrainingBasicNeuralNetwork/) | Start here: train a fully connected neural network (only `nn.Linear` layers, no convolutions) on Fashion-MNIST in plain PyTorch, and see what layers, activations, dropout, and parameters are. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicNeuralNetwork.html) |
+| [LitTrainingBasicNeuralNetwork](LitTrainingBasicNeuralNetwork/) | The same network trained with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): the Lightning-Hydra-Template project layout, torchmetrics (precision, recall, per-class accuracy), learning-curve and prediction plots, and optional LitLogger tracking. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicNeuralNetwork.html) |
+| [LitWBTrainingBasicNeuralNetwork](LitWBTrainingBasicNeuralNetwork/) | **Recommended pattern.** The Lightning MLP tracked with [Weights & Biases](https://wandb.ai): live charts, a test-prediction table, and a confusion matrix on wandb.ai, plus the network size (`num_params`) for comparing architectures. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicNeuralNetwork.html) |
+| **Convolutional network (ConvNet)** | |
 | [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST with a training loop written in plain PyTorch, and organize the code into modules and packages. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
-| [LitTrainingBasicNeuralNetwork](LitTrainingBasicNeuralNetwork/) | The fully connected network of TrainingBasicNeuralNetwork trained with PyTorch Lightning, with the same layout, metrics, plots, and optional LitLogger tracking as LitTrainingBasicConvnet. Shows that swapping the network changes nothing else. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicNeuralNetwork.html) |
-| [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same experiment with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): the Lightning-Hydra-Template project layout, torchmetrics (precision, recall, per-class accuracy), learning-curve and prediction plots, and optional LitLogger tracking. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) |
-| [LitWBTrainingBasicNeuralNetwork](LitWBTrainingBasicNeuralNetwork/) | The Lightning MLP tracked with W&B, like LitWBTrainingBasicConvnet; logs the network size (`num_params`) so architectures can be compared on wandb.ai. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicNeuralNetwork.html) |
-| [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | The Lightning experiment tracked with [Weights & Biases](https://wandb.ai): live charts, a test-prediction table, and a confusion matrix on wandb.ai instead of plotting code, with an offline mode when there is no key or the login fails. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) |
+| [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same ConvNet trained with PyTorch Lightning; its README explains the Lightning project layout used by all `Lit...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) |
+| [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | **Recommended pattern.** The Lightning ConvNet tracked with W&B, with an offline mode when there is no key or the login fails; its README explains the W&B setup and dashboard used by all `LitWB...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) |
+
+The `LitWB...` projects are the **recommended pattern** for your own
+experiments: Lightning removes the training-loop boilerplate, and W&B records
+every run (metrics, config, predictions) so runs can be compared without
+writing plotting code. The other projects build up to it step by step.
 
 Each project folder has its own `README.md` explaining what the project is
 about and what it teaches. This README covers what all projects share: setup,
@@ -43,27 +56,27 @@ CodeCS4337Fall2026/
 ├── data/                  # Datasets shared by all projects (created on first run, not in git)
 ├── runs/                  # Experiment results, one subfolder per project (not in git)
 ├── docs/                  # Source of the online documentation (built automatically, see below)
-├── TrainingBasicConvnet/  # One project = one Python package
+├── TrainingBasicNeuralNetwork/  # One project = one Python package
 │   ├── README.md          # What this project is about
-│   ├── __init__.py        # Makes the folder importable: from TrainingBasicConvnet import main
-│   ├── __main__.py        # Makes `python -m TrainingBasicConvnet` work
+│   ├── __init__.py        # Makes the folder importable: from TrainingBasicNeuralNetwork import main
+│   ├── __main__.py        # Makes `python -m TrainingBasicNeuralNetwork` work
 │   ├── main.py            # Entry point: main(config) runs a full experiment
 │   ├── configs/           # Experiment settings (config01.json, ...)
 │   ├── dataloaders/       # Dataset loading
-│   ├── models/            # Network definitions
+│   ├── models/            # Network definitions (models/mlp.py)
 │   ├── trainers/          # Training and evaluation loop
 │   └── utils/             # Helpers (paths, seeding, run folders)
-├── TrainingBasicNeuralNetwork/  # Same layout, with a fully connected network (models/mlp.py)
-├── LitTrainingBasicConvnet/  # Same experiment with PyTorch Lightning
+├── LitTrainingBasicNeuralNetwork/  # Same experiment with PyTorch Lightning
 │   ├── README.md, __init__.py, __main__.py, main.py, configs/  # Same roles as above
 │   ├── models/            # LightningModule, and plain networks in models/components/
 │   ├── dataloaders/       # LightningDataModule: download, split, batch
 │   └── utils/             # Helpers (paths, run summaries, plots)
-├── LitTrainingBasicNeuralNetwork/  # Same as LitTrainingBasicConvnet, with an MLP in models/components/
-├── LitWBTrainingBasicNeuralNetwork/  # Same as LitWBTrainingBasicConvnet (below), with an MLP
-└── LitWBTrainingBasicConvnet/  # Same Lightning experiment, tracked with W&B
-    ├── ...                # Same as LitTrainingBasicConvnet, without utils/plots.py
-    └── callbacks/         # Logs test predictions and a confusion matrix to W&B
+├── LitWBTrainingBasicNeuralNetwork/  # Same Lightning experiment, tracked with W&B (recommended)
+│   ├── ...                # Same as LitTrainingBasicNeuralNetwork, without utils/plots.py
+│   └── callbacks/         # Logs test predictions and a confusion matrix to W&B
+├── TrainingBasicConvnet/      # Same three steps with a ConvNet (models/convnet.py)
+├── LitTrainingBasicConvnet/   # Same layout as LitTrainingBasicNeuralNetwork
+└── LitWBTrainingBasicConvnet/ # Same layout as LitWBTrainingBasicNeuralNetwork (recommended)
 ```
 
 Every project has the same entry points (`main.py`, `configs/`) and is run the
@@ -81,7 +94,7 @@ One settings file at the repo root is shared by every project:
   keys, only needed for LitLogger in the `LitTraining...` projects (see the
   [LitTrainingBasicConvnet README](LitTrainingBasicConvnet/README.md#litlogger-optional)).
 - `WANDB_API_KEY` (optional): your Weights & Biases key, used by
-  LitWBTrainingBasicConvnet and LitWBTrainingBasicNeuralNetwork (see the
+  LitWBTrainingBasicNeuralNetwork and LitWBTrainingBasicConvnet (see the
   [LitWBTrainingBasicConvnet README](LitWBTrainingBasicConvnet/README.md#set-up-your-wb-key)). Without
   it, or if the login fails, W&B logs locally and the run can be uploaded later.
 
