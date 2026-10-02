@@ -10,11 +10,14 @@ Python package that you can either
 New projects will be added over the semester. To get them, run `git pull`
 inside your copy of the repository.
 
+Function and class details are in the
+[documentation](https://txstcodeplayground.github.io/CodeCS4337Fall2026/).
+
 ## Projects
 
 | Project | Description |
 | --- | --- |
-| [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST |
+| [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
 
 ## Repository structure
 

@@ -1,8 +1,12 @@
 # Patterns without a leading slash match at any depth, so they cover every project.
 .venv/
+.venv-docs/
 __pycache__/
 .ruff_cache/
 .vscode/
+
+# Generated Sphinx HTML (docs/requirements.txt is enough to rebuild it).
+docs/_build/
 
 # Local environment. .envcolab stays tracked (renamed to .env in Colab).
 .env
