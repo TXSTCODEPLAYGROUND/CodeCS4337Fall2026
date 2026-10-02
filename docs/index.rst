@@ -11,6 +11,7 @@ the docstrings in that package.
 
    TrainingBasicNeuralNetwork
    TrainingBasicConvnet
+   LitTrainingBasicNeuralNetwork
    LitTrainingBasicConvnet
    LitWBTrainingBasicConvnet
 
