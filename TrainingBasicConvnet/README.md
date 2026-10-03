@@ -1,5 +1,8 @@
 # TrainingBasicConvnet
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TrainingBasicConvnet/training_basic_convnet_notebook.ipynb)
+This project's notebook: [`training_basic_convnet_notebook.ipynb`](training_basic_convnet_notebook.ipynb).
+
 Train a small convolutional neural network (ConvNet) to recognize clothing in
 [Fashion-MNIST](https://github.com/zalandoresearch/fashion-mnist): 70,000
 grayscale images of 28x28 pixels in 10 classes (T-shirt/top, trouser,

@@ -1,5 +1,8 @@
 # LitTrainingBasicNeuralNetwork
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicNeuralNetwork/lit_training_basic_neural_network_notebook.ipynb)
+This project's notebook: [`lit_training_basic_neural_network_notebook.ipynb`](lit_training_basic_neural_network_notebook.ipynb).
+
 The fully connected network of
 [TrainingBasicNeuralNetwork](../TrainingBasicNeuralNetwork/) (an MLP with only
 `nn.Linear` layers), trained with

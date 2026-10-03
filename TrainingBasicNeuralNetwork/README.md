@@ -1,5 +1,8 @@
 # TrainingBasicNeuralNetwork
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TrainingBasicNeuralNetwork/training_basic_neural_network_notebook.ipynb)
+This project's notebook: [`training_basic_neural_network_notebook.ipynb`](training_basic_neural_network_notebook.ipynb).
+
 Train the simplest kind of neural network, a **fully connected network**
 (also called a multilayer perceptron, MLP), to recognize clothing in
 [Fashion-MNIST](https://github.com/zalandoresearch/fashion-mnist): 70,000

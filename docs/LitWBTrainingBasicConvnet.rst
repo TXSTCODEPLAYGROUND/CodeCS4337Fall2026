@@ -45,7 +45,7 @@ W&B key and offline mode
 
 Copy your API key from `wandb.ai/authorize <https://wandb.ai/authorize>`_
 into ``.env`` as ``WANDB_API_KEY`` (in Colab: add it as a Colab Secret and run
-the starter notebook's *Load API keys* cell). Without it, or if W&B cannot log in (a
+the project notebook's *Load API keys* cell). Without it, or if W&B cannot log in (a
 wrong key, no internet), the run is logged offline in the run folder and
 prints the ``wandb sync`` command that uploads it later.
 

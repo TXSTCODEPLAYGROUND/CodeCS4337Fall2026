@@ -18,7 +18,7 @@ Function and class details are in the
 The easiest way to run everything is the project's own notebook,
 [`hyperparameter_search.ipynb`](hyperparameter_search.ipynb)
 (the **Open In Colab** button above opens it in Colab).
-It has the same setup cells as the starter notebook, then runs the search,
+It has the same setup cells as the other projects' notebooks, then runs the search,
 plots the results, and trains the best config.
 
 ## The workflow

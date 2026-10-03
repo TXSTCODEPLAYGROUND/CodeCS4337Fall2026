@@ -2,7 +2,7 @@
 # In Colab, copy this file to .env so main() picks it up automatically.
 # From the repo root (%cd CodeCS4337Fall2026):
 #   !cp .envcolab .env
-# (starternotebook.ipynb does this for you.)
+# (every project's notebook does this for you.)
 # Dataset lives on the fast local VM disk (re-downloaded each session).
 # Outputs go to Google Drive so they survive runtime resets; requires
 #   from google.colab import drive; drive.mount("/content/drive")
@@ -27,7 +27,7 @@ OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs
 # would be pushed to GitHub. In Colab, store them as Secrets instead (key icon
 # in the left sidebar), named LIGHTNING_USER_ID and LIGHTNING_API_KEY, with the
 # values from lightning.ai -> profile picture -> Global Settings -> Keys ->
-# "Login via CLI". Then run the "Load API keys" cell of starternotebook.ipynb
+# "Login via CLI". Then run the "Load API keys" cell of the project's notebook
 # (after the setup cells, before running a project): it copies them to .env.
 # Locally, put the two lines in .env instead (not tracked by git).
 # -----Lit Logger setup ends here-----:
@@ -46,6 +46,6 @@ OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs
 # Do NOT put your W&B key in this file: it is tracked by git, so it would be
 # pushed to GitHub. In Colab, store it as a Secret instead (key icon in the
 # left sidebar) named WANDB_API_KEY. Then run the "Load API keys" cell of
-# starternotebook.ipynb (after the setup cells, before running a project): it
+# the project's notebook (after the setup cells, before running it): it
 # copies the key to .env, so notebook and terminal runs both find it.
 # -----W&B setup ends here-----:
