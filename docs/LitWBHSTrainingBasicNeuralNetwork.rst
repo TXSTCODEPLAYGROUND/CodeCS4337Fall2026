@@ -49,6 +49,16 @@ that model back, with the network the search picked:
 
    model = load_model("search01_best")   # newest run, best checkpoint
 
+To train a run further instead, pass ``resume_from`` to :func:`~LitWBHSTrainingBasicNeuralNetwork.main.main`:
+it continues from the run's last checkpoint (weights, optimizer, and epoch
+count) for the config's ``"epochs"`` more epochs, into a new run folder.
+
+.. code-block:: python
+
+   main("search01_best.json", resume_from="search01_best")
+
+On the command line: ``--resume-from search01_best``.
+
 The project folder has a Colab notebook, ``lit_wbhs_training_basic_neural_network_notebook.ipynb``,
 that runs the search, plots the results, and trains the best config. The
 `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/LitWBHSTrainingBasicNeuralNetwork>`_

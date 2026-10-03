@@ -79,6 +79,11 @@ from LitTrainingBasicNeuralNetwork import load_model
 model = load_model("config01")   # newest run of config01, best checkpoint
 ```
 
+To train a run further instead, resume it, as described in
+[Continuing training](../LitTrainingBasicConvnet/README.md#continuing-training):
+`main("config01.json", resume_from="config01")`, or
+`--resume-from config01` on the command line.
+
 ## Things to try
 
 - Change `"hidden_sizes"` (wider, deeper, or `[]` for a linear model) and

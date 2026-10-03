@@ -42,6 +42,16 @@ trained model back, rebuilding the network from the run's ``config.json``:
 
    model = load_model("config01")   # newest run of config01, best checkpoint
 
+To train a run further instead, pass ``resume_from`` to :func:`~LitTrainingBasicNeuralNetwork.main.main`:
+it continues from the run's last checkpoint (weights, optimizer, and epoch
+count) for the config's ``"epochs"`` more epochs, into a new run folder.
+
+.. code-block:: python
+
+   main("config01.json", resume_from="config01")
+
+On the command line: ``--resume-from config01``.
+
 The `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/LitTrainingBasicNeuralNetwork>`_
 compares the project with LitTrainingBasicConvnet.
 

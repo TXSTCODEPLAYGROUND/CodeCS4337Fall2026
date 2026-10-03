@@ -36,6 +36,7 @@ from dotenv import load_dotenv
 
 from .dataloaders import get_dataloaders
 from .models import MLP
+from .models.loading import find_resume_checkpoint
 from .trainers import Trainer
 from .utils import (
     PROJECT_NAME,
@@ -53,7 +54,8 @@ def parse_args() -> argparse.Namespace:
     """Parse command-line arguments.
 
     Returns:
-        Parsed arguments with a ``config`` attribute holding the config name or path.
+        Parsed arguments: ``config`` (the config name or path) and
+        ``resume_from`` (``None`` unless ``--resume-from`` is given).
     """
     parser = argparse.ArgumentParser(
         description="Train a fully connected neural network on Fashion-MNIST"
@@ -63,10 +65,16 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Config name or path, e.g. config01.json",
     )
+    parser.add_argument(
+        "--resume-from",
+        help="Continue an earlier run, e.g. config01 (its newest run)",
+    )
     return parser.parse_args()
 
 
-def main(config_path: str | Path | None = None) -> None:
+def main(
+    config_path: str | Path | None = None, resume_from: str | Path | None = None
+) -> None:
     """Run a full training experiment from a JSON config.
 
     Each invocation creates ``<OUTPUT_DIR>/<project_name>/<config_name>/<timestamp>/``
@@ -85,14 +93,28 @@ def main(config_path: str | Path | None = None) -> None:
             when calling from a notebook), command-line arguments are ignored.
             When omitted, it is read from the required ``--config`` CLI flag.
             See ``utils.resolve_config_path`` for the lookup rules.
+        resume_from: Continue an earlier run instead of starting from
+            scratch: ``"config01"`` (the newest run of config01), a run folder,
+            or a checkpoint, found by
+            :func:`~TrainingBasicNeuralNetwork.models.loading.find_resume_checkpoint`. The
+            weights, the optimizer (including its learning rate), and the epoch
+            count come from the run's last checkpoint; the config's ``"epochs"``
+            more epochs are then trained into a new run folder. The model
+            settings in the config must match the run's. On the command line:
+            ``--resume-from config01``.
     """
     load_dotenv(REPO_DIR / ".env")
     if config_path is None:
-        config_path = parse_args().config
+        args = parse_args()
+        config_path, resume_from = args.config, args.resume_from
 
     config_path = resolve_config_path(config_path)
     with open(config_path) as f:
         config = json.load(f)
+
+    resume_checkpoint = None
+    if resume_from is not None:
+        resume_checkpoint = find_resume_checkpoint(resume_from)
 
     experiment_name = config_path.stem
     experiment_dir = resolve_repo_path(os.getenv("OUTPUT_DIR", "runs"))
@@ -124,6 +146,12 @@ def main(config_path: str | Path | None = None) -> None:
     num_params = sum(p.numel() for p in model.parameters())
     print(f"Model: {model_cfg['hidden_sizes']} hidden units, {num_params:,} parameters")
     trainer = Trainer(model, train_loader, val_loader, config, run_dir, device)
+    if resume_checkpoint is not None:
+        trainer.resume(resume_checkpoint)
+        print(
+            f"Resuming {resume_checkpoint} after epoch {trainer.start_epoch}, "
+            f"{trainer.epochs} more epochs"
+        )
 
     started_at = datetime.now().astimezone()
     start_time = time.perf_counter()
@@ -161,6 +189,7 @@ def main(config_path: str | Path | None = None) -> None:
             "torch": torch.__version__,
         },
         "config": config,
+        "resumed_from": str(resume_checkpoint) if resume_checkpoint else None,
     }
     results_name = (
         f"results_epoch{trainer.best_epoch:02d}"

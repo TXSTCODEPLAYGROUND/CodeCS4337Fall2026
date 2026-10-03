@@ -45,6 +45,16 @@ model back, rebuilt with the run's ``hidden_sizes`` and ``dropout``:
 
    model = load_model("config01")   # newest run of config01, best checkpoint
 
+To train a run further instead, pass ``resume_from`` to :func:`~TrainingBasicNeuralNetwork.main.main`:
+it continues from the run's last checkpoint (weights, optimizer, and epoch
+count) for the config's ``"epochs"`` more epochs, into a new run folder.
+
+.. code-block:: python
+
+   main("config01.json", resume_from="config01")
+
+On the command line: ``--resume-from config01``.
+
 The `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/TrainingBasicNeuralNetwork>`_
 explains the layers, counts the parameters, and compares the network with a
 ConvNet.

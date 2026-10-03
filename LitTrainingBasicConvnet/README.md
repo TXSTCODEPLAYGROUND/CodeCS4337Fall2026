@@ -188,12 +188,15 @@ Each run writes these files to
 ├── hparams.json                    # Optimizer and data settings
 ├── metrics.csv                     # Every metric, every epoch (Lightning's CSVLogger)
 ├── best_epoch08_valacc0.9240.ckpt  # Checkpoint with the best validation accuracy
-├── last.ckpt                       # Checkpoint after the last epoch
+├── last.ckpt                       # Checkpoint of the last epoch, rewritten every epoch
 ├── loss.png, accuracy.png, accuracy_per_class.png
 └── predictions.png, wrong_predictions.png
 ```
 
-`best_epoch08` is the ninth epoch.
+`best_epoch08` is the ninth epoch. `ModelCheckpoint(save_last=True)` would only
+copy the best checkpoint to `last.ckpt`, so `main.py` uses a second
+`ModelCheckpoint` that writes `last.ckpt` after every epoch; that is the
+checkpoint training is resumed from.
 
 ## Loading a trained model
 
@@ -211,9 +214,48 @@ logits = model(images)                               # images: (N, 1, 28, 28), n
 ```
 
 Run names are looked up in `<OUTPUT_DIR>/LitTrainingBasicConvnet/`; a full
-path to a run folder or a `.ckpt` file works too. The model comes back in eval
+path to a run folder or a `.ckpt` file works too, e.g.
+`load_model("config01/2026-10-02_12-29-09/best_epoch07_valacc0.9260.ckpt")`.
+Each run folder keeps two checkpoints, the best and the last epoch; older ones
+are replaced during training, so other epochs can't be loaded. The model comes back in eval
 mode on the CPU (pass `device="cuda"` for a GPU), and works with
 `trainer.test(model, datamodule=data)`.
+
+## Continuing training
+
+Running a config trains from scratch. To train an earlier run further, for
+example because it needed more epochs or a Colab disconnect stopped it, pass
+`resume_from`:
+
+```python
+from LitTrainingBasicConvnet import main
+
+main("config01.json", resume_from="config01")   # newest run of config01
+```
+
+```bash
+python -m LitTrainingBasicConvnet --config config01.json --resume-from config01
+```
+
+Lightning restores everything from the run's `last.ckpt` (`trainer.fit(...,
+ckpt_path=...)`): the weights, the optimizer state including its learning
+rate, and the epoch count. The config's `"epochs"` **more** epochs are then
+trained, so a 10-epoch run resumed with `config01.json` ends after epoch 20.
+The continued run gets its own run folder, plots, and `runs_summary.csv` row,
+and `hparams.json` records `resumed_from`; the earlier run is not changed.
+
+- `resume_from` accepts the same names as `load_model`: a config name (its
+  newest run), a run folder such as `"config01/2026-10-02_12-29-09"`, or a
+  checkpoint file. A run stopped before its first `last.ckpt` continues from
+  its best checkpoint.
+- The config's model settings must match the run's (the weights only fit the
+  same network). To train a different number of extra epochs, copy the config,
+  change `"epochs"`, and pass the copy with `resume_from="config01"`.
+- The learning rate and weight decay come from the saved optimizer, so changing
+  `lr` or `weight_decay` in the config has no effect when resuming. The data
+  settings, seed, and logging come from the config.
+- Resuming again continues further: `"config01"` then means the continued run.
+- The best checkpoint and the test score are those of the continued run.
 
 ## Things to try
 

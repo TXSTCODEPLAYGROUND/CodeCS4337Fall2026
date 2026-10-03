@@ -48,6 +48,16 @@ from the config stored in the checkpoint and loads its weights:
    model = load_model("config01")                 # newest run, best checkpoint
    model = load_model("config01", which="last")   # its last epoch
 
+To train a run further instead, pass ``resume_from`` to :func:`~TrainingBasicConvnet.main.main`:
+it continues from the run's last checkpoint (weights, optimizer, and epoch
+count) for the config's ``"epochs"`` more epochs, into a new run folder.
+
+.. code-block:: python
+
+   main("config01.json", resume_from="config01")
+
+On the command line: ``--resume-from config01``.
+
 .. toctree::
    :maxdepth: 2
    :caption: API

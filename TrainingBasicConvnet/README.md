@@ -106,8 +106,46 @@ logits = model(images)                               # images: (N, 1, 28, 28), n
 ```
 
 Run names are looked up in `<OUTPUT_DIR>/TrainingBasicConvnet/`; a full path
-to a run folder or a `.pt` file works too. The model comes back in eval mode on
+to a run folder or a `.pt` file works too, e.g.
+`load_model("config01/2026-10-02_11-20-01/best_epoch10_valacc0.9248.pt")`.
+Each run folder keeps two checkpoints, the best and the last epoch; older ones
+are replaced during training, so other epochs can't be loaded. The model comes back in eval mode on
 the CPU (pass `device="cuda"` for a GPU).
+
+## Continuing training
+
+Running a config trains from scratch. To train an earlier run further, for
+example because it needed more epochs or a Colab disconnect stopped it, pass
+`resume_from`:
+
+```python
+from TrainingBasicConvnet import main
+
+main("config01.json", resume_from="config01")   # newest run of config01
+```
+
+```bash
+python -m TrainingBasicConvnet --config config01.json --resume-from config01
+```
+
+The trainer saves `last_epochXX_valaccY.pt` after **every** epoch (replacing
+the previous one), with the model and the optimizer state. `Trainer.resume`
+loads both and the epoch number, and `fit` then trains the config's `"epochs"`
+**more** epochs, numbered after the checkpoint's: a 10-epoch run resumed with
+`config01.json` trains epochs 11 to 20. The continued run gets its own run
+folder and `runs_summary.csv` row, and its results file records
+`resumed_from`; the earlier run is not changed.
+
+- `resume_from` accepts the same names as `load_model`: a config name (its
+  newest run), a run folder, or a checkpoint file. A run stopped before its
+  first `last_*.pt` continues from its best checkpoint.
+- The config's model settings must match the run's. To train a different
+  number of extra epochs, copy the config, change `"epochs"`, and pass the copy
+  with `resume_from="config01"`.
+- The learning rate and weight decay come from the saved optimizer, so changing
+  `lr` or `weight_decay` in the config has no effect when resuming. The data
+  settings and seed come from the config.
+- Resuming again continues further: `"config01"` then means the continued run.
 
 ## Things to try
 

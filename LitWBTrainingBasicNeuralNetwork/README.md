@@ -82,3 +82,9 @@ from LitWBTrainingBasicNeuralNetwork import load_model
 
 model = load_model("config01")
 ```
+
+To train a run further instead, resume it, as described in
+[Continuing training](../LitTrainingBasicConvnet/README.md#continuing-training):
+`main("config01.json", resume_from="config01")`, or
+`--resume-from config01` on the command line. The continued run is a new W&B
+run.
