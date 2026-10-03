@@ -37,7 +37,7 @@ from dotenv import load_dotenv
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 
-from .callbacks import LogTestPredictions
+from .callbacks import LogTestPredictions, ResumableEarlyStopping
 from .dataloaders import (
     FASHION_MNIST_CLASSES,
     FASHION_MNIST_MEAN,
@@ -71,6 +71,11 @@ def main(
     a copy of the config, ``metrics.csv`` (a local backup of the metrics),
     ``hparams.json``, the best and last checkpoints, and W&B's ``wandb/``
     folder. A row is appended to ``runs_summary.csv`` next to the run folders.
+
+    With ``"early_stopping": true`` in the config's ``"training"`` section,
+    training stops once ``val_acc`` has not improved for ``"patience"`` epochs
+    (:class:`~LitWBTrainingBasicConvnet.callbacks.early_stopping.ResumableEarlyStopping`);
+    the epochs actually run are saved as ``epochs_run``.
 
     Args:
         config_path: Config name or path, e.g. ``"config01.json"``. When
@@ -150,19 +155,34 @@ def main(
         dirpath=run_dir, filename="last", enable_version_counter=False
     )
 
+    callbacks: list[L.Callback] = [
+        checkpoint,
+        last_checkpoint,
+        LogTestPredictions(
+            model.hparams.class_names, FASHION_MNIST_MEAN[0], FASHION_MNIST_STD[0]
+        ),
+    ]
+    early_stopping = train_cfg.get("early_stopping", False)
+    if early_stopping:
+        callbacks.append(
+            ResumableEarlyStopping(
+                monitor="val_acc", mode="max", patience=train_cfg.get("patience", 3)
+            )
+        )
+
     trainer = L.Trainer(
         max_epochs=epochs,
         accelerator=config["accelerator"],
         logger=[csv_logger, wandb_logger],
-        callbacks=[
-            checkpoint,
-            last_checkpoint,
-            LogTestPredictions(
-                model.hparams.class_names, FASHION_MNIST_MEAN[0], FASHION_MNIST_STD[0]
-            ),
-        ],
+        callbacks=callbacks,
     )
     trainer.fit(model, datamodule=data, ckpt_path=resume_checkpoint)
+    epochs_run = trainer.current_epoch
+    if epochs_run < epochs:
+        print(
+            f"Early stopping: val_acc stopped improving, stopped after epoch {epochs_run}"
+        )
+    wandb_logger.experiment.summary["epochs_run"] = epochs_run
     (test_metrics,) = trainer.test(datamodule=data, ckpt_path="best")
     if not wandb_logger.experiment.offline:
         print(f"W&B run: {wandb_logger.experiment.url}")
@@ -179,6 +199,8 @@ def main(
         {
             "run_id": run_id,
             "epochs": train_cfg["epochs"],
+            "epochs_run": epochs_run,
+            "early_stopping": early_stopping,
             "best_val_acc": f"{checkpoint.best_model_score.item():.4f}",
             "test_acc": f"{test_metrics['test_acc']:.4f}",
             "test_precision": f"{test_metrics['test_precision']:.4f}",

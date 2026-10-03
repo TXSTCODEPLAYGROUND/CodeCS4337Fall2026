@@ -183,6 +183,36 @@ To train a run further instead, resume it, as described in
 `--resume-from config01` on the command line. The continued run is a new W&B
 run.
 
+## Early stopping
+
+`config01.json` turns on early stopping in its `"training"` section:
+
+```json
+"training": {
+  "epochs": 10,
+  "lr": 0.001,
+  "weight_decay": 0.0,
+  "early_stopping": true,
+  "patience": 3
+}
+```
+
+Training stops when `val_acc` has not improved for `patience` epochs in a
+row, so `"epochs"` becomes the **most** epochs a run can take. Set
+`"early_stopping": false` to always train all of them.
+
+- The model that is tested is still the **best checkpoint** (the epoch with
+  the highest `val_acc`), not the last epoch before stopping.
+- The run prints after which epoch it stopped. The epochs it actually ran are
+  in `runs_summary.csv` (`epochs_run`, next to the planned `epochs`) and in
+  the W&B run's summary (`epochs_run`).
+- **Resuming** a run that stopped early works: the epochs without improvement
+  are counted from zero again, with the config's `patience`, and the
+  continued run has to beat the earlier run's best `val_acc`. Lightning's own
+  `EarlyStopping` would restore its counter from the checkpoint and stop again
+  after one epoch; [`callbacks/early_stopping.py`](callbacks/early_stopping.py)
+  changes only that.
+
 ## Things to try
 
 - Compare [`main.py`](main.py) with
@@ -190,6 +220,8 @@ run.
   `utils/plots.py` there: count how much code W&B replaces.
 - Add a `config02.json` with more dropout or weight decay, run both, and
   compare the `val_loss` curves in one chart.
+- Raise `"epochs"` to 30 and try `"patience"` 1, 3, and 5: how many epochs
+  does each run take, and does a longer patience reach a better `test_acc`?
 - In the confusion matrix, find the class most often confused with *Shirt*.
 - Log something new: `self.log("lr", ...)` in `LitConvNet` appears in W&B
   without any other change.
