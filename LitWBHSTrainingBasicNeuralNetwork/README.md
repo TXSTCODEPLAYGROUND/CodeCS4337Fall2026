@@ -28,8 +28,8 @@ plots the results, and trains the best config.
    python -m LitWBHSTrainingBasicNeuralNetwork.search --config search01.json
    ```
 
-2. **Read the results**: the printed best trial, `trials.csv`, Optuna's
-   plots (in the notebook), and the trials in W&B.
+2. **Read the results**: the printed best trial, `trials.csv`, and Optuna's
+   plots (in the notebook).
 3. **Train the best config**, which the search saved as
    `configs/search01_best.json`. This run tests the model once on the test
    set, the score to report:
@@ -83,7 +83,8 @@ baseline to beat.
   time, `null` for no limit); the sampler's `seed`; `train_fraction` (the
   fraction of the training data each trial uses, see
   [below](#how-long-a-search-takes)); the pruner settings (below); and
-  `log_trials_to_wandb`.
+  `log_trials_to_wandb` (`false`, see
+  [below](#comparing-the-trials-in-wb)).
 - `"search_space"`: what each trial may pick.
 
 | Key | Searched as | Notes |
@@ -147,7 +148,7 @@ Search results go to
 | `study.db` | The Optuna study (an SQLite database), saved after every trial. Running the same search again **adds** trials to it, so an interrupted search continues where it stopped. To start over, delete the folder or use a new search config name. |
 | `trials.csv` | One row per trial: state (`COMPLETE` or `PRUNED`), `val_acc`, epochs run, number of parameters, duration, and every sampled setting. |
 | `best_config.json` | The training config of the best trial, with a `found_by` entry naming the trial. Also saved as `configs/search01_best.json`. |
-| `wandb/` | The trials' local W&B files (offline runs to `wandb sync` if there was no key). |
+| `wandb/` | Only with `"log_trials_to_wandb": true`: the trials' local W&B files (offline runs to `wandb sync` if there was no key). |
 
 `search("search01.json", n_trials=0)` (or `--n-trials 0`) runs no new trial
 and rewrites these files from the saved study. In Colab this brings back
@@ -161,9 +162,16 @@ scheduler, early stopping, activation, and the number of epochs actually run.
 
 ## Comparing the trials in W&B
 
-Every trial is a W&B run in the project `LitWBHSTrainingBasicNeuralNetwork`,
-in the group `search01`, with job type `search`. Its config holds the sampled
-settings, and its summary `best_val_acc` and `state` (`complete` or `pruned`).
+By default the trials are **not** logged to W&B: starting and uploading one
+W&B run per trial adds a few seconds to every trial and fills the project
+with dozens of runs, while Optuna's plots and `trials.csv` already compare
+them. Only training the best config (step 3) is logged, like any other run.
+
+To log the trials too, set `"log_trials_to_wandb": true` in the search
+config's `"study"`. Every trial is then a W&B run in the project
+`LitWBHSTrainingBasicNeuralNetwork`, in the group `search01`, with job type
+`search`. Its config holds the sampled settings, and its summary
+`best_val_acc` and `state` (`complete` or `pruned`).
 
 1. In the **Runs** table, filter or group by `group`, show the settings you
    care about, and sort by `best_val_acc`.
@@ -177,7 +185,6 @@ settings, and its summary `best_val_acc` and `state` (`complete` or `pruned`).
 
 The general W&B setup (keys, offline mode, `wandb sync`) is explained in the
 [LitWBTrainingBasicConvnet README](../LitWBTrainingBasicConvnet/README.md).
-To search without W&B, set `"log_trials_to_wandb": false`.
 
 ## How long a search takes
 

@@ -67,9 +67,13 @@ def search(
     TPE sampler picks each trial's settings from how earlier trials did, and
     the median pruner stops trials that fall behind.
 
-    Each trial is a W&B run in the group ``<search_name>``, so the trials can
-    be compared on wandb.ai (e.g. with a parallel-coordinates panel). Without
-    a W&B key, they are logged offline, as in :func:`~LitWBHSTrainingBasicNeuralNetwork.main.main`.
+    Trials are not logged to W&B by default: one W&B run per trial makes a
+    search slower and fills the project. With ``"log_trials_to_wandb": true``
+    in ``"study"``, each trial is a W&B run in the group ``<search_name>``, so
+    the trials can be compared on wandb.ai (e.g. with a parallel-coordinates
+    panel); without a W&B key, they are logged offline, as in
+    :func:`~LitWBHSTrainingBasicNeuralNetwork.main.main`. Training the best
+    config with ``main`` is logged to W&B either way.
 
     Results go to ``<OUTPUT_DIR>/LitWBHSTrainingBasicNeuralNetwork/<search_name>/``:
 
