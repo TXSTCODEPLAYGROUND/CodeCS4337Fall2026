@@ -37,6 +37,17 @@ Each run writes a timestamped folder under
 checkpoints, ``history.json``, and a results file. A row is also appended to
 ``runs_summary.csv`` for that config.
 
+Every run trains from scratch. To load a trained model back,
+:func:`~TrainingBasicConvnet.models.loading.load_model` rebuilds the network
+from the config stored in the checkpoint and loads its weights:
+
+.. code-block:: python
+
+   from TrainingBasicConvnet import load_model
+
+   model = load_model("config01")                 # newest run, best checkpoint
+   model = load_model("config01", which="last")   # its last epoch
+
 .. toctree::
    :maxdepth: 2
    :caption: API

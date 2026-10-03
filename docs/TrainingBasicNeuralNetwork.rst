@@ -36,6 +36,14 @@ Each run writes a timestamped folder under
 ``runs/TrainingBasicNeuralNetwork/<config>/`` with the config snapshot,
 checkpoints, ``history.json``, and a results file, and appends a row
 (including ``hidden_sizes`` and ``num_params``) to ``runs_summary.csv``.
+:func:`~TrainingBasicNeuralNetwork.models.loading.load_model` loads a trained
+model back, rebuilt with the run's ``hidden_sizes`` and ``dropout``:
+
+.. code-block:: python
+
+   from TrainingBasicNeuralNetwork import load_model
+
+   model = load_model("config01")   # newest run of config01, best checkpoint
 
 The `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/TrainingBasicNeuralNetwork>`_
 explains the layers, counts the parameters, and compares the network with a
@@ -54,6 +62,9 @@ Models
 ~~~~~~
 
 .. automodule:: TrainingBasicNeuralNetwork.models.mlp
+   :members:
+
+.. automodule:: TrainingBasicNeuralNetwork.models.loading
    :members:
 
 Dataloaders

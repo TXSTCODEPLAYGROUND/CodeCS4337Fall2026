@@ -167,7 +167,15 @@ Each run writes these files to
 └── wandb/                          # W&B's local copy of the run (offline runs are synced from here)
 ```
 
-Reloading a checkpoint works as in LitTrainingBasicConvnet (pass `net=` again).
+To load a trained model back, e.g. the best checkpoint of the newest
+`config01` run, see
+[Loading a trained model](../LitTrainingBasicConvnet/README.md#loading-a-trained-model):
+
+```python
+from LitWBTrainingBasicConvnet import load_model
+
+model = load_model("config01")
+```
 
 ## Things to try
 

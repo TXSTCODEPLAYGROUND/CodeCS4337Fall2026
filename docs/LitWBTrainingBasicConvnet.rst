@@ -69,6 +69,15 @@ Each run writes ``runs/LitWBTrainingBasicConvnet/<config>/<timestamp>/`` with
 copy of the run). A row per run is appended to ``runs_summary.csv`` in the
 config folder.
 
+:func:`~LitWBTrainingBasicConvnet.models.loading.load_model` loads a trained
+model back from its run:
+
+.. code-block:: python
+
+   from LitWBTrainingBasicConvnet import load_model
+
+   model = load_model("config01")   # newest run of config01, best checkpoint
+
 API
 ---
 
@@ -91,6 +100,9 @@ Models
    :members:
 
 .. automodule:: LitWBTrainingBasicConvnet.models.components.convnet
+   :members:
+
+.. automodule:: LitWBTrainingBasicConvnet.models.loading
    :members:
 
 Dataloaders

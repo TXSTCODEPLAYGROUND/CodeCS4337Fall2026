@@ -217,6 +217,21 @@ run (metrics, checkpoints, and plots); see the
 
 Open `runs_summary.csv` to compare runs of the same config at a glance.
 
+Running a config always trains from scratch into a new run folder; earlier
+runs are never loaded or overwritten. To get a trained model back, every
+project has `load_model`, which finds a run's checkpoint, rebuilds the network
+with the run's settings, and loads its weights:
+
+```python
+from TrainingBasicConvnet import load_model
+
+model = load_model("config01")                 # newest run of config01, best checkpoint
+model = load_model("config01", which="last")   # its last epoch instead
+```
+
+See [Loading a trained model](LitTrainingBasicConvnet/README.md#loading-a-trained-model)
+for the other options.
+
 ## Running in Google Colab
 
 The easiest way is the project's own notebook: every project folder has one,
@@ -326,7 +341,8 @@ your Drive.
   disconnects mid-run, that checkpoint is kept.
 - The last checkpoint, `history.json`, the results file, and the row in
   `runs_summary.csv` are written only when the run finishes, so an interrupted
-  run has only its best checkpoint.
+  run has only its best checkpoint. `load_model("config01")` still loads it;
+  starting the config again begins a new run from scratch.
 - Keep your notebook and any configs you edited in Drive too.
 
 **Avoid idle disconnects**

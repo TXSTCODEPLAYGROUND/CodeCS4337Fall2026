@@ -161,6 +161,15 @@ Training the best config gives a normal run folder,
 as in [LitWBTrainingBasicConvnet](../LitWBTrainingBasicConvnet/README.md#run-folder).
 `runs_summary.csv` now also records the optimizer, regularization,
 scheduler, early stopping, activation, and the number of epochs actually run.
+To load the trained model back, with the network the search picked:
+
+```python
+from LitWBHSTrainingBasicNeuralNetwork import load_model
+
+model = load_model("search01_best")   # newest run of search01_best, best checkpoint
+```
+
+The trials themselves save no checkpoints, only their scores.
 
 ## Comparing the trials in W&B
 

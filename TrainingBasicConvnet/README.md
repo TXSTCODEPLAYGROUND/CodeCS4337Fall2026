@@ -67,7 +67,7 @@ A **module** is one `.py` file. A **package** is a folder of modules with an
 | --- | --- |
 | [`configs/`](configs/) | Experiment settings (JSON), so changing a hyperparameter never means editing code |
 | [`dataloaders/`](dataloaders/) | Load and split the data |
-| [`models/`](models/) | Define networks |
+| [`models/`](models/) | Define networks, and load trained ones back |
 | [`trainers/`](trainers/) | Train, evaluate, and save checkpoints |
 | [`utils/`](utils/) | Small helpers: paths, seeding, run folders, run summaries |
 | [`main.py`](main.py) | Connect the pieces: read the config, build each part, run the experiment |
@@ -90,6 +90,24 @@ Why bother? Each part can be read, tested, and replaced on its own. To try a
 new architecture, add a file to `models/` and change one line in `main.py`;
 the data and training code stay untouched. When something breaks, the folder
 names tell you where to look.
+
+## Loading a trained model
+
+Every checkpoint stores the run's config, so `load_model` can rebuild the
+network with the right settings and load its weights:
+
+```python
+from TrainingBasicConvnet import load_model
+
+model = load_model("config01")                       # newest run of config01, best checkpoint
+model = load_model("config01/2026-10-02_11-20-01")   # one specific run
+model = load_model("config01", which="last")         # the last epoch instead of the best
+logits = model(images)                               # images: (N, 1, 28, 28), normalized
+```
+
+Run names are looked up in `<OUTPUT_DIR>/TrainingBasicConvnet/`; a full path
+to a run folder or a `.pt` file works too. The model comes back in eval mode on
+the CPU (pass `device="cuda"` for a GPU).
 
 ## Things to try
 

@@ -73,12 +73,12 @@ side in a W&B report.
 
 The same files as in
 [LitWBTrainingBasicConvnet](../LitWBTrainingBasicConvnet/README.md#run-folder),
-in `runs/LitWBTrainingBasicNeuralNetwork/<config>/<timestamp>/`. To reload a
-checkpoint, pass the network again:
+in `runs/LitWBTrainingBasicNeuralNetwork/<config>/<timestamp>/`. To load a
+trained model back, e.g. the best checkpoint of the newest `config01` run, see
+[Loading a trained model](../LitTrainingBasicConvnet/README.md#loading-a-trained-model):
 
 ```python
-from LitWBTrainingBasicNeuralNetwork.models import MLP, LitMLP
+from LitWBTrainingBasicNeuralNetwork import load_model
 
-net = MLP(hidden_sizes=[256, 128], dropout=0.2)
-model = LitMLP.load_from_checkpoint("path/to/file.ckpt", net=net)
+model = load_model("config01")
 ```

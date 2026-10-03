@@ -69,13 +69,14 @@ The same files as in
 [LitTrainingBasicConvnet](../LitTrainingBasicConvnet/README.md#run-folder),
 in `runs/LitTrainingBasicNeuralNetwork/<config>/<timestamp>/`. `hparams.json`
 also has a `"net"` section with the network settings (`hidden_sizes`,
-`dropout`), which you need to reload a checkpoint:
+`dropout`). `load_model` reads them from the run, rebuilds the network, and
+loads its weights (see
+[Loading a trained model](../LitTrainingBasicConvnet/README.md#loading-a-trained-model)):
 
 ```python
-from LitTrainingBasicNeuralNetwork.models import MLP, LitMLP
+from LitTrainingBasicNeuralNetwork import load_model
 
-net = MLP(hidden_sizes=[256, 128], dropout=0.2)
-model = LitMLP.load_from_checkpoint("path/to/file.ckpt", net=net)
+model = load_model("config01")   # newest run of config01, best checkpoint
 ```
 
 ## Things to try
