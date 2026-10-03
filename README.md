@@ -250,6 +250,11 @@ The notebook has three parts:
 | **2. Run a project** | Choose **Option A** (terminal command) or **Option B** (from Python), see below. |
 | **3. Results** | Shows `runs_summary.csv` from your Drive. |
 
+The notebook also runs on your own machine: with the `.venv` as its kernel,
+skip the Colab-only part 1 and start at part 2, whose first cell finds the
+repo folder in Colab and locally. The same holds for the project notebook
+`LitWBHSTrainingBasicNeuralNetwork/hyperparameter_search.ipynb`.
+
 It ends with [pro tips](#pro-tips-keep-training-running) for keeping long
 training runs alive.
 

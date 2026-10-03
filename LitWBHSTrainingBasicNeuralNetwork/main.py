@@ -166,6 +166,7 @@ def main(config_path: str | Path | None = None) -> dict[str, float]:
             "scheduler": train_cfg["scheduler"],
             "early_stopping": train_cfg["early_stopping"],
             "batch_size": data_cfg["batch_size"],
+            "train_fraction": data.hparams.train_fraction,
             "hidden_sizes": "-".join(map(str, model_cfg["hidden_sizes"])),
             "activation": model_cfg["activation"],
             "dropout": model_cfg["dropout"],

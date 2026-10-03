@@ -1,5 +1,6 @@
 """Starting a W&B run, online when possible and offline otherwise."""
 
+import contextlib
 import os
 import warnings
 from pathlib import Path
@@ -7,6 +8,7 @@ from typing import Any
 
 import wandb
 from lightning.pytorch.loggers import WandbLogger
+from wandb.sdk.mailbox.mailbox import MailboxClosedError
 
 
 def connect_wandb(
@@ -35,7 +37,7 @@ def connect_wandb(
         ``logger.experiment.offline`` tells which.
     """
 
-    def start(offline: bool) -> WandbLogger:
+    def init(offline: bool) -> WandbLogger:
         logger = WandbLogger(
             project=project,
             name=name,
@@ -49,6 +51,17 @@ def connect_wandb(
         )
         _ = logger.experiment
         return logger
+
+    def start(offline: bool) -> WandbLogger:
+        try:
+            return init(offline)
+        except MailboxClosedError:
+            # W&B's background process died (e.g. after interrupting a notebook
+            # cell) and every later run in this Python session would fail; drop the
+            # dead connection so the next run starts a new process.
+            with contextlib.suppress(Exception):
+                wandb.teardown()
+            return init(offline)
 
     sync_hint = (
         "logging to W&B offline. Upload the run later with: "

@@ -5,27 +5,35 @@
     "project": "LitWBHSTrainingBasicNeuralNetwork"
   },
   "data": {
-    "batch_size": 256,
+    "batch_size": 128,
     "val_split": 0.1,
     "num_workers": "auto",
     "train_fraction": 1.0
   },
   "model": {
-    "hidden_sizes": [256, 128],
+    "hidden_sizes": [
+      256,
+      512
+    ],
     "activation": "relu",
-    "dropout": 0.2
+    "dropout": 0.06430665346193094
   },
   "training": {
-    "epochs": 10,
+    "epochs": 13,
     "optimizer": "adam",
-    "lr": 0.001,
+    "lr": 0.0020421694493485965,
     "momentum": 0.9,
-    "l1": 0.0,
-    "l2": 0.0,
-    "scheduler": "none",
+    "l1": 1.1686048048779343e-07,
+    "l2": 8.225344533366124e-06,
+    "scheduler": "cosine",
     "step_size": 3,
     "gamma": 0.5,
     "early_stopping": false,
     "patience": 3
+  },
+  "found_by": {
+    "search_config": "search01.json",
+    "trial": 34,
+    "val_acc": 0.8658
   }
 }

@@ -61,6 +61,8 @@ main("search01_best.json")
 | Regularization | `"weight_decay"` (L2) | `"l1"` (penalty added to the loss) and `"l2"` (the optimizer's weight decay) |
 | Learning rate | Constant | `"scheduler"`: none, step, cosine, or plateau, with `"step_size"` and `"gamma"`; the learning rate is logged every epoch |
 | Early stopping | No | `"early_stopping"` and `"patience"` |
+| Data-loading workers | `"num_workers": 2` | `"num_workers": "auto"`: the CPU cores available, at most 8 (8 on a big machine, 2 in Colab), so the same config is fast everywhere |
+| Training data | All 54,000 training images | `"train_fraction"`: train on part of them, e.g. for faster search trials |
 | Setup code | In `main()` | In `build()` in [`main.py`](main.py), shared by `main()` and every search trial |
 | W&B connection | In `main.py` | [`utils/tracking.py`](utils/tracking.py), shared too |
 | New files | | [`search.py`](search.py), [`callbacks/optuna_pruning.py`](callbacks/optuna_pruning.py), [`configs/search01.json`](configs/search01.json), the notebook |
@@ -78,8 +80,10 @@ baseline to beat.
 - `"base_config"`: the training config every trial starts from. Everything not
   searched (seed, validation split, W&B project) comes from it.
 - `"study"`: `n_trials`; `timeout_minutes` (stop starting trials after this
-  time, `null` for no limit); the sampler's `seed`; the pruner settings
-  (below); and `log_trials_to_wandb`.
+  time, `null` for no limit); the sampler's `seed`; `train_fraction` (the
+  fraction of the training data each trial uses, see
+  [below](#how-long-a-search-takes)); the pruner settings (below); and
+  `log_trials_to_wandb`.
 - `"search_space"`: what each trial may pick.
 
 | Key | Searched as | Notes |
@@ -125,13 +129,13 @@ different search, copy `search01.json` to `search02.json`, edit it, and pass
 - **The median pruner** stops a trial when its validation accuracy after an
   epoch is below the median of the earlier trials at the same epoch. The
   callback [`OptunaPruning`](callbacks/optuna_pruning.py) reports the
-  accuracy after every epoch and raises `optuna.TrialPruned` when the pruner
-  says so. `pruner_startup_trials` trials always run to the end first, so
+  accuracy after every epoch and stops training when the pruner says so; the
+  search then marks the trial as pruned. `pruner_startup_trials` trials always run to the end first, so
   there is something to compare with, and no trial is pruned during its first
   `pruner_warmup_epochs` epochs.
 - **Seeds.** Every trial uses the base config's seed, so a trial and its
-  saved config train identically: training `search01_best.json` reproduces
-  the best trial's validation accuracy.
+  saved config train identically: with `train_fraction` 1.0, training
+  `search01_best.json` reproduces the best trial's validation accuracy.
 
 ## Results
 
@@ -183,6 +187,38 @@ minute or more (15 epochs with a small batch size), so the 30 trials of
 first, run a few trials: `--n-trials 3`. Fewer epochs per trial make the
 search faster, but favor settings that learn quickly over settings that end
 best.
+
+**Training on part of the data.** Loading images is often the bottleneck,
+especially in Colab, which has only 2 CPU cores for it (`"num_workers":
+"auto"` uses up to 8 cores elsewhere). To make every trial faster, train each
+trial on a fraction of the 54,000 training images:
+
+```bash
+python -m LitWBHSTrainingBasicNeuralNetwork.search --config search01.json --train-fraction 0.25
+```
+
+or `search("search01.json", train_fraction=0.25)`, or `"train_fraction"` in
+the search config's `"study"`. The subset is stratified: every class keeps
+the same fraction of its images (e.g. about 1,350 of each class at 0.25), so
+no class is over- or under-represented by chance. It is drawn with the seed,
+so every trial trains on the same images.
+
+- The validation set stays complete (6,000 images), so trials are still
+  ranked reliably. Shrinking it too would make the scores noisy: at about 88%
+  accuracy, 6,000 images give a score accurate to about ±0.4%, 1,200 only to
+  about ±0.9%, as large as the gaps between good trials.
+- The saved best config keeps the base config's `"train_fraction"` (1.0), so
+  section 3 of the workflow still trains the final model on all the data.
+- Settings that depend on the amount of data may not transfer exactly: with
+  less data, a model overfits sooner, so the search may favor more dropout or
+  L1/L2, and an epoch has fewer steps. Use the fraction to explore quickly,
+  and `1.0` for a final, narrower search when you have the time.
+- Keep the same fraction for all trials of a study; to change it, use a new
+  search config name (e.g. `search02.json`), since scores from different
+  fractions are not comparable.
+
+`"train_fraction"` also works in a training config's `"data"` section, e.g.
+for a quick test of `main()`.
 
 ## Things to try
 
