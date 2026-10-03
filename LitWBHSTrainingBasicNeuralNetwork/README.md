@@ -171,6 +171,19 @@ model = load_model("search01_best")   # newest run of search01_best, best checkp
 
 The trials themselves save no checkpoints, only their scores.
 
+To train the best config further, resume its run (see
+[Continuing training](../LitTrainingBasicConvnet/README.md#continuing-training)):
+
+```python
+main("search01_best.json", resume_from="search01_best")   # "epochs" more epochs
+```
+
+The optimizer, scheduler, and early-stopping state continue from the run's
+`last.ckpt`. A cosine schedule had already reached a learning rate of 0 at the
+end of the earlier run, so on resuming its curve is stretched over all epochs
+(earlier plus new), and training continues from the learning rate the
+stretched curve has at that epoch.
+
 ## Comparing the trials in W&B
 
 By default the trials are **not** logged to W&B: starting and uploading one

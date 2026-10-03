@@ -14,6 +14,31 @@ from .lit_mlp import LitMLP
 CHECKPOINT_SUFFIX = ".ckpt"
 
 
+def _resolve_run(run: str | Path) -> Path:
+    """Find ``run`` as given, in the repo root, or in ``<OUTPUT_DIR>/LitWBTrainingBasicNeuralNetwork``."""
+    load_dotenv(REPO_DIR / ".env")
+    path = Path(run).expanduser()
+    outputs = resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_NAME
+    for candidate in (path, REPO_DIR / path, outputs / path):
+        if candidate.exists():
+            path = candidate.resolve()
+            break
+    else:
+        if outputs.is_dir():
+            found = sorted(d.name for d in outputs.iterdir() if d.is_dir())
+            hint = f"Runs saved for this project: {found or 'none yet'}"
+        else:
+            hint = (
+                f"{outputs} does not exist: no run of {PROJECT_NAME} was saved there "
+                "yet. Train first; in Colab, mount Google Drive before training and "
+                "before loading"
+            )
+        raise FileNotFoundError(
+            f"{str(run)!r} not found here, in {REPO_DIR}, or in {outputs}. {hint}"
+        )
+    return path
+
+
 def find_checkpoint(run: str | Path, which: str = "best") -> Path:
     """Locate a checkpoint saved by :func:`~LitWBTrainingBasicNeuralNetwork.main.main`.
 
@@ -37,17 +62,7 @@ def find_checkpoint(run: str | Path, which: str = "best") -> Path:
     """
     if which not in ("best", "last"):
         raise ValueError(f"which must be 'best' or 'last', got {which!r}")
-    load_dotenv(REPO_DIR / ".env")
-    path = Path(run).expanduser()
-    outputs = resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_NAME
-    for candidate in (path, REPO_DIR / path, outputs / path):
-        if candidate.exists():
-            path = candidate.resolve()
-            break
-    else:
-        raise FileNotFoundError(
-            f"{str(run)!r} not found here, in {REPO_DIR}, or in {outputs}"
-        )
+    path = _resolve_run(run)
     if path.is_file():
         return path
 
@@ -60,6 +75,29 @@ def find_checkpoint(run: str | Path, which: str = "best") -> Path:
     if not checkpoints:
         raise FileNotFoundError(f"No {pattern} checkpoint in {path} or its run folders")
     return max(checkpoints, key=lambda p: p.stat().st_mtime)
+
+
+def find_resume_checkpoint(run: str | Path) -> Path:
+    """Locate the checkpoint to continue training from: the run's last epoch.
+
+    ``run`` is looked up as in :func:`find_checkpoint`; for a config folder, its
+    newest run is used. A run stopped before it saved a ``last`` checkpoint
+    continues from its best one.
+
+    Args:
+        run: Checkpoint file, run folder, or config folder.
+
+    Returns:
+        The checkpoint path.
+    """
+    path = _resolve_run(run)
+    if path.is_file():
+        return path
+    run_dir = find_checkpoint(path, "best").parent
+    last = list(run_dir.glob(f"last*{CHECKPOINT_SUFFIX}"))
+    if last:
+        return max(last, key=lambda p: p.stat().st_mtime)
+    return find_checkpoint(run_dir, "best")
 
 
 def _run_config(checkpoint: Path) -> dict:

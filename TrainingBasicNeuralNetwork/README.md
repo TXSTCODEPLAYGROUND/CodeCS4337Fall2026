@@ -94,6 +94,11 @@ from TrainingBasicNeuralNetwork import load_model
 model = load_model("config01")   # newest run of config01, best checkpoint
 ```
 
+To train a run further instead, resume it, as described in
+[Continuing training](../TrainingBasicConvnet/README.md#continuing-training):
+`main("config01.json", resume_from="config01")`, or
+`--resume-from config01` on the command line.
+
 ## Things to try
 
 Change only [`configs/config01.json`](configs/config01.json) (or a copy of

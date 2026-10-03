@@ -163,7 +163,7 @@ Each run writes these files to
 ├── hparams.json                    # Optimizer and data settings
 ├── metrics.csv                     # Every metric, every epoch (local backup)
 ├── best_epoch08_valacc0.9240.ckpt  # Checkpoint with the best validation accuracy
-├── last.ckpt                       # Checkpoint after the last epoch
+├── last.ckpt                       # Checkpoint of the last epoch, rewritten every epoch
 └── wandb/                          # W&B's local copy of the run (offline runs are synced from here)
 ```
 
@@ -176,6 +176,12 @@ from LitWBTrainingBasicConvnet import load_model
 
 model = load_model("config01")
 ```
+
+To train a run further instead, resume it, as described in
+[Continuing training](../LitTrainingBasicConvnet/README.md#continuing-training):
+`main("config01.json", resume_from="config01")`, or
+`--resume-from config01` on the command line. The continued run is a new W&B
+run.
 
 ## Things to try
 

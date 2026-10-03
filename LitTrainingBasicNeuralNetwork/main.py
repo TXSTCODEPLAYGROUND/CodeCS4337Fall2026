@@ -43,6 +43,7 @@ from .dataloaders import (
     FashionMNISTDataModule,
 )
 from .models import MLP, LitMLP
+from .models.loading import find_resume_checkpoint
 from .utils import (
     PROJECT_NAME,
     REPO_DIR,
@@ -53,7 +54,9 @@ from .utils import (
 )
 
 
-def main(config_path: str | Path | None = None) -> dict[str, float]:
+def main(
+    config_path: str | Path | None = None, resume_from: str | Path | None = None
+) -> dict[str, float]:
     """Train, then test the best checkpoint, using a JSON config.
 
     Results go to ``<OUTPUT_DIR>/LitTrainingBasicNeuralNetwork/<config_name>/<timestamp>/``:
@@ -72,6 +75,15 @@ def main(config_path: str | Path | None = None) -> dict[str, float]:
     Args:
         config_path: Config name or path, e.g. ``"config01.json"``. When
             omitted, it is read from the required ``--config`` command-line flag.
+        resume_from: Continue an earlier run instead of starting from
+            scratch: ``"config01"`` (the newest run of config01), a run folder,
+            or a checkpoint, found by
+            :func:`~LitTrainingBasicNeuralNetwork.models.loading.find_resume_checkpoint`. The
+            weights, the optimizer (including its learning rate), and the epoch
+            count come from the run's last checkpoint; the config's ``"epochs"``
+            more epochs are then trained into a new run folder. The model
+            settings in the config must match the run's. On the command line:
+            ``--resume-from config01``.
 
     Returns:
         Test metrics of the best checkpoint, e.g. ``test_loss``, ``test_acc``,
@@ -81,10 +93,26 @@ def main(config_path: str | Path | None = None) -> dict[str, float]:
     if config_path is None:
         parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
         parser.add_argument("--config", required=True, help="e.g. config01.json")
-        config_path = parser.parse_args().config
+        parser.add_argument(
+            "--resume-from",
+            help="continue an earlier run, e.g. config01 (its newest run)",
+        )
+        args = parser.parse_args()
+        config_path, resume_from = args.config, args.resume_from
     config_path = resolve_config_path(config_path)
     config = json.loads(config_path.read_text())
     data_cfg, model_cfg, train_cfg = config["data"], config["model"], config["training"]
+    epochs, resume_checkpoint = train_cfg["epochs"], None
+    if resume_from is not None:
+        resume_checkpoint = find_resume_checkpoint(resume_from)
+        state = torch.load(resume_checkpoint, map_location="cpu", weights_only=False)
+        done = state["epoch"] + 1
+        epochs += done
+        print(
+            f"Resuming {resume_checkpoint} after {done} epochs, up to {epochs} epochs"
+        )
+        # Expected: the new run saves its checkpoints in its own folder.
+        warnings.filterwarnings("ignore", message=".*dirpath has changed.*")
 
     L.seed_everything(config["seed"], workers=True)
 
@@ -120,16 +148,20 @@ def main(config_path: str | Path | None = None) -> dict[str, float]:
         auto_insert_metric_name=False,
         monitor="val_acc",
         mode="max",
-        save_last=True,
+    )
+    # save_last=True would only copy the best checkpoint; this one is rewritten
+    # every epoch, so a stopped run can be resumed from its last epoch.
+    last_checkpoint = ModelCheckpoint(
+        dirpath=run_dir, filename="last", enable_version_counter=False
     )
 
     trainer = L.Trainer(
-        max_epochs=train_cfg["epochs"],
+        max_epochs=epochs,
         accelerator=config["accelerator"],
         logger=loggers,
-        callbacks=[checkpoint],
+        callbacks=[checkpoint, last_checkpoint],
     )
-    trainer.fit(model, datamodule=data)
+    trainer.fit(model, datamodule=data, ckpt_path=resume_checkpoint)
     (test_metrics,) = trainer.test(datamodule=data, ckpt_path="best")
     preds = torch.cat(trainer.predict(datamodule=data, ckpt_path="best"))
 
@@ -139,6 +171,8 @@ def main(config_path: str | Path | None = None) -> dict[str, float]:
         "model": dict(model.hparams),
         "data": dict(data.hparams),
     }
+    if resume_checkpoint:
+        hparams["resumed_from"] = str(resume_checkpoint)
     (run_dir / "hparams.json").write_text(json.dumps(hparams, indent=2))
     plots = save_run_plots(
         run_dir,

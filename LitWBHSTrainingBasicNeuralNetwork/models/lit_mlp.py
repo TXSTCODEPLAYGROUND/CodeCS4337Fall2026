@@ -1,5 +1,7 @@
 """The LightningModule (Lightning's "system"): how the network is trained and evaluated."""
 
+import math
+
 import lightning as L
 import torch
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
@@ -175,6 +177,26 @@ class LitMLP(L.LightningModule):
             batch_idx: Index of the batch (unused).
         """
         self._shared_step(batch, "test")
+
+    def on_train_start(self) -> None:
+        """Stretch a cosine schedule over all epochs when a run is resumed.
+
+        Resuming restores the earlier run's scheduler, whose cosine already ends
+        at a learning rate of 0 after that run's epochs. The curve is stretched
+        to the new number of epochs, and the learning rate set to its value at
+        the current epoch, so the extra epochs still learn.
+        """
+        if self.hparams.scheduler != "cosine":
+            return
+        scheduler = self.lr_schedulers()
+        if scheduler.T_max == self.trainer.max_epochs:
+            return
+        scheduler.T_max = self.trainer.max_epochs
+        # The scheduler updates the learning rate from its previous value, which
+        # is 0 here, so set the value of the stretched curve directly.
+        factor = (1 + math.cos(math.pi * scheduler.last_epoch / scheduler.T_max)) / 2
+        for group, base_lr in zip(scheduler.optimizer.param_groups, scheduler.base_lrs):
+            group["lr"] = scheduler.eta_min + (base_lr - scheduler.eta_min) * factor
 
     def on_train_epoch_end(self) -> None:
         """Log the per-class training accuracy of the finished epoch."""

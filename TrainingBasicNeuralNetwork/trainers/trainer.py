@@ -57,6 +57,7 @@ class Trainer:
         self.best_epoch = 0
         self.best_checkpoint: Path | None = None
         self.last_checkpoint: Path | None = None
+        self.start_epoch = 0
 
     def _run_epoch(
         self, loader: DataLoader, train: bool, desc: str
@@ -109,15 +110,19 @@ class Trainer:
 
         After each epoch the model is evaluated on the validation set. Whenever
         validation accuracy improves, the previous best checkpoint is replaced
-        by ``best_epochXX_valaccY.YYYY.pt``. The final weights are saved as
-        ``last_epochXX_valaccY.YYYY.pt`` and the metric history as
-        ``history.json``.
+        by ``best_epochXX_valaccY.YYYY.pt``. The previous last checkpoint is
+        replaced by ``last_epochXX_valaccY.YYYY.pt`` after every epoch, so an
+        interrupted run can be resumed (see :meth:`resume`). The metric
+        history is saved as ``history.json`` at the end.
+
+        After :meth:`resume`, epochs are numbered after the checkpoint's.
 
         Returns:
             Per-epoch history with keys ``train_loss``, ``train_acc``,
             ``val_loss``, and ``val_acc``.
         """
-        for epoch in range(1, self.epochs + 1):
+        last_epoch = self.start_epoch + self.epochs
+        for epoch in range(self.start_epoch + 1, last_epoch + 1):
             train_loss, train_acc = self._run_epoch(
                 self.train_loader, train=True, desc=f"train {epoch}"
             )
@@ -129,7 +134,7 @@ class Trainer:
             self.history["val_acc"].append(val_acc)
 
             print(
-                f"Epoch {epoch}/{self.epochs} | "
+                f"Epoch {epoch}/{last_epoch} | "
                 f"train loss {train_loss:.4f} acc {train_acc:.4f} | "
                 f"val loss {val_loss:.4f} acc {val_acc:.4f}"
             )
@@ -142,13 +147,12 @@ class Trainer:
                 self.best_checkpoint = self.save_checkpoint(
                     self._checkpoint_name("best", epoch, val_acc), epoch, val_acc
                 )
+            if self.last_checkpoint is not None:
+                self.last_checkpoint.unlink(missing_ok=True)
+            self.last_checkpoint = self.save_checkpoint(
+                self._checkpoint_name("last", epoch, val_acc), epoch, val_acc
+            )
 
-        final_val_acc = self.history["val_acc"][-1]
-        self.last_checkpoint = self.save_checkpoint(
-            self._checkpoint_name("last", self.epochs, final_val_acc),
-            self.epochs,
-            final_val_acc,
-        )
         self.save_history()
         return self.history
 
@@ -204,6 +208,22 @@ class Trainer:
         """
         checkpoint = torch.load(path, map_location=self.device)
         self.model.load_state_dict(checkpoint["model_state_dict"])
+
+    def resume(self, path: Path) -> None:
+        """Continue from a checkpoint: restore the model, optimizer, and epoch count.
+
+        :meth:`fit` then trains ``epochs`` more epochs, numbered after the
+        checkpoint's. The optimizer continues with its saved state, including
+        its learning rate. The best accuracy is tracked anew, so this run saves
+        its own best checkpoint.
+
+        Args:
+            path: Path to a checkpoint written by :meth:`save_checkpoint`.
+        """
+        checkpoint = torch.load(path, map_location=self.device)
+        self.model.load_state_dict(checkpoint["model_state_dict"])
+        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        self.start_epoch = checkpoint["epoch"]
 
     def save_history(self) -> None:
         """Write the per-epoch metric history to ``history.json`` in ``run_dir``."""

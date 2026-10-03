@@ -104,7 +104,7 @@ Each run writes ``runs/LitTrainingBasicConvnet/<config>/<timestamp>/``:
 * ``metrics.csv``: every metric per epoch, written by Lightning's ``CSVLogger``
 * ``hparams.json``: optimizer and data settings
 * ``best_epochXX_valaccY.ckpt``: checkpoint with the best validation accuracy
-* ``last.ckpt``: checkpoint after the last epoch
+* ``last.ckpt``: checkpoint of the last epoch, rewritten every epoch
 * ``loss.png`` and ``accuracy.png``: training and validation curves on one graph
 * ``accuracy_per_class.png``: every class per epoch, training solid and validation dashed
 * ``predictions.png`` and ``wrong_predictions.png``: test images with their
@@ -124,6 +124,16 @@ model back: it finds the checkpoint, rebuilds the network from the run's
    model = load_model("config01")                       # newest run, best checkpoint
    model = load_model("config01/2026-10-02_12-29-09")   # one specific run
    model = load_model("config01", which="last")         # the last epoch
+
+To train a run further instead, pass ``resume_from`` to :func:`~LitTrainingBasicConvnet.main.main`:
+it continues from the run's last checkpoint (weights, optimizer, and epoch
+count) for the config's ``"epochs"`` more epochs, into a new run folder.
+
+.. code-block:: python
+
+   main("config01.json", resume_from="config01")
+
+On the command line: ``--resume-from config01``.
 
 LitLogger
 ---------

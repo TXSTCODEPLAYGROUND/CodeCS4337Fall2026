@@ -217,20 +217,26 @@ run (metrics, checkpoints, and plots); see the
 
 Open `runs_summary.csv` to compare runs of the same config at a glance.
 
-Running a config always trains from scratch into a new run folder; earlier
-runs are never loaded or overwritten. To get a trained model back, every
-project has `load_model`, which finds a run's checkpoint, rebuilds the network
-with the run's settings, and loads its weights:
+Running a config trains from scratch into a new run folder; earlier runs are
+never overwritten. To get a trained model back, every project has
+`load_model`, which finds a run's checkpoint, rebuilds the network with the
+run's settings, and loads its weights. To **keep training** a run instead,
+pass `resume_from` to `main`: it continues from the run's last epoch (weights,
+optimizer, and epoch count) for the config's `"epochs"` more epochs, into a
+new run folder:
 
 ```python
-from TrainingBasicConvnet import load_model
+from TrainingBasicConvnet import load_model, main
 
 model = load_model("config01")                 # newest run of config01, best checkpoint
 model = load_model("config01", which="last")   # its last epoch instead
+main("config01.json", resume_from="config01")  # train it further
 ```
 
+On the command line: `python -m TrainingBasicConvnet --config config01.json --resume-from config01`.
 See [Loading a trained model](LitTrainingBasicConvnet/README.md#loading-a-trained-model)
-for the other options.
+and [Continuing training](LitTrainingBasicConvnet/README.md#continuing-training)
+for the details.
 
 ## Running in Google Colab
 
@@ -336,13 +342,14 @@ your Drive.
 **Save your state in Google Drive**
 
 - Always mount Drive *before* training, so results go straight to Drive.
-- The best model so far (`best_epochXX_valaccY.pt`) is saved to Drive
-  *during* training, every time validation accuracy improves. If the runtime
-  disconnects mid-run, that checkpoint is kept.
-- The last checkpoint, `history.json`, the results file, and the row in
-  `runs_summary.csv` are written only when the run finishes, so an interrupted
-  run has only its best checkpoint. `load_model("config01")` still loads it;
-  starting the config again begins a new run from scratch.
+- Two checkpoints are saved to Drive *during* training: the best model so far
+  (`best_epochXX_valaccY.pt`, `.ckpt` in Lightning projects), every time
+  validation accuracy improves, and the last epoch, after every epoch. If the
+  runtime disconnects mid-run, both are kept: `load_model("config01")` loads
+  the best one, and `main("config01.json", resume_from="config01")` continues
+  training from the last one.
+- The run's other files (results, plots, and the row in `runs_summary.csv`)
+  are written only when the run finishes.
 - Keep your notebook and any configs you edited in Drive too.
 
 **Avoid idle disconnects**
@@ -362,7 +369,8 @@ your Drive.
   full run.
 - Prefer several shorter runs over one very long run.
 - After a disconnect, re-run the setup cells (and the **Load API keys** cell,
-  if you use W&B or LitLogger), then start the run again.
+  if you use W&B or LitLogger), then resume the run with `resume_from` instead
+  of starting over.
 - When done, use *Runtime → Disconnect and delete runtime* to save your GPU
   quota (or compute units on paid plans).
 
