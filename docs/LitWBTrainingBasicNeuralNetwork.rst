@@ -38,6 +38,15 @@ The number of parameters is sent to W&B as ``num_params`` in the run's config,
 so runs with different ``hidden_sizes`` can be compared on wandb.ai. Locally,
 ``runs_summary.csv`` records ``hidden_sizes`` and ``num_params``.
 
+:func:`~LitWBTrainingBasicNeuralNetwork.models.loading.load_model` loads a
+trained model back, rebuilt with the run's ``hidden_sizes`` and ``dropout``:
+
+.. code-block:: python
+
+   from LitWBTrainingBasicNeuralNetwork import load_model
+
+   model = load_model("config01")   # newest run of config01, best checkpoint
+
 The `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/LitWBTrainingBasicNeuralNetwork>`_
 shows how to compare network sizes in W&B.
 
@@ -63,6 +72,9 @@ Models
    :members:
 
 .. automodule:: LitWBTrainingBasicNeuralNetwork.models.components.mlp
+   :members:
+
+.. automodule:: LitWBTrainingBasicNeuralNetwork.models.loading
    :members:
 
 Dataloaders

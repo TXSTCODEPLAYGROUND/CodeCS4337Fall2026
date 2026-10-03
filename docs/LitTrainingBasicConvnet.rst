@@ -113,13 +113,17 @@ Each run writes ``runs/LitTrainingBasicConvnet/<config>/<timestamp>/``:
 Lightning numbers epochs from 0, so ``best_epoch09`` is the tenth epoch. A row
 per run is appended to ``runs_summary.csv`` in the config folder.
 
-Because the network is passed in, give it again when loading a checkpoint:
+:func:`~LitTrainingBasicConvnet.models.loading.load_model` loads a trained
+model back: it finds the checkpoint, rebuilds the network from the run's
+``config.json``, and returns the model in eval mode:
 
 .. code-block:: python
 
-   from LitTrainingBasicConvnet.models import ConvNet, LitConvNet
+   from LitTrainingBasicConvnet import load_model
 
-   model = LitConvNet.load_from_checkpoint("path/to/best.ckpt", net=ConvNet(dropout=0.25))
+   model = load_model("config01")                       # newest run, best checkpoint
+   model = load_model("config01/2026-10-02_12-29-09")   # one specific run
+   model = load_model("config01", which="last")         # the last epoch
 
 LitLogger
 ---------
@@ -130,7 +134,7 @@ of each run also appear on lightning.ai, where runs can be watched live and
 compared. It needs a free Lightning AI account, so it is off by default. To
 turn it on, copy ``LIGHTNING_USER_ID`` and ``LIGHTNING_API_KEY`` from
 lightning.ai (profile picture, *Global Settings*, *Keys*, *Login via CLI*)
-into ``.env`` (in Colab: add them as Colab Secrets and run the starter
+into ``.env`` (in Colab: add them as Colab Secrets and run the project
 notebook's *Load API keys* cell) and set ``"litlogger": true`` in the config.
 Without the keys it
 is skipped with a warning. The local ``metrics.csv`` and plots are written
@@ -152,6 +156,9 @@ Models
    :members:
 
 .. automodule:: LitTrainingBasicConvnet.models.components.convnet
+   :members:
+
+.. automodule:: LitTrainingBasicConvnet.models.loading
    :members:
 
 Dataloaders

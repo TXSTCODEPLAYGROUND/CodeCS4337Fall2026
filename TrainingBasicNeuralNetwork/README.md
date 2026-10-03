@@ -82,6 +82,18 @@ knowledge about images is why ConvNets do better on images. MLPs are still
 the basic building block: the last layers of a ConvNet, and parts of
 transformers, are fully connected layers.
 
+## Loading a trained model
+
+`load_model` rebuilds the network from the config stored in the checkpoint
+and loads its weights, as in
+[TrainingBasicConvnet](../TrainingBasicConvnet/README.md#loading-a-trained-model):
+
+```python
+from TrainingBasicNeuralNetwork import load_model
+
+model = load_model("config01")   # newest run of config01, best checkpoint
+```
+
 ## Things to try
 
 Change only [`configs/config01.json`](configs/config01.json) (or a copy of

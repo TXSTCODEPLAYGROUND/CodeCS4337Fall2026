@@ -193,14 +193,27 @@ Each run writes these files to
 └── predictions.png, wrong_predictions.png
 ```
 
-`best_epoch08` is the ninth epoch. Because the network is passed into
-`LitConvNet`, give it again when reloading a checkpoint:
+`best_epoch08` is the ninth epoch.
+
+## Loading a trained model
+
+`load_model` finds a run's checkpoint, rebuilds the network from the run's
+`config.json`, and loads the weights, so you don't have to remember the
+network's settings:
 
 ```python
-from LitTrainingBasicConvnet.models import ConvNet, LitConvNet
+from LitTrainingBasicConvnet import load_model
 
-model = LitConvNet.load_from_checkpoint("path/to/file.ckpt", net=ConvNet(dropout=0.25))
+model = load_model("config01")                       # newest run of config01, best checkpoint
+model = load_model("config01/2026-10-02_12-29-09")   # one specific run
+model = load_model("config01", which="last")         # the last epoch instead of the best
+logits = model(images)                               # images: (N, 1, 28, 28), normalized
 ```
+
+Run names are looked up in `<OUTPUT_DIR>/LitTrainingBasicConvnet/`; a full
+path to a run folder or a `.ckpt` file works too. The model comes back in eval
+mode on the CPU (pass `device="cuda"` for a GPU), and works with
+`trainer.test(model, datamodule=data)`.
 
 ## Things to try
 

@@ -9,5 +9,6 @@ Example:
 """
 
 from .main import main
+from .models import load_model
 
-__all__ = ["main"]
+__all__ = ["load_model", "main"]

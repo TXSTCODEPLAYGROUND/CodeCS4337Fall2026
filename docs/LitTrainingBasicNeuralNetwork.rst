@@ -33,13 +33,14 @@ turns LitLogger on or off (off by default). ``runs_summary.csv`` also records
 ``hidden_sizes`` and ``num_params``, and ``hparams.json`` has a ``"net"``
 section with the network settings.
 
-Because the network is passed in, give it again when loading a checkpoint:
+:func:`~LitTrainingBasicNeuralNetwork.models.loading.load_model` loads a
+trained model back, rebuilding the network from the run's ``config.json``:
 
 .. code-block:: python
 
-   from LitTrainingBasicNeuralNetwork.models import MLP, LitMLP
+   from LitTrainingBasicNeuralNetwork import load_model
 
-   model = LitMLP.load_from_checkpoint("path/to/best.ckpt", net=MLP(hidden_sizes=[256, 128]))
+   model = load_model("config01")   # newest run of config01, best checkpoint
 
 The `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/LitTrainingBasicNeuralNetwork>`_
 compares the project with LitTrainingBasicConvnet.
@@ -60,6 +61,9 @@ Models
    :members:
 
 .. automodule:: LitTrainingBasicNeuralNetwork.models.components.mlp
+   :members:
+
+.. automodule:: LitTrainingBasicNeuralNetwork.models.loading
    :members:
 
 Dataloaders
