@@ -17,26 +17,38 @@ Function and class details are in the
 
 The projects come in two series, one per network. Each series goes through
 the same three steps: plain PyTorch, then PyTorch Lightning, then Lightning
-with Weights & Biases tracking. A third section then searches for good
-hyperparameters automatically.
+with Weights & Biases tracking. The fully connected series also shows
+TensorBoard, a tracking dashboard that runs locally without an account, and
+is followed by an automatic search for good hyperparameters; the ConvNet
+series ends with a search that also picks the network's architecture.
 
 | Project | Description |
 | --- | --- |
 | **Fully connected network (MLP)** | |
 | [TrainingBasicNeuralNetwork](TrainingBasicNeuralNetwork/) | Start here: train a fully connected neural network (only `nn.Linear` layers, no convolutions) on Fashion-MNIST in plain PyTorch, and see what layers, activations, dropout, and parameters are. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TrainingBasicNeuralNetwork/training_basic_neural_network_notebook.ipynb) |
+| [TensorBoardTrainingBasicNeuralNetwork](TensorBoardTrainingBasicNeuralNetwork/) | For learning TensorBoard; train your own models with the `LitWB...` approach. TrainingBasicNeuralNetwork with [TensorBoard](https://www.tensorflow.org/tensorboard) logging (`torch.utils.tensorboard`): training curves, sample predictions, a confusion matrix, the network graph, weight histograms, and an HParams table comparing runs, viewed in the notebook (Colab or Jupyter) or at `localhost:6006`. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TensorBoardTrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TensorBoardTrainingBasicNeuralNetwork/tensorboard_training_basic_neural_network_notebook.ipynb) |
 | [LitTrainingBasicNeuralNetwork](LitTrainingBasicNeuralNetwork/) | The same network trained with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): the Lightning-Hydra-Template project layout, torchmetrics (precision, recall, per-class accuracy), learning-curve and prediction plots, and optional LitLogger tracking. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicNeuralNetwork/lit_training_basic_neural_network_notebook.ipynb) |
-| [LitWBTrainingBasicNeuralNetwork](LitWBTrainingBasicNeuralNetwork/) | **Recommended pattern.** The Lightning MLP tracked with [Weights & Biases](https://wandb.ai): live charts, a test-prediction table, and a confusion matrix on wandb.ai, plus the network size (`num_params`) for comparing architectures. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicNeuralNetwork/lit_wb_training_basic_neural_network_notebook.ipynb) |
+| [LitWBTrainingBasicNeuralNetwork](LitWBTrainingBasicNeuralNetwork/) | **Use this approach for your training.** The Lightning MLP tracked with [Weights & Biases](https://wandb.ai): live charts, a test-prediction table, and a confusion matrix on wandb.ai, plus the network size (`num_params`) for comparing architectures. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicNeuralNetwork/lit_wb_training_basic_neural_network_notebook.ipynb) |
+| **Hyperparameter search (Optuna)** | |
+| [LitWBHSTrainingBasicNeuralNetwork](LitWBHSTrainingBasicNeuralNetwork/) | LitWBTrainingBasicNeuralNetwork plus a hyperparameter search with [Optuna](https://optuna.org): network size, activation, dropout, batch size, epochs, optimizer, learning rate, L1/L2 regularization, learning-rate scheduler, and early stopping. The best trial is saved as a config to train and log to W&B. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBHSTrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBHSTrainingBasicNeuralNetwork/lit_wbhs_training_basic_neural_network_notebook.ipynb) |
 | **Convolutional network (ConvNet)** | |
 | [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST with a training loop written in plain PyTorch, and organize the code into modules and packages. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TrainingBasicConvnet/training_basic_convnet_notebook.ipynb) |
 | [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same ConvNet trained with PyTorch Lightning; its README explains the Lightning project layout used by all `Lit...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicConvnet/lit_training_basic_convnet_notebook.ipynb) |
-| [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | **Recommended pattern.** The Lightning ConvNet tracked with W&B, with an offline mode when there is no key or the login fails; its README explains the W&B setup and dashboard used by all `LitWB...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicConvnet/lit_wb_training_basic_convnet_notebook.ipynb) |
-| **Hyperparameter search (Optuna)** | |
-| [LitWBHSTrainingBasicNeuralNetwork](LitWBHSTrainingBasicNeuralNetwork/) | LitWBTrainingBasicNeuralNetwork plus a hyperparameter search with [Optuna](https://optuna.org): network size, activation, dropout, batch size, epochs, optimizer, learning rate, L1/L2 regularization, learning-rate scheduler, and early stopping. The best trial is saved as a config to train and log to W&B. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBHSTrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBHSTrainingBasicNeuralNetwork/lit_wbhs_training_basic_neural_network_notebook.ipynb) |
+| [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | **Use this approach for your training.** The Lightning ConvNet tracked with W&B, with an offline mode when there is no key or the login fails; its README explains the W&B setup and dashboard used by all `LitWB...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicConvnet/lit_wb_training_basic_convnet_notebook.ipynb) |
+| [HyperparameterSearchConvnets](HyperparameterSearchConvnets/) | LitWBHSTrainingBasicNeuralNetwork for ConvNets: Optuna also searches the **architecture** of a ConvNet built from ResNet-like blocks (2 to 8 blocks, 16 to 256 channels in the first block, 1 to 3 convolutions per block, BatchNorm, skip connections, dropout), starting from a plain two-block ConvNet. Which choices matter, and when do BatchNorm and skip connections make deep networks trainable? [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/HyperparameterSearchConvnets.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/HyperparameterSearchConvnets/hyperparameter_search_convnets_notebook.ipynb) |
 
-The `LitWB...` projects are the **recommended pattern** for your own
-experiments: Lightning removes the training-loop boilerplate, and W&B records
-every run (metrics, config, predictions) so runs can be compared without
-writing plotting code. The other projects build up to it step by step.
+> **Train your own models with Lightning + W&B.** For your own experiments
+> and coursework, you must follow the `LitWB...` approach: start from
+> [LitWBTrainingBasicNeuralNetwork](LitWBTrainingBasicNeuralNetwork/) or
+> [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/). Lightning removes
+> the training-loop boilerplate, and W&B records every run (metrics, config,
+> predictions) so runs can be compared without writing plotting code.
+
+The other projects are there to learn from, not to base your training on:
+plain PyTorch and Lightning without W&B build up to the `LitWB...` projects
+step by step, the hyperparameter search builds on them, and
+TensorBoardTrainingBasicNeuralNetwork shows another tracking tool you will
+meet in other code.
 
 Each project folder has its own `README.md` explaining what the project is
 about and what it teaches. This README covers what all projects share: setup,
@@ -72,17 +84,22 @@ CodeCS4337Fall2026/
 │   ├── models/            # LightningModule, and plain networks in models/components/
 │   ├── dataloaders/       # LightningDataModule: download, split, batch
 │   └── utils/             # Helpers (paths, run summaries, plots)
-├── LitWBTrainingBasicNeuralNetwork/  # Same Lightning experiment, tracked with W&B (recommended)
+├── LitWBTrainingBasicNeuralNetwork/  # Same Lightning experiment, tracked with W&B (use for your training)
 │   ├── ...                # Same as LitTrainingBasicNeuralNetwork, without utils/plots.py
 │   └── callbacks/         # Logs test predictions and a confusion matrix to W&B
 ├── TrainingBasicConvnet/      # Same three steps with a ConvNet (models/convnet.py)
 ├── LitTrainingBasicConvnet/   # Same layout as LitTrainingBasicNeuralNetwork
-├── LitWBTrainingBasicConvnet/ # Same layout as LitWBTrainingBasicNeuralNetwork (recommended)
-└── LitWBHSTrainingBasicNeuralNetwork/  # LitWBTrainingBasicNeuralNetwork plus an Optuna search
-    ├── ...                    # Same layout as LitWBTrainingBasicNeuralNetwork
-    ├── search.py              # Second entry point: search(config) runs the Optuna study
-    ├── configs/search01.json  # Search space and study settings
-    └── lit_wbhs_training_basic_neural_network_notebook.ipynb  # Colab notebook: search, plots, train the best config
+├── LitWBTrainingBasicConvnet/ # Same layout as LitWBTrainingBasicNeuralNetwork (use for your training)
+├── HyperparameterSearchConvnets/  # Same layout as LitWBHSTrainingBasicNeuralNetwork, for ConvNets
+│   └── models/components/convnet.py  # Builds a ConvNet from ResNet-like blocks
+├── LitWBHSTrainingBasicNeuralNetwork/  # LitWBTrainingBasicNeuralNetwork plus an Optuna search
+│   ├── ...                    # Same layout as LitWBTrainingBasicNeuralNetwork
+│   ├── search.py              # Second entry point: search(config) runs the Optuna study
+│   ├── configs/search01.json  # Search space and study settings
+│   └── lit_wbhs_training_basic_neural_network_notebook.ipynb  # Colab notebook: search, plots, train the best config
+└── TensorBoardTrainingBasicNeuralNetwork/  # TrainingBasicNeuralNetwork plus TensorBoard logging
+    ├── ...                    # Same layout as TrainingBasicNeuralNetwork
+    └── utils/tensorboard_logging.py  # Images, graph, and HParams for TensorBoard
 ```
 
 Every project has the same entry points (`main.py`, `configs/`) and is run the
@@ -255,7 +272,9 @@ cells from top to bottom.
 | TrainingBasicConvnet | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TrainingBasicConvnet/training_basic_convnet_notebook.ipynb) |
 | LitTrainingBasicConvnet | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicConvnet/lit_training_basic_convnet_notebook.ipynb) |
 | LitWBTrainingBasicConvnet | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicConvnet/lit_wb_training_basic_convnet_notebook.ipynb) |
+| HyperparameterSearchConvnets | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/HyperparameterSearchConvnets/hyperparameter_search_convnets_notebook.ipynb) (architecture search, plots, and training the best config) |
 | LitWBHSTrainingBasicNeuralNetwork | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBHSTrainingBasicNeuralNetwork/lit_wbhs_training_basic_neural_network_notebook.ipynb) (search, plots, and training the best config) |
+| TensorBoardTrainingBasicNeuralNetwork | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TensorBoardTrainingBasicNeuralNetwork/tensorboard_training_basic_neural_network_notebook.ipynb) (training, then TensorBoard in the notebook) |
 
 Click the badge, then **File → Save a copy in Drive** so your changes to the
 notebook are kept. The badge always opens the latest version of the notebook.

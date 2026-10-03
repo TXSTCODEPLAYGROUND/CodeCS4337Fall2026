@@ -1,0 +1,43 @@
+{
+  "seed": 42,
+  "accelerator": "auto",
+  "wandb": {
+    "project": "HyperparameterSearchConvnets"
+  },
+  "data": {
+    "batch_size": 256,
+    "val_split": 0.1,
+    "num_workers": "auto",
+    "train_fraction": 1.0
+  },
+  "model": {
+    "channels": [
+      64,
+      128,
+      256
+    ],
+    "convs_per_block": 2,
+    "batch_norm": true,
+    "skip_connections": false,
+    "activation": "relu",
+    "dropout": 0.15367458028575987
+  },
+  "training": {
+    "epochs": 8,
+    "optimizer": "adam",
+    "lr": 0.000345742358841534,
+    "momentum": 0.9,
+    "l1": 2.2555655740657742e-07,
+    "l2": 0.0,
+    "scheduler": "plateau",
+    "step_size": 3,
+    "gamma": 0.30225801259970875,
+    "early_stopping": true,
+    "patience": 5
+  },
+  "found_by": {
+    "search_config": "search01.json",
+    "trial": 18,
+    "val_acc": 0.9122
+  }
+}

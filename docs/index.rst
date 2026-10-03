@@ -7,8 +7,10 @@ the docstrings in that package.
 
 The projects come in two series, one per network, each going from plain
 PyTorch to PyTorch Lightning to Lightning with Weights & Biases tracking. The
-``LitWB...`` projects are the recommended pattern for your own experiments.
-The last section adds an automatic hyperparameter search with Optuna.
+``LitWB...`` projects (Lightning + W&B) are the approach you must follow
+when training your own models; the other projects are for learning.
+The next section adds an automatic hyperparameter search with Optuna, and
+the last one logs the plain-PyTorch MLP to TensorBoard.
 
 .. toctree::
    :maxdepth: 2
@@ -16,7 +18,7 @@ The last section adds an automatic hyperparameter search with Optuna.
 
    TrainingBasicNeuralNetwork
    LitTrainingBasicNeuralNetwork
-   LitWBTrainingBasicNeuralNetwork (recommended) <LitWBTrainingBasicNeuralNetwork>
+   LitWBTrainingBasicNeuralNetwork (use for your training) <LitWBTrainingBasicNeuralNetwork>
 
 .. toctree::
    :maxdepth: 2
@@ -24,13 +26,20 @@ The last section adds an automatic hyperparameter search with Optuna.
 
    TrainingBasicConvnet
    LitTrainingBasicConvnet
-   LitWBTrainingBasicConvnet (recommended) <LitWBTrainingBasicConvnet>
+   LitWBTrainingBasicConvnet (use for your training) <LitWBTrainingBasicConvnet>
+   HyperparameterSearchConvnets
 
 .. toctree::
    :maxdepth: 2
    :caption: Hyperparameter search (Optuna)
 
    LitWBHSTrainingBasicNeuralNetwork
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Experiment tracking with TensorBoard
+
+   TensorBoardTrainingBasicNeuralNetwork
 
 .. toctree::
    :caption: Links
