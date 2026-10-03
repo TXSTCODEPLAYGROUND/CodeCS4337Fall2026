@@ -1,6 +1,6 @@
 # LitWBHSTrainingBasicNeuralNetwork
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBHSTrainingBasicNeuralNetwork/hyperparameter_search.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBHSTrainingBasicNeuralNetwork/lit_wbhs_training_basic_neural_network_notebook.ipynb)
 
 [LitWBTrainingBasicNeuralNetwork](../LitWBTrainingBasicNeuralNetwork/) plus
 a **hyperparameter search** with [Optuna](https://optuna.org). Instead of
@@ -16,7 +16,7 @@ Function and class details are in the
 [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBHSTrainingBasicNeuralNetwork.html).
 
 The easiest way to run everything is the project's own notebook,
-[`hyperparameter_search.ipynb`](hyperparameter_search.ipynb)
+[`lit_wbhs_training_basic_neural_network_notebook.ipynb`](lit_wbhs_training_basic_neural_network_notebook.ipynb)
 (the **Open In Colab** button above opens it in Colab).
 It has the same setup cells as the other projects' notebooks, then runs the search,
 plots the results, and trains the best config.

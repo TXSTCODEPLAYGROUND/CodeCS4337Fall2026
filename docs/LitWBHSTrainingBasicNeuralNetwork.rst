@@ -39,7 +39,7 @@ config is trained. The study is saved in
 ``<OUTPUT_DIR>/LitWBHSTrainingBasicNeuralNetwork/<search_name>/study.db``, so
 running the same search again adds trials to it.
 
-The project folder has a Colab notebook, ``hyperparameter_search.ipynb``,
+The project folder has a Colab notebook, ``lit_wbhs_training_basic_neural_network_notebook.ipynb``,
 that runs the search, plots the results, and trains the best config. The
 `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/LitWBHSTrainingBasicNeuralNetwork>`_
 explains the search space, Optuna's sampler and pruner, and the W&B dashboard.
