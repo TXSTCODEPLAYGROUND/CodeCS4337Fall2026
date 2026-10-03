@@ -7,7 +7,7 @@
     "train_fraction": 1.0,
     "pruner_startup_trials": 5,
     "pruner_warmup_epochs": 2,
-    "log_trials_to_wandb": true
+    "log_trials_to_wandb": false
   },
   "search_space": {
     "n_layers": [1, 3],

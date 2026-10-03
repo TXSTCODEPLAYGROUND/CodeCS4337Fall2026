@@ -4,8 +4,9 @@ LitWBHSTrainingBasicNeuralNetwork
 :doc:`LitWBTrainingBasicNeuralNetwork` plus a hyperparameter search with
 `Optuna <https://optuna.org>`__: network size, activation, dropout, batch
 size, epochs, optimizer, learning rate, L1/L2 regularization, learning-rate
-scheduler, and early stopping. Every trial is logged to W&B, and the best one
-is saved as a training config.
+scheduler, and early stopping. The best trial is saved as a training config,
+whose training run is logged to W&B (the trials themselves only with
+``"log_trials_to_wandb": true``).
 
 1. Search, with a search config from ``LitWBHSTrainingBasicNeuralNetwork/configs/``:
 
