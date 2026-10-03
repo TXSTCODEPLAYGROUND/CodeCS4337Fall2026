@@ -35,7 +35,11 @@ or, from Python or a notebook started at the repository root:
 
 The config lives in ``LitWBTrainingBasicConvnet/configs/``. Instead of
 ``"litlogger"``, it has ``"wandb": {"project": "LitWBTrainingBasicConvnet"}``,
-the W&B project the runs are sent to.
+the W&B project the runs are sent to. Its ``"training"`` section also turns on
+early stopping (``"early_stopping": true``, ``"patience": 3``): training stops
+when ``val_acc`` has not improved for ``patience`` epochs, so ``"epochs"`` is
+the most a run can take
+(:class:`~LitWBTrainingBasicConvnet.callbacks.early_stopping.ResumableEarlyStopping`).
 
 The `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/LitWBTrainingBasicConvnet>`_
 explains how to get a W&B key and how to build the dashboard.
@@ -101,6 +105,9 @@ Callbacks
 ~~~~~~~~~
 
 .. automodule:: LitWBTrainingBasicConvnet.callbacks.wandb_predictions
+   :members:
+
+.. automodule:: LitWBTrainingBasicConvnet.callbacks.early_stopping
    :members:
 
 Models
