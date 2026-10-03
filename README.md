@@ -36,6 +36,7 @@ series ends with a search that also picks the network's architecture.
 | [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same ConvNet trained with PyTorch Lightning; its README explains the Lightning project layout used by all `Lit...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicConvnet/lit_training_basic_convnet_notebook.ipynb) |
 | [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | **Use this approach for your training.** The Lightning ConvNet tracked with W&B, with an offline mode when there is no key or the login fails; its README explains the W&B setup and dashboard used by all `LitWB...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicConvnet/lit_wb_training_basic_convnet_notebook.ipynb) |
 | [HyperparameterSearchConvnets](HyperparameterSearchConvnets/) | LitWBHSTrainingBasicNeuralNetwork for ConvNets: Optuna also searches the **architecture** of a ConvNet built from ResNet-like blocks (2 to 8 blocks, 16 to 256 channels in the first block, 1 to 3 convolutions per block, BatchNorm, skip connections, dropout), starting from a plain two-block ConvNet. Which choices matter, and when do BatchNorm and skip connections make deep networks trainable? [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/HyperparameterSearchConvnets.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/HyperparameterSearchConvnets/hyperparameter_search_convnets_notebook.ipynb) |
+| [ResNetWalkThrough](ResNetWalkThrough/) | A single notebook, no training: a pretrained ResNet-18 classifies Imagenette images, then you look at its architecture with torchinfo, torchview, and Netron, its activations layer by layer and inside one residual block, Grad-CAM heatmaps with Captum, and compare ResNet variants (ResNet-18 to 152, ResNeXt, Wide ResNet). [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/ResNetWalkThrough/ResNetWalkThrough.ipynb) |
 
 > **Train your own models with Lightning + W&B.** For your own experiments
 > and coursework, you must follow the `LitWB...` approach: start from
@@ -92,6 +93,7 @@ CodeCS4337Fall2026/
 ├── LitWBTrainingBasicConvnet/ # Same layout as LitWBTrainingBasicNeuralNetwork (use for your training)
 ├── HyperparameterSearchConvnets/  # Same layout as LitWBHSTrainingBasicNeuralNetwork, for ConvNets
 │   └── models/components/convnet.py  # Builds a ConvNet from ResNet-like blocks
+├── ResNetWalkThrough/     # Only a README and a notebook (ResNetWalkThrough.ipynb): a tour of pretrained ResNets
 ├── LitWBHSTrainingBasicNeuralNetwork/  # LitWBTrainingBasicNeuralNetwork plus an Optuna search
 │   ├── ...                    # Same layout as LitWBTrainingBasicNeuralNetwork
 │   ├── search.py              # Second entry point: search(config) runs the Optuna study
@@ -103,7 +105,7 @@ CodeCS4337Fall2026/
 ```
 
 Every project has the same entry points (`main.py`, `configs/`) and is run the
-same way. Each project folder also has its own Colab notebook, named after the
+same way, except ResNetWalkThrough, which is only a notebook. Each project folder also has its own Colab notebook, named after the
 project (`lit_wb_training_basic_convnet_notebook.ipynb` for
 `LitWBTrainingBasicConvnet`, ...). Lightning projects have no `trainers/` folder, because Lightning's
 `Trainer` replaces the hand-written training loop; their layout is explained
@@ -273,6 +275,7 @@ cells from top to bottom.
 | LitTrainingBasicConvnet | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicConvnet/lit_training_basic_convnet_notebook.ipynb) |
 | LitWBTrainingBasicConvnet | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicConvnet/lit_wb_training_basic_convnet_notebook.ipynb) |
 | HyperparameterSearchConvnets | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/HyperparameterSearchConvnets/hyperparameter_search_convnets_notebook.ipynb) (architecture search, plots, and training the best config) |
+| ResNetWalkThrough | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/ResNetWalkThrough/ResNetWalkThrough.ipynb) (pretrained ResNets: architecture, activations, Grad-CAM, variants) |
 | LitWBHSTrainingBasicNeuralNetwork | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBHSTrainingBasicNeuralNetwork/lit_wbhs_training_basic_neural_network_notebook.ipynb) (search, plots, and training the best config) |
 | TensorBoardTrainingBasicNeuralNetwork | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TensorBoardTrainingBasicNeuralNetwork/tensorboard_training_basic_neural_network_notebook.ipynb) (training, then TensorBoard in the notebook) |
 
@@ -481,6 +484,11 @@ pip install -r requirements.txt
 
 When projects are added later, run this again after `git pull` (see
 [Getting updates](#getting-updates)).
+
+ResNetWalkThrough also needs the **Graphviz** program for its torchview
+graph. pip cannot install it: use `sudo apt install graphviz` (Linux),
+`brew install graphviz` (macOS), or the installer from
+[graphviz.org](https://graphviz.org/download/) (Windows).
 
 ### 3. Run the experiment
 
