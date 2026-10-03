@@ -11,8 +11,8 @@ table of test predictions, and a confusion matrix on wandb.ai instead of
 plotting code, with `metrics.csv` kept locally as a backup. After 10 epochs
 the test accuracy is about 88.6%.
 
-This Lightning + W&B setup is the **recommended pattern** for your own
-experiments: start new projects from this one or from
+This Lightning + W&B setup is the **approach you must follow** when training
+your own models: start new projects from this one or from
 [LitWBTrainingBasicConvnet](../LitWBTrainingBasicConvnet/).
 
 Read the projects it combines first:

@@ -23,8 +23,8 @@ What changes:
 4. **`metrics.csv` is still saved locally** (Lightning's `CSVLogger`), as a
    backup that works without an internet connection or an account.
 
-This Lightning + W&B setup is the **recommended pattern** for your own
-experiments: start new projects from this one or from
+This Lightning + W&B setup is the **approach you must follow** when training
+your own models: start new projects from this one or from
 [LitWBTrainingBasicNeuralNetwork](../LitWBTrainingBasicNeuralNetwork/).
 
 How to set up and run the project and where results go is explained in the
