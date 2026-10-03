@@ -48,7 +48,6 @@ running, configs, and where data and results go.
 CodeCS4337Fall2026/
 ├── README.md              # This file
 ├── requirements.txt       # Python packages for every project (one shared .venv)
-├── starternotebook.ipynb  # General Colab notebook for any project (each project also has its own)
 ├── ruff.toml              # Code style settings (you can ignore this for now, see below)
 ├── .gitignore             # Files git should not track (data, runs, .env, virtualenvs, ...)
 ├── .env                   # Local settings for all projects: where data and results go (not in git)
@@ -243,12 +242,6 @@ You can also download a notebook from the project folder and, in
 [Colab](https://colab.research.google.com), choose **File → Upload notebook**;
 uploaded notebooks are saved in the `Colab Notebooks` folder of your Google
 Drive.
-
-[`starternotebook.ipynb`](starternotebook.ipynb) at the repo root
-([open in Colab](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/starternotebook.ipynb))
-is a general version of the same notebook: it works for any project, but you
-change the project name in its run cells yourself.
-
 The notebook asks Colab for a GPU. If it does not get one, open
 **Runtime → Change runtime type** and select a GPU. Training works on CPU too,
 just much slower.
@@ -385,8 +378,9 @@ drive.mount("/content/drive")
 !cp .envcolab .env
 ```
 
-Then run the requirements loop from the setup cell of
-[`starternotebook.ipynb`](starternotebook.ipynb), and finally:
+Then run the requirements loop from the setup cell of any project's notebook
+(e.g. [`training_basic_convnet_notebook.ipynb`](TrainingBasicConvnet/training_basic_convnet_notebook.ipynb)),
+and finally:
 
 ```python
 from TrainingBasicConvnet import main
