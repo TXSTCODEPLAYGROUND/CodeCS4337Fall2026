@@ -49,6 +49,7 @@ autodoc_mock_imports = [
     "numpy",
     "optuna",
     "dotenv",
+    "sklearn",
     "tqdm",
     "wandb",
 ]

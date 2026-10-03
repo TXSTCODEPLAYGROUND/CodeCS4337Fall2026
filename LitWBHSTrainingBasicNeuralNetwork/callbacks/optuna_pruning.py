@@ -9,9 +9,9 @@ class OptunaPruning(L.Callback):
 
     Optuna's pruner compares the reported values with those of earlier trials
     at the same epoch. If this trial is clearly worse (e.g. below the median),
-    the callback raises ``optuna.TrialPruned``: training stops and Optuna
-    records the trial as pruned, so the search spends its time on promising
-    settings.
+    the callback stops training and sets :attr:`pruned`; the caller then
+    raises ``optuna.TrialPruned`` so Optuna records the trial as pruned, and
+    the search spends its time on promising settings.
 
     The best value seen is kept in :attr:`best`, the score of the trial.
     """
@@ -26,11 +26,12 @@ class OptunaPruning(L.Callback):
         self.trial = trial
         self.monitor = monitor
         self.best = float("-inf")
+        self.pruned: str | None = None
 
     def on_validation_end(
         self, trainer: L.Trainer, pl_module: L.LightningModule
     ) -> None:
-        """Report the epoch's value; raise ``optuna.TrialPruned`` if the pruner says so."""
+        """Report the epoch's value; stop training if the pruner says so."""
         # Lightning runs 2 validation batches before training as a quick check.
         if trainer.sanity_checking:
             return
@@ -38,5 +39,8 @@ class OptunaPruning(L.Callback):
         self.best = max(self.best, value)
         epoch = trainer.current_epoch
         self.trial.report(value, step=epoch)
+        # Raising inside fit() would leave the DataLoader workers hanging: PyTorch
+        # then waits 5 s per worker to shut them down before the next trial.
         if self.trial.should_prune():
-            raise optuna.TrialPruned(f"{self.monitor}={value:.4f} at epoch {epoch}")
+            self.pruned = f"{self.monitor}={value:.4f} at epoch {epoch}"
+            trainer.should_stop = True

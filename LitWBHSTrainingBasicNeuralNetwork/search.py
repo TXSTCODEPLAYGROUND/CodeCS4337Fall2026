@@ -53,7 +53,9 @@ from .utils import (
 
 
 def search(
-    search_config_path: str | Path | None = None, n_trials: int | None = None
+    search_config_path: str | Path | None = None,
+    n_trials: int | None = None,
+    train_fraction: float | None = None,
 ) -> optuna.Study:
     """Run an Optuna study: train many settings and keep the best one.
 
@@ -87,6 +89,13 @@ def search(
             trial and only rewrites the results of the saved study, e.g. to
             get ``configs/<search_name>_best.json`` back after the repo folder
             was deleted. Also settable with ``--n-trials``.
+        train_fraction: Fraction of the training split each trial trains on,
+            overriding ``"train_fraction"`` in the config's ``"study"``, e.g.
+            ``0.25`` for trials about 4 times faster. Validation always uses
+            the full validation split, and the saved best config trains on
+            the base config's data, so only the search gets faster. Keep it the
+            same for all trials of a study, or the scores are not comparable.
+            Also settable with ``--train-fraction``.
 
     Returns:
         The Optuna study, with every trial so far (``study.trials``) and the
@@ -99,8 +108,12 @@ def search(
         parser.add_argument(
             "--n-trials", type=int, help="override the config's n_trials"
         )
+        parser.add_argument(
+            "--train-fraction", type=float, help="override the config's train_fraction"
+        )
         args = parser.parse_args()
-        search_config_path, n_trials = args.config, args.n_trials
+        search_config_path = args.config
+        n_trials, train_fraction = args.n_trials, args.train_fraction
     search_path = resolve_config_path(search_config_path)
     search_cfg = json.loads(search_path.read_text())
     base_config = json.loads(resolve_config_path(search_cfg["base_config"]).read_text())
@@ -122,10 +135,19 @@ def search(
             n_warmup_steps=study_cfg["pruner_warmup_epochs"],
         ),
     )
+    if train_fraction is None:
+        train_fraction = study_cfg["train_fraction"]
     objective = _Objective(
-        base_config, space, search_name, search_dir, study_cfg["log_trials_to_wandb"]
+        base_config,
+        space,
+        search_name,
+        search_dir,
+        study_cfg["log_trials_to_wandb"],
+        train_fraction,
     )
     timeout = study_cfg["timeout_minutes"]
+    if train_fraction < 1:
+        print(f"Trials train on {train_fraction:.0%} of the training split.")
 
     # Lightning prints its setup (GPU, model summary) for every trial; keep only warnings.
     lightning_log = logging.getLogger("lightning.pytorch")
@@ -221,7 +243,9 @@ class _Objective:
         search_name: str,
         search_dir: Path,
         use_wandb: bool,
+        train_fraction: float,
     ) -> None:
+        self.train_fraction = train_fraction
         self.base_config = base_config
         self.space = space
         self.search_name = search_name
@@ -233,6 +257,7 @@ class _Objective:
 
     def __call__(self, trial: optuna.Trial) -> float:
         config = suggest_config(trial, self.base_config, self.space)
+        config["data"]["train_fraction"] = self.train_fraction
         L.seed_everything(config["seed"], workers=True, verbose=False)
         data, model, num_params = build(config)
         trial.set_user_attr("num_params", num_params)
@@ -261,18 +286,19 @@ class _Objective:
             enable_progress_bar=False,
             enable_model_summary=False,
         )
-        state = "complete"
         try:
             trainer.fit(model, datamodule=data)
-        except optuna.TrialPruned:
-            state = "pruned"
-            raise
         finally:
             if logger:
                 logger.experiment.summary.update(
-                    {"best_val_acc": pruning.best, "state": state}
+                    {
+                        "best_val_acc": pruning.best,
+                        "state": "pruned" if pruning.pruned else "complete",
+                    }
                 )
                 wandb.finish()
+        if pruning.pruned:
+            raise optuna.TrialPruned(pruning.pruned)
         return pruning.best
 
 
