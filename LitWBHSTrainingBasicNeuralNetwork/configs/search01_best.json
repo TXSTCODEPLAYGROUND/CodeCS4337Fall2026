@@ -1,0 +1,39 @@
+{
+  "seed": 42,
+  "accelerator": "auto",
+  "wandb": {
+    "project": "LitWBHSTrainingBasicNeuralNetwork"
+  },
+  "data": {
+    "batch_size": 128,
+    "val_split": 0.1,
+    "num_workers": "auto",
+    "train_fraction": 1.0
+  },
+  "model": {
+    "hidden_sizes": [
+      256,
+      256
+    ],
+    "activation": "relu",
+    "dropout": 0.011676707054476987
+  },
+  "training": {
+    "epochs": 14,
+    "optimizer": "adamw",
+    "lr": 0.0032516805065504004,
+    "momentum": 0.9,
+    "l1": 0.0,
+    "l2": 0.0,
+    "scheduler": "cosine",
+    "step_size": 3,
+    "gamma": 0.5,
+    "early_stopping": false,
+    "patience": 3
+  },
+  "found_by": {
+    "search_config": "search01.json",
+    "trial": 47,
+    "val_acc": 0.8812
+  }
+}
