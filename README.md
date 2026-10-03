@@ -23,15 +23,15 @@ hyperparameters automatically.
 | Project | Description |
 | --- | --- |
 | **Fully connected network (MLP)** | |
-| [TrainingBasicNeuralNetwork](TrainingBasicNeuralNetwork/) | Start here: train a fully connected neural network (only `nn.Linear` layers, no convolutions) on Fashion-MNIST in plain PyTorch, and see what layers, activations, dropout, and parameters are. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicNeuralNetwork.html) |
-| [LitTrainingBasicNeuralNetwork](LitTrainingBasicNeuralNetwork/) | The same network trained with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): the Lightning-Hydra-Template project layout, torchmetrics (precision, recall, per-class accuracy), learning-curve and prediction plots, and optional LitLogger tracking. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicNeuralNetwork.html) |
-| [LitWBTrainingBasicNeuralNetwork](LitWBTrainingBasicNeuralNetwork/) | **Recommended pattern.** The Lightning MLP tracked with [Weights & Biases](https://wandb.ai): live charts, a test-prediction table, and a confusion matrix on wandb.ai, plus the network size (`num_params`) for comparing architectures. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicNeuralNetwork.html) |
+| [TrainingBasicNeuralNetwork](TrainingBasicNeuralNetwork/) | Start here: train a fully connected neural network (only `nn.Linear` layers, no convolutions) on Fashion-MNIST in plain PyTorch, and see what layers, activations, dropout, and parameters are. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TrainingBasicNeuralNetwork/training_basic_neural_network_notebook.ipynb) |
+| [LitTrainingBasicNeuralNetwork](LitTrainingBasicNeuralNetwork/) | The same network trained with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): the Lightning-Hydra-Template project layout, torchmetrics (precision, recall, per-class accuracy), learning-curve and prediction plots, and optional LitLogger tracking. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicNeuralNetwork/lit_training_basic_neural_network_notebook.ipynb) |
+| [LitWBTrainingBasicNeuralNetwork](LitWBTrainingBasicNeuralNetwork/) | **Recommended pattern.** The Lightning MLP tracked with [Weights & Biases](https://wandb.ai): live charts, a test-prediction table, and a confusion matrix on wandb.ai, plus the network size (`num_params`) for comparing architectures. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicNeuralNetwork/lit_wb_training_basic_neural_network_notebook.ipynb) |
 | **Convolutional network (ConvNet)** | |
-| [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST with a training loop written in plain PyTorch, and organize the code into modules and packages. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) |
-| [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same ConvNet trained with PyTorch Lightning; its README explains the Lightning project layout used by all `Lit...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) |
-| [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | **Recommended pattern.** The Lightning ConvNet tracked with W&B, with an offline mode when there is no key or the login fails; its README explains the W&B setup and dashboard used by all `LitWB...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) |
+| [TrainingBasicConvnet](TrainingBasicConvnet/) | Train a basic ConvNet on Fashion-MNIST with a training loop written in plain PyTorch, and organize the code into modules and packages. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/TrainingBasicConvnet.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TrainingBasicConvnet/training_basic_convnet_notebook.ipynb) |
+| [LitTrainingBasicConvnet](LitTrainingBasicConvnet/) | The same ConvNet trained with PyTorch Lightning; its README explains the Lightning project layout used by all `Lit...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitTrainingBasicConvnet.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicConvnet/lit_training_basic_convnet_notebook.ipynb) |
+| [LitWBTrainingBasicConvnet](LitWBTrainingBasicConvnet/) | **Recommended pattern.** The Lightning ConvNet tracked with W&B, with an offline mode when there is no key or the login fails; its README explains the W&B setup and dashboard used by all `LitWB...` projects. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTrainingBasicConvnet.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicConvnet/lit_wb_training_basic_convnet_notebook.ipynb) |
 | **Hyperparameter search (Optuna)** | |
-| [LitWBHSTrainingBasicNeuralNetwork](LitWBHSTrainingBasicNeuralNetwork/) | LitWBTrainingBasicNeuralNetwork plus a hyperparameter search with [Optuna](https://optuna.org): network size, activation, dropout, batch size, epochs, optimizer, learning rate, L1/L2 regularization, learning-rate scheduler, and early stopping. The best trial is saved as a config to train and log to W&B. Comes with its own Colab notebook. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBHSTrainingBasicNeuralNetwork.html) |
+| [LitWBHSTrainingBasicNeuralNetwork](LitWBHSTrainingBasicNeuralNetwork/) | LitWBTrainingBasicNeuralNetwork plus a hyperparameter search with [Optuna](https://optuna.org): network size, activation, dropout, batch size, epochs, optimizer, learning rate, L1/L2 regularization, learning-rate scheduler, and early stopping. The best trial is saved as a config to train and log to W&B. [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBHSTrainingBasicNeuralNetwork.html) · [Colab notebook](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBHSTrainingBasicNeuralNetwork/hyperparameter_search.ipynb) |
 
 The `LitWB...` projects are the **recommended pattern** for your own
 experiments: Lightning removes the training-loop boilerplate, and W&B records
@@ -48,7 +48,7 @@ running, configs, and where data and results go.
 CodeCS4337Fall2026/
 ├── README.md              # This file
 ├── requirements.txt       # Python packages for every project (one shared .venv)
-├── starternotebook.ipynb  # Ready-to-run Google Colab notebook (start here in Colab)
+├── starternotebook.ipynb  # General Colab notebook for any project (each project also has its own)
 ├── ruff.toml              # Code style settings (you can ignore this for now, see below)
 ├── .gitignore             # Files git should not track (data, runs, .env, virtualenvs, ...)
 ├── .env                   # Local settings for all projects: where data and results go (not in git)
@@ -59,6 +59,7 @@ CodeCS4337Fall2026/
 ├── docs/                  # Source of the online documentation (built automatically, see below)
 ├── TrainingBasicNeuralNetwork/  # One project = one Python package
 │   ├── README.md          # What this project is about
+│   ├── training_basic_neural_network_notebook.ipynb  # This project's Colab notebook
 │   ├── __init__.py        # Makes the folder importable: from TrainingBasicNeuralNetwork import main
 │   ├── __main__.py        # Makes `python -m TrainingBasicNeuralNetwork` work
 │   ├── main.py            # Entry point: main(config) runs a full experiment
@@ -68,7 +69,7 @@ CodeCS4337Fall2026/
 │   ├── trainers/          # Training and evaluation loop
 │   └── utils/             # Helpers (paths, seeding, run folders)
 ├── LitTrainingBasicNeuralNetwork/  # Same experiment with PyTorch Lightning
-│   ├── README.md, __init__.py, __main__.py, main.py, configs/  # Same roles as above
+│   ├── README.md, *_notebook.ipynb, __init__.py, __main__.py, main.py, configs/  # Same roles as above
 │   ├── models/            # LightningModule, and plain networks in models/components/
 │   ├── dataloaders/       # LightningDataModule: download, split, batch
 │   └── utils/             # Helpers (paths, run summaries, plots)
@@ -86,7 +87,10 @@ CodeCS4337Fall2026/
 ```
 
 Every project has the same entry points (`main.py`, `configs/`) and is run the
-same way. Lightning projects have no `trainers/` folder, because Lightning's
+same way. Each project folder also has its own Colab notebook, named after the
+project (`lit_wb_training_basic_convnet_notebook.ipynb` for
+`LitWBTrainingBasicConvnet`, ...); the search project's is
+`hyperparameter_search.ipynb`. Lightning projects have no `trainers/` folder, because Lightning's
 `Trainer` replaces the hand-written training loop; their layout is explained
 in the [LitTrainingBasicConvnet README](LitTrainingBasicConvnet/README.md).
 
@@ -105,7 +109,7 @@ One settings file at the repo root is shared by every project:
   it, or if the login fails, W&B logs locally and the run can be uploaded later.
 
 Add keys to `.env` only, never to `.envcolab`, which is tracked by git. In
-Colab, store them as Colab Secrets instead and run the starter notebook's
+Colab, store them as Colab Secrets instead and run the project notebook's
 **Load API keys** cell (see [Running in Google Colab](#running-in-google-colab)).
 
 Relative paths (like `data` or `runs`) are resolved against the repo root, so
@@ -115,7 +119,7 @@ it does not matter which folder you run from. Absolute paths are used as-is.
   is not tracked by git, so you can change it freely. If it is missing (for
   example after a fresh clone), the same defaults are used.
 - **`.envcolab`** holds the Colab settings. In Colab it is copied to `.env`
-  (the starter notebook does this for you, see
+  (the project notebooks do this for you, see
   [Running in Google Colab](#running-in-google-colab)).
 
 ### Configs
@@ -217,24 +221,34 @@ Open `runs_summary.csv` to compare runs of the same config at a glance.
 
 ## Running in Google Colab
 
-The easiest way is the ready-made notebook
-[`starternotebook.ipynb`](starternotebook.ipynb). It sets everything up for you;
-you only need to open it in Colab and run the cells from top to bottom.
+The easiest way is the project's own notebook: every project folder has one,
+already set up for that project, so there is nothing to change or copy. It
+sets everything up for you; you only need to open it in Colab and run the
+cells from top to bottom.
 
-### 1. Open the starter notebook in Colab
+### 1. Open the project's notebook in Colab
 
-Either:
+| Project | Notebook |
+| --- | --- |
+| TrainingBasicNeuralNetwork | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TrainingBasicNeuralNetwork/training_basic_neural_network_notebook.ipynb) |
+| LitTrainingBasicNeuralNetwork | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicNeuralNetwork/lit_training_basic_neural_network_notebook.ipynb) |
+| LitWBTrainingBasicNeuralNetwork | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicNeuralNetwork/lit_wb_training_basic_neural_network_notebook.ipynb) |
+| TrainingBasicConvnet | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/TrainingBasicConvnet/training_basic_convnet_notebook.ipynb) |
+| LitTrainingBasicConvnet | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicConvnet/lit_training_basic_convnet_notebook.ipynb) |
+| LitWBTrainingBasicConvnet | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicConvnet/lit_wb_training_basic_convnet_notebook.ipynb) |
+| LitWBHSTrainingBasicNeuralNetwork | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBHSTrainingBasicNeuralNetwork/hyperparameter_search.ipynb) (search, plots, and training the best config) |
 
-- **Open it directly from GitHub:** click
-  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/starternotebook.ipynb)
-  (also at the top of this page), then **File → Save a copy in Drive** so your
-  changes to the notebook are kept. This always opens the latest version of the
-  notebook, or
-- **Upload it:** download
-  [`starternotebook.ipynb`](starternotebook.ipynb) from this repository, then in
-  [Colab](https://colab.research.google.com) choose **File → Upload notebook**.
-  Uploaded notebooks are saved automatically in the `Colab Notebooks` folder of
-  your Google Drive.
+Click the badge, then **File → Save a copy in Drive** so your changes to the
+notebook are kept. The badge always opens the latest version of the notebook.
+You can also download a notebook from the project folder and, in
+[Colab](https://colab.research.google.com), choose **File → Upload notebook**;
+uploaded notebooks are saved in the `Colab Notebooks` folder of your Google
+Drive.
+
+[`starternotebook.ipynb`](starternotebook.ipynb) at the repo root
+([open in Colab](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/starternotebook.ipynb))
+is a general version of the same notebook: it works for any project, but you
+change the project name in its run cells yourself.
 
 The notebook asks Colab for a GPU. If it does not get one, open
 **Runtime → Change runtime type** and select a GPU. Training works on CPU too,
@@ -246,14 +260,13 @@ The notebook has three parts:
 
 | Part | What it does |
 | --- | --- |
-| **1. Setup** | Mounts Google Drive (Colab asks you to allow access), clones the repo into `/content/CodeCS4337Fall2026` (or runs `git pull` if it is already there), copies `.envcolab` to `.env`, installs only the missing requirements, and moves the notebook into the repo folder. Then the optional **Load API keys** cell loads `.env` and copies any missing tracker keys (`WANDB_API_KEY`, `LIGHTNING_USER_ID`, `LIGHTNING_API_KEY`) from your Colab Secrets into the environment and `.env`, printing which keys were found. Run it before any project, from the notebook or from Colab's terminal. |
-| **2. Run a project** | Choose **Option A** (terminal command) or **Option B** (from Python), see below. |
+| **1. Setup** | Mounts Google Drive (Colab asks you to allow access), clones the repo into `/content/CodeCS4337Fall2026` (or runs `git pull` if it is already there), copies `.envcolab` to `.env`, installs only the missing requirements, and moves the notebook into the repo folder. In the projects that use a tracker, the optional **Load API keys** cell then loads `.env` and copies the project's missing keys (`WANDB_API_KEY` for `LitWB...`, `LIGHTNING_USER_ID` and `LIGHTNING_API_KEY` for `LitTraining...`) from your Colab Secrets into the environment and `.env`, printing which keys were found. Run it before the project, from the notebook or from Colab's terminal. |
+| **2. Run the project** | Choose **Option A** (terminal command) or **Option B** (from Python), see below. |
 | **3. Results** | Shows `runs_summary.csv` from your Drive. |
 
-The notebook also runs on your own machine: with the `.venv` as its kernel,
-skip the Colab-only part 1 and start at part 2, whose first cell finds the
-repo folder in Colab and locally. The same holds for the project notebook
-`LitWBHSTrainingBasicNeuralNetwork/hyperparameter_search.ipynb`.
+The notebooks also run on your own machine: open the notebook from its
+project folder with the `.venv` as its kernel, skip the Colab-only part 1, and
+start at part 2, whose first cell finds the repo folder in Colab and locally.
 
 It ends with [pro tips](#pro-tips-keep-training-running) for keeping long
 training runs alive.
@@ -261,8 +274,7 @@ training runs alive.
 The setup cells are safe to run again at any time, for example to get new
 projects after they are added (the setup cell rewrites `.env`, so run the
 API-key cell again after it). The setup cell installs the packages for every
-project, so to run a different project you only change the project name in the
-run cells (e.g. `LitTrainingBasicConvnet` instead of `TrainingBasicConvnet`).
+project. To run a different project, open that project's notebook.
 
 Results are saved to
 `/content/drive/MyDrive/CodeCS4337Fall2026/runs/<ProjectName>/<config>/<timestamp>/`.
@@ -362,7 +374,7 @@ differences are expected and fine for this course.
 ### Without the notebook
 
 If you prefer to set things up yourself in any Colab notebook, these cells do
-the same as the starter notebook:
+the same as the project notebooks:
 
 ```python
 from google.colab import drive
@@ -505,7 +517,7 @@ when nothing changed.
   then `git stash pop`.
 - `data/`, `runs/`, and `.env` are not in git, so pulling never changes your
   datasets, results, or local settings.
-- **In Colab**, just re-run the setup cells of the starter notebook. They run
+- **In Colab**, just re-run the setup cells of your project's notebook. They run
   `git pull` and install any missing packages. The setup cell rewrites `.env`,
   so run the **Load API keys** cell again afterwards if you use API keys.
 

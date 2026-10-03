@@ -1,5 +1,8 @@
 # LitWBTrainingBasicConvnet
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicConvnet/lit_wb_training_basic_convnet_notebook.ipynb)
+This project's notebook: [`lit_wb_training_basic_convnet_notebook.ipynb`](lit_wb_training_basic_convnet_notebook.ipynb).
+
 The same experiment as [LitTrainingBasicConvnet](../LitTrainingBasicConvnet/)
 (the same ConvNet, LightningModule, DataModule, metrics, and settings), but
 tracked with [Weights & Biases](https://wandb.ai) (W&B) instead of LitLogger
@@ -62,7 +65,7 @@ trainer = L.Trainer(logger=[csv_logger, wandb_logger], ...)
    **In Colab**, the setup cell overwrites `.env`, so store the key as a Colab
    *Secret* named `WANDB_API_KEY` instead (key icon in the left sidebar). Then
    run the **Load API keys** cell of
-   [`starternotebook.ipynb`](../starternotebook.ipynb), after the setup cells
+   [this project's notebook](lit_wb_training_basic_convnet_notebook.ipynb), after the setup cells
    and before running the project. It copies the key from your Secrets to the
    notebook's environment and to `.env`, so every way of running works: from
    the notebook (Option A1 or B) and from Colab's terminal (A2).
@@ -94,7 +97,7 @@ To upload such a run to W&B later:
    To upload every offline run of a config at once, use `*` for the timestamp:
    `runs/LitWBTrainingBasicConvnet/config01/*/wandb/offline-run-*`.
 
-   In Colab, run the starter notebook's **Load API keys** cell first, then the
+   In Colab, run the project notebook's **Load API keys** cell first, then the
    same two commands in Colab's terminal, or with `!` in a cell
    (`!wandb sync ...`; the key cell already set the key for `!` commands).
 3. Open your project on wandb.ai: the run appears with all its charts, as if

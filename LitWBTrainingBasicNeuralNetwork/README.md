@@ -1,5 +1,8 @@
 # LitWBTrainingBasicNeuralNetwork
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBTrainingBasicNeuralNetwork/lit_wb_training_basic_neural_network_notebook.ipynb)
+This project's notebook: [`lit_wb_training_basic_neural_network_notebook.ipynb`](lit_wb_training_basic_neural_network_notebook.ipynb).
+
 The fully connected network (MLP) of
 [LitTrainingBasicNeuralNetwork](../LitTrainingBasicNeuralNetwork/), tracked
 with [Weights & Biases](https://wandb.ai) (W&B) exactly like
@@ -19,7 +22,7 @@ Read the projects it combines first:
   count parameters.
 - [LitWBTrainingBasicConvnet](../LitWBTrainingBasicConvnet/README.md)
   explains W&B: setting up your key (in `.env`, or Colab Secrets with the
-  starter notebook's **Load API keys** cell), offline mode and `wandb sync`,
+  project notebook's **Load API keys** cell), offline mode and `wandb sync`,
   what is logged, and how to build the dashboard. All of it applies here
   unchanged.
 

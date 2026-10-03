@@ -1,5 +1,8 @@
 # LitTrainingBasicConvnet
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitTrainingBasicConvnet/lit_training_basic_convnet_notebook.ipynb)
+This project's notebook: [`lit_training_basic_convnet_notebook.ipynb`](lit_training_basic_convnet_notebook.ipynb).
+
 The same experiment as [TrainingBasicConvnet](../TrainingBasicConvnet/) (a
 small ConvNet on Fashion-MNIST, with the same network and settings), rewritten
 with [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/). Read
@@ -165,7 +168,7 @@ It is off by default, because it needs a Lightning AI account. To turn it on:
    **In Colab**, the setup cell overwrites `.env`, so store the two values as
    Colab *Secrets* named `LIGHTNING_USER_ID` and `LIGHTNING_API_KEY` instead
    (key icon in the left sidebar). Then run the **Load API keys** cell of
-   [`starternotebook.ipynb`](../starternotebook.ipynb), after the setup cells
+   [this project's notebook](lit_training_basic_convnet_notebook.ipynb), after the setup cells
    and before running the project. It copies the keys from your Secrets to the
    notebook's environment and to `.env`, so every way of running works: from
    the notebook (Option A1 or B) and from Colab's terminal (A2).

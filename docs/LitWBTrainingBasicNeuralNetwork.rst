@@ -31,7 +31,7 @@ The config in ``LitWBTrainingBasicNeuralNetwork/configs/`` sets the network
 with ``"model": {"hidden_sizes": [256, 128], "dropout": 0.2}`` and the W&B
 project with ``"wandb": {"project": "LitWBTrainingBasicNeuralNetwork"}``. The
 W&B key comes from ``WANDB_API_KEY`` in ``.env`` (in Colab: a Colab Secret and
-the starter notebook's *Load API keys* cell). Without it, or if W&B cannot log
+the project notebook's *Load API keys* cell). Without it, or if W&B cannot log
 in, the run is logged offline and can be uploaded later with ``wandb sync``.
 
 The number of parameters is sent to W&B as ``num_params`` in the run's config,
