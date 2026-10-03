@@ -1,5 +1,7 @@
 # LitWBHSTrainingBasicNeuralNetwork
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBHSTrainingBasicNeuralNetwork/hyperparameter_search.ipynb)
+
 [LitWBTrainingBasicNeuralNetwork](../LitWBTrainingBasicNeuralNetwork/) plus
 a **hyperparameter search** with [Optuna](https://optuna.org). Instead of
 guessing the learning rate, the network size, or the optimizer, Optuna trains
@@ -15,7 +17,7 @@ Function and class details are in the
 
 The easiest way to run everything is the project's own notebook,
 [`hyperparameter_search.ipynb`](hyperparameter_search.ipynb)
-([open in Colab](https://colab.research.google.com/github/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/blob/main/LitWBHSTrainingBasicNeuralNetwork/hyperparameter_search.ipynb)).
+(the **Open In Colab** button above opens it in Colab).
 It has the same setup cells as the starter notebook, then runs the search,
 plots the results, and trains the best config.
 
