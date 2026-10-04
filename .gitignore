@@ -17,6 +17,3 @@ runs/
 
 # W&B writes here only when run outside a project (each run keeps its own in runs/).
 wandb/
-
-# Ultralytics' weights_dir defaults to <repo>/weights (yolo26n.pt for its AMP check).
-/weights/

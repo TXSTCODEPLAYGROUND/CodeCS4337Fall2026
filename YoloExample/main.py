@@ -40,7 +40,7 @@ from ultralytics.utils.torch_utils import get_flops, get_num_params
 
 from .callbacks import epoch_logger, log_ap_per_iou, log_evaluation, log_predictions
 from .dataloaders import CLASS_NAMES, prepare_pennfudan
-from .models.loading import find_resume_weights, weights_path
+from .models.loading import find_resume_weights, weights_path, yolo_weights_dir
 from .utils import (
     PROJECT_NAME,
     REPO_DIR,
@@ -133,6 +133,7 @@ def main(
     data_yaml = prepare_pennfudan(
         data_dir, tuple(data_cfg["split_sizes"]), config["seed"]
     )
+    yolo_weights_dir()
     project_runs = resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_NAME
     if resume_from is not None:
         last = find_resume_weights(resume_from)

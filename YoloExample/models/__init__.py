@@ -6,6 +6,7 @@ from .loading import (
     find_weights,
     load_model,
     weights_path,
+    yolo_weights_dir,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "find_weights",
     "load_model",
     "weights_path",
+    "yolo_weights_dir",
 ]

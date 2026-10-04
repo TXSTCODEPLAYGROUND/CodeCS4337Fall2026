@@ -5,19 +5,46 @@ import os
 from pathlib import Path
 
 import torch
+import ultralytics.utils
 from dotenv import load_dotenv
 from ultralytics import YOLO
 
 from ..utils.paths import PROJECT_NAME, REPO_DIR, resolve_repo_path
+
+YOLO_WEIGHTS_FOLDER = "yolo_weights"
+"""Folder of ``DATA_DIR`` holding the downloaded YOLO weights."""
+
+
+def yolo_weights_dir() -> Path:
+    """Use ``<DATA_DIR>/yolo_weights/`` for every YOLO weights file Ultralytics downloads.
+
+    This covers the pretrained models of the configs (``yolov8n.pt``) and the
+    small ``yolo26n.pt`` Ultralytics downloads once to check mixed precision
+    before training. Ultralytics would otherwise put the latter in its
+    ``weights_dir`` setting, ``<repo>/weights/`` when its settings were
+    created inside this repo. The setting is changed only for the current
+    Python process: Ultralytics' ``settings.json`` is not modified.
+
+    Returns:
+        The folder, created if needed.
+    """
+    load_dotenv(REPO_DIR / ".env")
+    folder = resolve_repo_path(os.getenv("DATA_DIR", "data")) / YOLO_WEIGHTS_FOLDER
+    folder.mkdir(parents=True, exist_ok=True)
+    ultralytics.utils.WEIGHTS_DIR = folder
+    # dict.__setitem__ skips SettingsManager.__setitem__, which would save to settings.json.
+    dict.__setitem__(ultralytics.utils.SETTINGS, "weights_dir", str(folder))
+    return folder
 
 
 def weights_path(weights: str) -> str:
     """Where the starting weights of a config are, or are downloaded to.
 
     A pretrained Ultralytics name such as ``"yolov8n.pt"`` becomes
-    ``<DATA_DIR>/weights/yolov8n.pt``; Ultralytics downloads the file there the
-    first time. An architecture file such as ``"yolov8n.yaml"`` (training from
-    scratch) and an existing path are returned unchanged.
+    ``<DATA_DIR>/yolo_weights/yolov8n.pt`` (:func:`yolo_weights_dir`);
+    Ultralytics downloads the file there the first time, and later runs read
+    it from there. An architecture file such as ``"yolov8n.yaml"`` (training
+    from scratch) and an existing path are returned unchanged.
 
     Args:
         weights: The config's ``"model": {"weights": ...}``.
@@ -25,11 +52,9 @@ def weights_path(weights: str) -> str:
     Returns:
         The path or name to pass to ``YOLO(...)``.
     """
+    folder = yolo_weights_dir()
     if not weights.endswith(".pt") or Path(weights).expanduser().is_file():
         return weights
-    load_dotenv(REPO_DIR / ".env")
-    folder = resolve_repo_path(os.getenv("DATA_DIR", "data")) / "weights"
-    folder.mkdir(parents=True, exist_ok=True)
     return str(folder / weights)
 
 

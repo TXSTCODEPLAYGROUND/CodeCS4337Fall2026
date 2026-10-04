@@ -44,7 +44,9 @@ python -m YoloExample --config config03.json   # from scratch
 
 The dataset (51 MB) is downloaded to `data/PennFudanPed/` and converted to
 YOLO format in `data/pennfudan_yolo/` on the first run; the COCO weights
-(6 MB) go to `data/weights/`. On Colab's T4, config02 takes a few minutes and
+(6 MB) go to `data/yolo_weights/`, with the small `yolo26n.pt` Ultralytics
+uses to check mixed precision before training; later runs read them from
+there. On Colab's T4, config02 takes a few minutes and
 config03 around 15; on a recent desktop GPU, under a minute and about two.
 
 ## The dataset and the YOLO label format
@@ -332,10 +334,12 @@ it and its location). Three of them matter here:
   also create a second, differently organized W&B run.
 - `sync` (on by default) sends anonymous usage analytics and crash reports to
   Ultralytics. Turn it off with `yolo settings sync=False`.
-- `weights_dir` is where Ultralytics downloads helper weights, e.g.
+- `weights_dir` is where Ultralytics downloads weights, including
   `yolo26n.pt` for its one-time mixed-precision check before training. When
-  the settings are first created inside this repo, that is `<repo>/weights/`,
-  which `.gitignore` ignores.
+  the settings are first created inside this repo, it is `<repo>/weights/`.
+  This project replaces it, for its own runs only, with `data/yolo_weights/`
+  (`yolo_weights_dir` in [`models/loading.py`](models/loading.py)), so all
+  YOLO weights live with the data; `settings.json` is not changed.
 
 Ultralytics is licensed under [AGPL-3.0](https://www.ultralytics.com/license):
 fine for coursework and open-source projects; a closed-source product that
