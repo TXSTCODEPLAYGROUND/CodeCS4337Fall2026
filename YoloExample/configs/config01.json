@@ -1,0 +1,24 @@
+{
+  "seed": 42,
+  "device": null,
+  "wandb": {
+    "project": "YoloExample"
+  },
+  "data": {
+    "split_sizes": [120, 25, 25],
+    "imgsz": 640,
+    "batch": 16,
+    "workers": 2
+  },
+  "model": {
+    "weights": "yolov8n.pt"
+  },
+  "training": {
+    "train": false
+  },
+  "evaluation": {
+    "conf": 0.001,
+    "iou": 0.7,
+    "gallery_conf": 0.25
+  }
+}

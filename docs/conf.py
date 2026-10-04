@@ -52,6 +52,8 @@ autodoc_mock_imports = [
     "sklearn",
     "tqdm",
     "wandb",
+    "ultralytics",
+    "PIL",
 ]
 
 autodoc_default_options = {

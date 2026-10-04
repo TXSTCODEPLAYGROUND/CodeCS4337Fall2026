@@ -9,8 +9,9 @@ The projects come in two series, one per network, each going from plain
 PyTorch to PyTorch Lightning to Lightning with Weights & Biases tracking. The
 ``LitWB...`` projects (Lightning + W&B) are the approach you must follow
 when training your own models; the other projects are for learning.
-The next section adds an automatic hyperparameter search with Optuna, and
-the last one logs the plain-PyTorch MLP to TensorBoard.
+The next sections move on to object detection with YOLO, add an automatic
+hyperparameter search with Optuna, and log the plain-PyTorch MLP to
+TensorBoard.
 
 .. toctree::
    :maxdepth: 2
@@ -29,6 +30,12 @@ the last one logs the plain-PyTorch MLP to TensorBoard.
    LitWBTrainingBasicConvnet (use for your training) <LitWBTrainingBasicConvnet>
    HyperparameterSearchConvnets
    LitWBTransferLearningResnet
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Object detection (YOLO)
+
+   YoloExample
 
 .. toctree::
    :maxdepth: 2
