@@ -28,6 +28,7 @@ the last one logs the plain-PyTorch MLP to TensorBoard.
    LitTrainingBasicConvnet
    LitWBTrainingBasicConvnet (use for your training) <LitWBTrainingBasicConvnet>
    HyperparameterSearchConvnets
+   LitWBTransferLearningResnet
 
 .. toctree::
    :maxdepth: 2

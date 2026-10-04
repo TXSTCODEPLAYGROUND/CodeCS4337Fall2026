@@ -1,0 +1,24 @@
+{
+  "seed": 42,
+  "accelerator": "auto",
+  "wandb": {
+    "project": "LitWBTransferLearningResnet"
+  },
+  "data": {
+    "batch_size": 64,
+    "num_workers": 2
+  },
+  "model": {
+    "pretrained": false,
+    "freeze_backbone": false,
+    "dropout": 0.2
+  },
+  "training": {
+    "epochs": 60,
+    "lr": 0.001,
+    "backbone_lr": 0.001,
+    "weight_decay": 0.0,
+    "early_stopping": true,
+    "patience": 10
+  }
+}
