@@ -9,7 +9,8 @@ The projects come in two series, one per network, each going from plain
 PyTorch to PyTorch Lightning to Lightning with Weights & Biases tracking. The
 ``LitWB...`` projects (Lightning + W&B) are the approach you must follow
 when training your own models; the other projects are for learning.
-The next sections move on to object detection with YOLO, add an automatic
+The next sections move on to object detection with YOLO and semantic
+segmentation with a U-Net, add an automatic
 hyperparameter search with Optuna, and log the plain-PyTorch MLP to
 TensorBoard.
 
@@ -36,6 +37,12 @@ TensorBoard.
    :caption: Object detection (YOLO)
 
    YoloExample
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Semantic segmentation (U-Net)
+
+   UnetSemanticSegmentationExample
 
 .. toctree::
    :maxdepth: 2

@@ -1,0 +1,34 @@
+{
+  "seed": 42,
+  "accelerator": "auto",
+  "wandb": {
+    "project": "UnetSemanticSegmentationExample"
+  },
+  "data": {
+    "image_size": 256,
+    "batch_size": 16,
+    "num_workers": 2,
+    "augmentation": "strong",
+    "split_sizes": [800, 100, 100]
+  },
+  "model": {
+    "architecture": "resnet34_unet",
+    "base_channels": null,
+    "depth": null,
+    "pretrained": true
+  },
+  "training": {
+    "epochs": 100,
+    "loss": "bce_dice",
+    "optimizer": "adamw",
+    "lr": 0.001,
+    "encoder_lr": 0.0001,
+    "weight_decay": 0.0001,
+    "scheduler": "cosine",
+    "freeze_encoder_epochs": 3,
+    "threshold": 0.5,
+    "precision": "16-mixed",
+    "early_stopping": true,
+    "patience": 15
+  }
+}
