@@ -1,0 +1,27 @@
+# Run Label Studio locally. From the DataAnnotation folder:
+#   docker compose --env-file ../.env up -d --build
+# then open http://localhost:8080. Stop it with: docker compose stop
+services:
+  label-studio:
+    build: .
+    image: cs4337-label-studio:1.23.2
+    container_name: cs4337-label-studio
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      # Read from the repository's .env (--env-file ../.env). Only these two
+      # values are passed to the container, not the other keys in .env.
+      # When both are set, this account is created at the first start;
+      # otherwise, create one on the sign-up page.
+      LABEL_STUDIO_USERNAME: ${LABEL_STUDIO_USERNAME:-}
+      LABEL_STUDIO_PASSWORD: ${LABEL_STUDIO_PASSWORD:-}
+    volumes:
+      # Projects, annotations, and uploaded images live in a Docker volume,
+      # so they survive restarts. "docker compose down -v" deletes them.
+      - label-studio-data:/label-studio/data
+      # The images from download_data.py, read-only, for Local files storage.
+      - ../data/annotation:/label-studio/files/annotation:ro
+    restart: unless-stopped
+
+volumes:
+  label-studio-data:

@@ -1,0 +1,13 @@
+<!-- Object detection: one tight box around every animal, even if it is partly hidden or cut by the border.
+     Press 1-4 to pick the class, then drag a box. The labels are in alphabetical order, the order of the
+     YOLO export's classes.txt, so the class numbers match the dataset's own labels. -->
+<View>
+  <Header value="Draw a tight box around every animal"/>
+  <Image name="image" value="$image" zoom="true" zoomControl="true"/>
+  <RectangleLabels name="label" toName="image" strokeWidth="2">
+    <Label value="buffalo" background="#8E8E93" hotkey="1"/>
+    <Label value="elephant" background="#007AFF" hotkey="2"/>
+    <Label value="rhino" background="#FF9500" hotkey="3"/>
+    <Label value="zebra" background="#AF52DE" hotkey="4"/>
+  </RectangleLabels>
+</View>

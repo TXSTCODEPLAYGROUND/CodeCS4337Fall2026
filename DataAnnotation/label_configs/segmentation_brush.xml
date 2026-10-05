@@ -1,0 +1,9 @@
+<!-- Semantic segmentation with a brush: paint the balloon pixels (B: brush, E: eraser, [ and ]: brush size).
+     Slower than polygons for round objects, but better for shapes that have no clear outline. -->
+<View>
+  <Header value="Paint every balloon pixel (include the knot, not the string)"/>
+  <Image name="image" value="$image" zoom="true" zoomControl="true"/>
+  <BrushLabels name="label" toName="image">
+    <Label value="balloon" background="#FF3B30" hotkey="1"/>
+  </BrushLabels>
+</View>

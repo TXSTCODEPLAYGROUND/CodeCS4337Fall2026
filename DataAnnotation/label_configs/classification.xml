@@ -1,0 +1,10 @@
+<!-- Image classification: one label per image. Keys 1, 2, 3 pick a class. -->
+<View>
+  <Header value="What is the main object in this image?"/>
+  <Image name="image" value="$image" maxWidth="640px"/>
+  <Choices name="label" toName="image" choice="single-radio" showInline="true" required="true">
+    <Choice value="dog" hotkey="1"/>
+    <Choice value="church" hotkey="2"/>
+    <Choice value="parachute" hotkey="3"/>
+  </Choices>
+</View>

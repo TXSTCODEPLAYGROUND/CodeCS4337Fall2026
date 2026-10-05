@@ -1,0 +1,9 @@
+<!-- Semantic segmentation with polygons: click around each balloon, one polygon per balloon.
+     Press 1 to select the label, click points along the edge, click the first point to close. -->
+<View>
+  <Header value="Outline every balloon, one polygon each (include the knot, not the string)"/>
+  <Image name="image" value="$image" zoom="true" zoomControl="true"/>
+  <PolygonLabels name="label" toName="image" strokeWidth="2" pointSize="small" opacity="0.4">
+    <Label value="balloon" background="#FF3B30" hotkey="1"/>
+  </PolygonLabels>
+</View>
