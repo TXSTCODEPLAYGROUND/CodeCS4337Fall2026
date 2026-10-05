@@ -2,11 +2,12 @@ YoloExample
 ===========
 
 Pedestrian detection with `YOLOv8 <https://docs.ultralytics.com/models/yolov8/>`_
-on the `Penn-Fudan dataset <https://www.cis.upenn.edu/~jshi/ped_html/>`_
+(YOLO, "You Only Look Once", version 8) on the `Penn-Fudan dataset <https://www.cis.upenn.edu/~jshi/ped_html/>`_
 (170 street photos, 423 people). Training is done by the
 `Ultralytics <https://docs.ultralytics.com/>`_ library; the project converts
 the dataset to the YOLO label format, compares three strategies with a
-zero-shot baseline, and logs a full evaluation report to W&B.
+zero-shot baseline, and logs a full evaluation report to W&B (Weights &
+Biases).
 
 Running
 -------
@@ -39,10 +40,12 @@ The three configs
 The configs live in ``YoloExample/configs/``:
 
 * ``config01.json``, **zero-shot**: ``"weights": "yolov8n.pt"``,
-  ``"train": false``. The COCO-pretrained YOLOv8n is only evaluated, keeping
+  ``"train": false``. YOLOv8n pretrained on COCO (Common Objects in Context,
+  80 classes, one of which is ``person``) is only evaluated, keeping
   only its ``person`` boxes (``classes=[0]``). This is the baseline.
 * ``config02.json``, **fine-tuned**: the same COCO weights, trained 50 epochs
-  on Penn-Fudan with SGD, a small learning rate, and the backbone frozen
+  on Penn-Fudan with SGD (stochastic gradient descent), a small learning rate,
+  and the backbone frozen
   (``"ultralytics_args": {"freeze": 10}``).
 * ``config03.json``, **from scratch**: ``"weights": "yolov8n.yaml"``, the same
   architecture with random weights, 150 epochs.
@@ -93,14 +96,17 @@ run, as an Ultralytics ``YOLO`` model:
    model = load_model("config02")   # newest run of config02, weights/best.pt
    results = model.predict("street.jpg", conf=0.25)
 
-To finish an interrupted training run, pass ``resume_from`` to
+To continue a training run, pass ``resume_from`` to
 :func:`~YoloExample.main.main`:
 
 .. code-block:: python
 
    main("config02.json", resume_from="config02")
 
-On the command line: ``--resume-from config02``.
+On the command line: ``--resume-from config02``. An interrupted run is
+finished in its own folder from ``weights/last.pt``; a finished run is trained
+the config's ``"epochs"`` more epochs from its ``weights/best.pt``, in a new
+run folder (:func:`~YoloExample.models.loading.find_resume_weights`).
 
 API
 ---

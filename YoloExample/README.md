@@ -6,11 +6,15 @@ This project's notebook: [`yolo_example_notebook.ipynb`](yolo_example_notebook.i
 **Object detection** with [YOLOv8](https://docs.ultralytics.com/models/yolov8/)
 on the [Penn-Fudan pedestrian dataset](https://www.cis.upenn.edu/~jshi/ped_html/):
 find every person in a street photo and draw a box around them. Three configs
-compare a COCO-pretrained YOLOv8n used as it is (the **zero-shot baseline**),
+compare a YOLOv8n (YOLO, "You Only Look Once", version 8, size nano)
+pretrained on COCO (Common Objects in Context: 118,000 images, 80 classes)
+used as it is (the **zero-shot baseline**),
 the same model fine-tuned on Penn-Fudan, and the same architecture trained
-from scratch. Every run is tracked in W&B: training curves, precision, recall,
-F1, mAP50, mAP75, and **mAP50-95** (mAP@0.5:0.05:0.95) on the validation and
-test sets, AP at each IoU threshold, PR curves, a table of every image with its
+from scratch. Every run is tracked in W&B (Weights & Biases): training curves, precision, recall,
+F1, mAP50, mAP75, and **mAP50-95** (mAP@0.5:0.05:0.95; mAP is mean average
+precision, see [Metrics](#metrics)) on the validation and test sets, AP
+(average precision) at each IoU (intersection over union) threshold, PR
+(precision-recall) curves, a table of every image with its
 true and predicted boxes, a results table, and a comparison of all configs with
 the zero-shot baseline.
 
@@ -46,7 +50,7 @@ The dataset (51 MB) is downloaded to `data/PennFudanPed/` and converted to
 YOLO format in `data/pennfudan_yolo/` on the first run; the COCO weights
 (6 MB) go to `data/yolo_weights/`, with the small `yolo26n.pt` Ultralytics
 uses to check mixed precision before training; later runs read them from
-there. On Colab's T4, config02 takes a few minutes and
+there. On Colab's T4 GPU (graphics processing unit), config02 takes a few minutes and
 config03 around 15; on a recent desktop GPU, under a minute and about two.
 
 ## The dataset and the YOLO label format
@@ -71,7 +75,7 @@ class x_center y_center width height
 `class` is the index in the dataset's `names` (here `0` = `person`); the box
 is its **center and size, divided by the image width and height**, so every
 number is between 0 and 1 and stays valid when the image is resized. Pascal
-VOC stores pixel corners (`x_min, y_min, x_max, y_max`) and COCO the top-left
+VOC (Visual Object Classes) stores pixel corners (`x_min, y_min, x_max, y_max`) and COCO the top-left
 corner and size in pixels (`x_min, y_min, width, height`); converting means
 getting this right:
 
@@ -91,14 +95,23 @@ a conversion this way, since wrong labels still train, just badly.
 
 ## YOLOv8 in short
 
-YOLOv8n (3.2 million parameters, about 9 GFLOPs per 640 x 640 image) is a
+YOLOv8n (3.2 million parameters, about 9 GFLOPs, billions of floating-point operations, per 640 x 640 image) is a
 one-stage detector: one pass through one network predicts all boxes.
 
-- **Backbone** (layers 0 to 9: Conv, C2f, SPPF blocks) turns the
-  `3 x 640 x 640` image into feature maps at three scales: 80 x 80 (stride 8),
-  40 x 40 (stride 16), 20 x 20 (stride 32).
-- **Neck** (layers 10 to 21, PAN-FPN) mixes the three scales with upsampling,
-  concatenation, and strided convolutions.
+- **Backbone** (layers 0 to 9) turns the `3 x 640 x 640` image into feature
+  maps at three scales: 80 x 80 (stride 8), 40 x 40 (stride 16), 20 x 20
+  (stride 32); the stride is how many input pixels one cell covers. Its
+  blocks are **Conv** (convolution + batch normalization + SiLU, the Sigmoid
+  Linear Unit activation), **C2f** (Cross Stage Partial bottleneck with 2
+  convolutions, faster: half of the channels go through small residual
+  blocks, the other half skip ahead, and all are concatenated), and **SPPF**
+  (Spatial Pyramid Pooling, Fast: max-poolings that give each cell context
+  from a large part of the image).
+- **Neck** (layers 10 to 21, PAN-FPN: Path Aggregation Network + Feature
+  Pyramid Network) mixes the three scales: a top-down path (upsampling and
+  concatenation) brings deep "what" information to the large maps, and a
+  bottom-up path (strided convolutions) brings precise "where" information
+  back to the small maps.
 - **Head** (layer 22, Detect) predicts, for every cell of the three maps, a box
   and the class scores, in separate branches.
 
@@ -125,7 +138,7 @@ notebook shows each step on a real image.
 | Config | Strategy | `model.weights` | Training |
 | --- | --- | --- | --- |
 | `config01.json` | **zero-shot** (baseline) | `yolov8n.pt` (COCO) | `"train": false`: only evaluated |
-| `config02.json` | **fine-tuned** | `yolov8n.pt` (COCO) | 50 epochs, SGD, `lr0` 0.001, first 10 layers (the backbone) frozen |
+| `config02.json` | **fine-tuned** | `yolov8n.pt` (COCO) | 50 epochs, SGD (stochastic gradient descent), `lr0` (initial learning rate) 0.001, first 10 layers (the backbone) frozen |
 | `config03.json` | **from scratch** | `yolov8n.yaml` (random weights) | 150 epochs, `optimizer` auto, patience 30 |
 
 **Zero-shot** means evaluating a model on a task without training it on that
@@ -144,7 +157,7 @@ only 120 training images, how gently it trains matters a lot (test mAP50-95,
 
 | Fine-tuning settings | Test mAP50-95 |
 | --- | --- |
-| `optimizer` auto (AdamW, lr 0.002), nothing frozen | 0.766 |
+| `optimizer` auto (AdamW, Adam with decoupled weight decay; learning rate 0.002), nothing frozen | 0.766 |
 | `"freeze": 10`, `optimizer` auto | 0.775 |
 | SGD, `lr0` 0.001, nothing frozen | 0.832 |
 | **SGD, `lr0` 0.001, `"freeze": 10`** (config02) | **0.854** |
@@ -225,7 +238,7 @@ The three **training losses**, logged every epoch for `train/` and `val/`:
 
 | Loss | What it measures |
 | --- | --- |
-| `box_loss` | CIoU loss: 1 − IoU between predicted and true boxes, plus penalties for center distance and aspect ratio |
+| `box_loss` | CIoU (Complete IoU) loss: 1 − IoU between predicted and true boxes, plus penalties for center distance and aspect ratio |
 | `cls_loss` | binary cross-entropy of the class scores |
 | `dfl_loss` | Distribution Focal Loss: how far each side's 16-bin distance distribution is from the true distance |
 
@@ -318,11 +331,20 @@ print(results[0].boxes.xyxy, results[0].boxes.conf)
 `load_model("config01")` returns the COCO model of the zero-shot config; pass
 `classes=[0]` to `predict` or `val` to keep only its people.
 
-To finish an interrupted training run (a Colab disconnect, a crash):
-`main("config02.json", resume_from="config02")`, or `--resume-from config02`
-on the command line. Ultralytics continues from `weights/last.pt`, in the same
-folder, up to the run's original number of epochs. A run that already finished
-cannot be resumed; start a new run instead.
+To continue a training run: `main("config02.json", resume_from="config02")`,
+or `--resume-from config02` on the command line. What happens depends on the
+run:
+
+| The run | What `resume_from` does |
+| --- | --- |
+| **interrupted** (a Colab disconnect, a crash) | Ultralytics finishes it from `weights/last.pt` (weights, optimizer state, epoch), in the **same** folder, up to the run's original number of epochs |
+| **finished** (all epochs done, or early stopping) | trains the config's `"epochs"` **more** epochs, starting from its `weights/best.pt`, in a **new** run folder, with the config's settings (e.g. `freeze`, `lr0`) |
+
+A finished run has no optimizer state left (Ultralytics removes it from the
+final weights), so continuing it is a new training stage: the learning-rate
+schedule starts again from `lr0`, without the 3 warm-up epochs (they would
+disturb trained weights). Its `runs_summary.csv` row has `resumed_from` set to
+the earlier run.
 
 ## Ultralytics settings and license
 

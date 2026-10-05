@@ -103,11 +103,15 @@ def main(
     Args:
         config_path: Config name or path, e.g. ``"config01.json"``. When
             omitted, it is read from the required ``--config`` command-line flag.
-        resume_from: Finish an interrupted training run instead of starting a
-            new one: ``"config02"`` (its newest run), a run folder, or a
-            ``last.pt`` file. Ultralytics continues from ``weights/last.pt``
-            up to the run's original number of epochs, in the same folder; a
-            run that already finished cannot be resumed. On the command line:
+        resume_from: Continue a training run instead of starting from the
+            config's weights: ``"config02"`` (its newest run), a run folder,
+            or a ``last.pt`` file. An **interrupted** run is finished in its
+            own folder: Ultralytics continues from ``weights/last.pt``
+            (weights, optimizer, epoch) up to the run's original number of
+            epochs. A **finished** run (all epochs done, or early stopping)
+            is trained the config's ``"epochs"`` **more** epochs, starting
+            from its ``weights/best.pt``, in a **new** run folder, with the
+            config's settings and no warm-up. On the command line:
             ``--resume-from config02``.
 
     Returns:
@@ -120,7 +124,7 @@ def main(
         parser.add_argument("--config", required=True, help="e.g. config01.json")
         parser.add_argument(
             "--resume-from",
-            help="finish an interrupted training run, e.g. config02 (its newest run)",
+            help="continue a training run, e.g. config02 (its newest run)",
         )
         args = parser.parse_args()
         config_path, resume_from = args.config, args.resume_from
@@ -135,11 +139,22 @@ def main(
     )
     yolo_weights_dir()
     project_runs = resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_NAME
+    interrupted_last = continue_from = source_run = None
     if resume_from is not None:
-        last = find_resume_weights(resume_from)
-        run_dir = last.parent.parent
+        resume_weights, interrupted = find_resume_weights(resume_from)
+        source_run = resume_weights.parent.parent
+        if interrupted:
+            interrupted_last = resume_weights
+            print(f"Finishing the interrupted run {source_run}")
+        else:
+            continue_from = resume_weights
+            print(
+                f"{source_run.name} already finished: training {train_cfg['epochs']} "
+                f"more epochs from {resume_weights}, in a new run folder"
+            )
+    if interrupted_last is not None:
+        run_dir = source_run
         run_name = f"{run_dir.name}-resumed"
-        print(f"Resuming {last}")
     else:
         run_dir = (
             project_runs
@@ -157,6 +172,8 @@ def main(
     for prefix in ("train/*", "val/*", "lr/*"):
         run.define_metric(prefix, step_metric="epoch")
     run.summary["strategy"] = strategy
+    if source_run is not None:
+        run.summary["resumed_from"] = source_run.name
     common = {
         "imgsz": data_cfg["imgsz"],
         "batch": data_cfg["batch"],
@@ -169,12 +186,17 @@ def main(
     if strategy == "zero-shot":
         model = YOLO(weights_path(model_cfg["weights"]))
     else:
+        start_weights = interrupted_last or continue_from
         model = YOLO(
-            str(last) if resume_from is not None else weights_path(model_cfg["weights"])
+            str(start_weights) if start_weights else weights_path(model_cfg["weights"])
         )
         model.add_callback("on_fit_epoch_end", epoch_logger(run))
+        # Warm-up (3 epochs from a low learning rate) is for fresh weights; a
+        # trained model would be shaken up by its high bias learning rate.
+        extra_args = {"warmup_epochs": 0} if continue_from is not None else {}
+        extra_args |= train_cfg.get("ultralytics_args", {})
         start = time.perf_counter()
-        if resume_from is not None:
+        if interrupted_last is not None:
             model.train(resume=True)
         else:
             model.train(
@@ -189,7 +211,7 @@ def main(
                 exist_ok=True,
                 plots=True,
                 **common,
-                **train_cfg.get("ultralytics_args", {}),
+                **extra_args,
             )
         train_minutes = (time.perf_counter() - start) / 60
         epochs_run, best_epoch = _training_progress(run_dir / "results.csv")
@@ -292,6 +314,7 @@ def main(
         },
         "seed": config["seed"],
         "resumed": resume_from is not None,
+        "resumed_from": source_run.name if source_run is not None else "",
     }
     append_run_summary(run_dir.parent / "runs_summary.csv", summary_row)
     _log_comparison(run, project_runs)

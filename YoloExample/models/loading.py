@@ -158,29 +158,32 @@ def load_model(run: str | Path, which: str = "best") -> YOLO:
     return YOLO(str(weights))
 
 
-def find_resume_weights(run: str | Path) -> Path:
-    """Locate the ``last.pt`` of an interrupted training run, to resume it.
+def find_resume_weights(run: str | Path) -> tuple[Path, bool]:
+    """Locate the weights to resume a training run from.
+
+    An **interrupted** run (a disconnect, a crash) still has its optimizer
+    state and epoch in ``last.pt``, so Ultralytics can finish it. A
+    **finished** run (all epochs done, or early stopping) has neither: its
+    ``best.pt`` is the starting point of a new training stage.
 
     Args:
         run: A ``last.pt`` file, a run folder, or a config folder (its newest
             run with a ``last.pt``).
 
     Returns:
-        The ``last.pt`` path.
+        ``(weights, interrupted)``: ``last.pt`` and ``True`` for an
+        interrupted run; ``best.pt`` and ``False`` for a finished one.
 
     Raises:
         FileNotFoundError: If the run has no ``last.pt`` (e.g. zero-shot).
-        ValueError: If the run already finished, so there is nothing to resume.
     """
-    weights = find_weights(run, "last")
-    if weights is None:
+    last = find_weights(run, "last")
+    if last is None:
         raise FileNotFoundError(
             f"No weights/last.pt in {find_run(run)}: nothing to resume"
         )
     # Ultralytics sets "epoch" to -1 when it finalizes the weights of a finished run.
-    if torch.load(weights, map_location="cpu", weights_only=False).get("epoch") == -1:
-        raise ValueError(
-            f"{weights.parent.parent} already finished training: nothing to resume. "
-            "To train longer, start a new run (e.g. with more epochs in a copy of the config)."
-        )
-    return weights
+    if torch.load(last, map_location="cpu", weights_only=False).get("epoch") != -1:
+        return last, True
+    best = last.with_name("best.pt")
+    return (best if best.is_file() else last), False
