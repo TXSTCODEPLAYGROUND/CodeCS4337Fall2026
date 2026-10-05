@@ -73,8 +73,10 @@ What is logged
   ``<stage>_precision``, ``<stage>_recall``, and ``<stage>_pixel_acc``
   (:class:`~UnetSemanticSegmentationExample.models.lit_unet.LitUNet`), plus the
   learning rates and, for config03, ``encoder_frozen``.
-* After every validation epoch, the same 8 validation images with their
-  ground-truth and predicted masks as W&B mask layers, and after training,
+* After every validation epoch, the same 8 validation images, each shown as
+  four panels side by side: the image, the ground-truth mask, the predicted
+  mask, and an error map (true positives green, false positives red, false
+  negatives yellow). After training,
   for the best checkpoint, a per-image table (Dice, IoU, polyp area) and
   galleries of the worst and best images of the validation and test sets
   (:class:`~UnetSemanticSegmentationExample.callbacks.wandb_segmentation.LogSegmentation`).

@@ -152,13 +152,22 @@ pixels, with a pixel predicted as polyp when its probability is at least 0.5.
 The learning rate of each parameter group (`lr-AdamW/pg1` is config03's
 encoder, `pg2` its decoder) and `encoder_frozen` are logged too.
 
-[`callbacks/wandb_segmentation.py`](callbacks/wandb_segmentation.py) adds images:
+[`callbacks/wandb_segmentation.py`](callbacks/wandb_segmentation.py) adds images.
+Each image is one strip of four panels side by side, so the masks can be
+compared at a glance:
+
+| image | ground truth | prediction | errors |
+| --- | --- | --- | --- |
+| the endoscopy image | true polyp in green | predicted polyp in blue | green: true positive (polyp found), red: false positive (background predicted as polyp), yellow: false negative (polyp missed) |
+
+The panel titles give the polyp's share of the image, and the caption gives
+the image's name and Dice.
 
 | In W&B | What it shows |
 | --- | --- |
-| `val_progress` | the same 8 validation images after every epoch, with the ground truth and the prediction as switchable mask layers; drag the step slider to watch them improve |
+| `val_progress` | the same 8 validation images after every epoch; drag the step slider to watch the predictions improve |
 | `val_per_image`, `test_per_image` | for the best checkpoint, one row per image: `dice`, `iou`, `polyp_area`, `predicted_area`; sort by `dice` to find the hardest images |
-| `val_worst_examples`, `test_worst_examples` | the 8 images with the lowest Dice, with their masks |
+| `val_worst_examples`, `test_worst_examples` | the 8 images with the lowest Dice |
 | `val_best_examples`, `test_best_examples` | the 8 images with the highest Dice |
 
 The run summary also has `total_params`, `trainable_params`, `best_epoch`,

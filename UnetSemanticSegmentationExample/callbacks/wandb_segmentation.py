@@ -6,14 +6,71 @@ import torch
 import wandb
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.trainer.states import TrainerFn
+from PIL import Image, ImageDraw, ImageFont
 from torch.utils.data import Dataset
+
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+BLUE = (0, 120, 255)
+WHITE = (255, 255, 255)
+GAP = 4
+HEADER = 22
+FOOTER = 22
+
+
+def _tint(
+    picture: np.ndarray, where: np.ndarray, color: tuple[int, int, int]
+) -> np.ndarray:
+    """Blend ``color`` into the pixels of ``picture`` where ``where`` is True."""
+    out = picture.copy()
+    out[where] = (0.45 * out[where] + 0.55 * np.array(color)).astype(np.uint8)
+    return out
+
+
+def _dice(mask: torch.Tensor, pred: torch.Tensor) -> float:
+    """Dice of one predicted mask; 1.0 when both masks are empty."""
+    truth, predicted = mask.float(), pred.float()
+    total = truth.sum() + predicted.sum()
+    return 1.0 if total == 0 else (2 * (truth * predicted).sum() / total).item()
+
+
+def _strip(panels: dict[str, np.ndarray]) -> np.ndarray:
+    """Put equal-size ``(H, W, 3)`` panels side by side, titled, with an error legend."""
+    height, width = next(iter(panels.values())).shape[:2]
+    canvas = Image.new(
+        "RGB",
+        (len(panels) * width + (len(panels) - 1) * GAP, HEADER + height + FOOTER),
+        WHITE,
+    )
+    draw = ImageDraw.Draw(canvas)
+    font = ImageFont.load_default(size=13)
+    for k, (title, panel) in enumerate(panels.items()):
+        x = k * (width + GAP)
+        canvas.paste(Image.fromarray(panel), (x, HEADER))
+        draw.text(
+            (x + width // 2, HEADER // 2), title, fill="black", font=font, anchor="mm"
+        )
+    x = 4
+    for color, label in (
+        (GREEN, "true positive"),
+        (RED, "false positive"),
+        (YELLOW, "false negative"),
+    ):
+        y = HEADER + height + FOOTER // 2
+        draw.rectangle((x, y - 6, x + 12, y + 6), fill=color, outline="black")
+        draw.text((x + 17, y), label, fill="black", font=font, anchor="lm")
+        x += 17 + int(draw.textlength(label, font=font)) + 18
+    return np.asarray(canvas)
 
 
 class LogSegmentation(L.Callback):
     """Log predicted masks over the images, and per-image Dice and IoU, to W&B.
 
-    In W&B, each image shows the ground-truth mask and the predicted mask as
-    layers that can be switched on and off (``wandb.Image(..., masks=...)``).
+    In W&B, each image is a strip of four panels side by side: the image, the
+    ground-truth mask, the predicted mask, and an error map (true positives
+    green, false positives red, false negatives yellow), with the image's name
+    and Dice in the caption.
 
     During training, after every validation epoch:
 
@@ -148,24 +205,31 @@ class LogSegmentation(L.Callback):
         image = image.cpu() * self.std + self.mean
         return (image.clamp(0, 1) * 255).byte().permute(1, 2, 0).numpy()
 
-    def _overlay(
+    def _comparison(
         self, image: torch.Tensor, mask: torch.Tensor, pred: torch.Tensor, caption: str
     ) -> wandb.Image:
-        """An image with its ground-truth and predicted masks as W&B layers."""
-        return wandb.Image(
-            self._picture(image),
-            masks={
-                "ground_truth": {
-                    "mask_data": mask[0].cpu().numpy().astype(np.uint8),
-                    "class_labels": self.class_labels,
-                },
-                "prediction": {
-                    "mask_data": pred[0].cpu().numpy().astype(np.uint8),
-                    "class_labels": self.class_labels,
-                },
-            },
-            caption=caption,
-        )
+        """One image as a labeled strip: image | ground truth | prediction | errors.
+
+        The error panel uses the notebook's colors: green for true positives
+        (polyp found), red for false positives (background predicted as
+        polyp), and yellow for false negatives (polyp missed).
+        """
+        picture = self._picture(image)
+        truth = mask[0].cpu().numpy() > 0.5
+        predicted = pred[0].cpu().numpy() > 0.5
+        errors = _tint(picture, truth & predicted, GREEN)
+        errors = _tint(errors, ~truth & predicted, RED)
+        errors = _tint(errors, truth & ~predicted, YELLOW)
+        name = self.class_labels[1]
+        panels = {
+            "image": picture,
+            f"ground truth ({truth.mean():.1%} {name})": _tint(picture, truth, GREEN),
+            f"prediction ({predicted.mean():.1%} {name})": _tint(
+                picture, predicted, BLUE
+            ),
+            "errors": errors,
+        }
+        return wandb.Image(_strip(panels), caption=caption)
 
     def _predict(
         self, pl_module: L.LightningModule, dataset: Dataset, indices: list[int]
@@ -192,13 +256,18 @@ class LogSegmentation(L.Callback):
         logger = next(lg for lg in trainer.loggers if isinstance(lg, WandbLogger))
         indices = list(range(min(self.num_progress, len(dataset))))
         images, masks, preds = self._predict(pl_module, dataset, indices)
+        names = getattr(dataset, "names", [str(i) for i in indices])
         logger.experiment.log(
             {
                 "val_progress": [
-                    self._overlay(
-                        images[k], masks[k], preds[k], f"epoch {trainer.current_epoch}"
+                    self._comparison(
+                        images[k],
+                        masks[k],
+                        preds[k],
+                        f"epoch {trainer.current_epoch}, {names[i]}: "
+                        f"Dice {_dice(masks[k], preds[k]):.3f}",
                     )
-                    for k in range(len(indices))
+                    for k, i in enumerate(indices)
                 ],
                 "trainer/global_step": trainer.global_step,
             }
@@ -228,7 +297,7 @@ class LogSegmentation(L.Callback):
                 trainer.lightning_module, dataset, indices
             )
             for k, i in enumerate(indices):
-                shown[i] = self._overlay(
+                shown[i] = self._comparison(
                     images[k], masks[k], preds[k], f"{names[i]}: Dice {dice[i]:.3f}"
                 )
 
