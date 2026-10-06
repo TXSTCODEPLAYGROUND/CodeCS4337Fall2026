@@ -2,10 +2,12 @@
 
 This repository holds the code for CS4337, Fall 2026. Each top-level folder
 (for example `TrainingBasicNeuralNetwork/`) is a **self-contained project**: a small
-Python package that you can either
+Python package that you can
 
-- import and run from a notebook (e.g. Google Colab), or
-- run from the terminal on your own machine.
+- import and run from a notebook (e.g. Google Colab),
+- run from the terminal on your own machine, or
+- train on a Colab runtime from your terminal with the Colab CLI (see
+  [Training with the Colab CLI](#training-with-the-colab-cli)).
 
 New projects will be added over the semester. To get them, see
 [Getting updates](#getting-updates).
@@ -561,6 +563,96 @@ from TrainingBasicConvnet import main          # or: from LitTrainingBasicConvne
 
 main("config01.json")
 ```
+
+## Training with the Colab CLI
+
+The [Colab CLI](https://github.com/googlecolab/google-colab-cli) is another way to train a project, once
+everything is final. Its only purpose is the training run itself:
+
+1. **Work locally** on your project: change the code or a config, run short
+   tests, fix bugs (see [Running locally](#running-locally)).
+2. **Use Google Colab** for debugging and interactive work (see
+   [Running in Google Colab](#running-in-google-colab)).
+3. **Use the Colab CLI** when everything is final and the only thing left is
+   training. The CLI creates a Colab runtime from your local terminal and opens
+   a shell on it, so there is no notebook or browser tab to keep open.
+
+The Colab CLI works on Linux and macOS (not Windows). Each training project's
+README has a **Training with the Colab CLI** section with its exact commands
+and what to check after the run. For more detail, see
+[google-colab-cli.md](google-colab-cli.md) or the
+[official Colab CLI documentation](https://github.com/googlecolab/google-colab-cli).
+
+**Install** it on your own machine:
+
+```bash
+uv tool install google-colab-cli     # or: pip install google-colab-cli
+colab version                         # check that it works
+```
+
+The first command that talks to Colab prints a sign-in link: open it, sign in
+with your Google account, and paste the code it shows back into the terminal.
+
+**The basic workflow.** A **session** is one Colab runtime (a virtual machine)
+with a name you choose, here `cs4337`. These commands run in your **local**
+terminal:
+
+| What | Command |
+| --- | --- |
+| Create a session with a GPU | `colab new -s cs4337 --gpu T4` (or `L4`, `A100`, `H100`, depending on your plan) |
+| Create a session without a GPU | `colab new -s cs4337` (CPU only) |
+| List your sessions / check one | `colab sessions` / `colab status -s cs4337` |
+| Attach to a session (open a shell on it) | `colab ssh -s cs4337` |
+| Leave the shell; the session keeps running | `exit` |
+| Stop the session (delete the runtime) | `colab stop -s cs4337` |
+
+> **Once a session is stopped, nothing on it stays.** The cloned repo, the
+> downloaded data, and every file that is not on Google Drive are deleted.
+> The projects write their runs to Google Drive, so mount Drive before
+> training.
+
+**Mount Google Drive** from your local terminal, not from inside the session.
+If you are attached, `exit` first:
+
+```bash
+exit                                # only if you are inside the session
+colab drivemount -s cs4337          # open the link it prints and allow access
+colab ssh -s cs4337                 # attach again
+```
+
+**Clone the repo and train.** Inside the session:
+
+```bash
+cd /content
+git clone https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git
+cd CodeCS4337Fall2026
+cp .envcolab .env
+grep -vE '^\s*(#|$)' requirements.txt \
+  | sed -E 's/[<>=!~;[ ].*//' \
+  | while read -r pkg; do
+      if pip show "$pkg" > /dev/null 2>&1; then echo "skip $pkg (already installed)"
+      else pip install -q "$pkg" && echo "installed $pkg"; fi
+    done
+tmux new -s train                  # if tmux is missing: apt-get install -y tmux
+python -m ProjectName --config configname.json
+```
+
+For example `python -m TrainingBasicConvnet --config config01.json`. The
+install loop installs only what Colab doesn't already have (see
+[Why only the missing requirements are installed](#why-only-the-missing-requirements-are-installed)), and
+`tmux` keeps training going if the SSH connection drops: press `Ctrl+B`, then
+`D` to leave it running, and `tmux attach -t train` to come back. The runtime
+only sees what is on GitHub, so push your final code and configs (to your own
+fork) before cloning. Projects that log to W&B or LitLogger read their keys
+from `.env`: add them to the runtime's `.env` as the project's README shows,
+never to `.envcolab`.
+
+**Make sure everything is logged.** `.envcolab` sets
+`OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs`, so each run folder and each
+`runs_summary.csv` are on Drive and kept after the session stops. Check them,
+and the run's W&B or LitLogger page if the project uses one, then stop the
+session with `colab stop -s cs4337`. If a run was cut off, start a new session
+and continue it with `--resume-from configname`.
 
 ## Getting updates
 
