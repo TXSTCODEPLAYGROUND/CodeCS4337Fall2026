@@ -162,6 +162,66 @@ it does not matter which folder you run from. Absolute paths are used as-is.
   (the project notebooks do this for you, see
   [Running in Google Colab](#running-in-google-colab)).
 
+#### Pro Tips: Training with Google Colab CLI
+
+For training on Google Colab using `google-colab-cli`, follow these steps to configure your environment and keep training running inside `tmux`.
+
+##### 1. Environment Setup
+
+1. **Prepare environment variables:** Create `envcolab.txt` containing all required keys (refer to `.envcolab`) and upload it to your Google Drive root.
+2. **Start a GPU session:**
+   ```bash
+   colab new -s train --gpu t4
+   ```
+3. **Mount Google Drive:**
+   ```bash
+   colab drivemount -s train
+   ```
+4. **Connect via SSH:**
+   ```bash
+   colab ssh -s train
+   ```
+5. **Clone the repository:**
+   ```bash
+   cd /content
+   git clone https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git
+   cd CodeCS4337Fall2026
+   ```
+6. **Copy environment variables:**
+   ```bash
+   cp /content/drive/MyDrive/envcolab.txt .env
+   ```
+7. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+##### 2. Training with tmux
+
+Using `tmux` allows training to continue after disconnecting from SSH, as long as the Colab runtime remains active.
+
+| Action | Command |
+|---|---|
+| Install tmux | `apt-get install -y tmux` |
+| Start session | `tmux new -s sessionname` |
+| Start training (from repo root) | `python -m ProjectName --config someconfig.json` |
+| Detach session | `Ctrl + b`, then `d` |
+| Reattach (single session) | `tmux att` |
+| Reattach (named session) | `tmux attach -t sessionname` |
+| List sessions | `tmux ls` |
+
+##### 3. Useful Monitoring Tools
+
+| Tool | Install | Run / Usage |
+|---|---|---|
+| NVIDIA SMI | Preinstalled | `nvidia-smi` - GPU utilization and memory |
+| btop | `apt-get install -y btop` | `btop` - press `5` for GPU view (if supported) |
+| gpustat | `pip install gpustat` | `gpustat -i` - continuous GPU monitoring |
+| Stop monitoring | - | `Ctrl + C` |
+
+**Note:** `tmux` preserves your terminal session, not the Colab runtime itself. Training stops if Colab disconnects or terminates the runtime. Never commit `.env` or files containing credentials to Git.
+
+
 ### Configs
 
 An experiment is described by a JSON file in the project's `configs/` folder
