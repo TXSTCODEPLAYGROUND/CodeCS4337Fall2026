@@ -1,0 +1,222 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Transfer Learning</title>
+<style>
+  :root {
+    --navy: #1f3a68; --ink: #1d2433; --muted: #5b6475; --line: #c9d3e3;
+    --blue: #1e6fd9; --orange: #ef8a1f; --green: #3a9a4b; --purple: #6a4bc4; --teal: #1597a6;
+    --c-conv: #dbe7fb; --c-l1: #cfe3ff; --c-l2: #d8f0cf; --c-l3: #fff0bf; --c-l4: #ffd9b8; --c-pool: #e9edf3; --c-fc: #e3dbfb; --c-new: #c9f0d6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 1600px; background: #ffffff; color: var(--ink);
+         font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 20px; }
+  .title { background: var(--navy); color: #fff; border-radius: 10px; text-align: center; padding: 14px 0 12px; }
+  .title h1 { font-size: 44px; letter-spacing: .5px; }
+  .title p { font-size: 18px; opacity: .92; margin-top: 2px; }
+
+  .steps { display: grid; grid-template-columns: 1fr 1fr 1fr 1.05fr 0.9fr; gap: 12px; margin-top: 14px; }
+  .card { border-radius: 10px; padding: 14px; display: flex; flex-direction: column; }
+  .s1 { background: #eaf3fd; } .s2 { background: #fff4e6; } .s3 { background: #eaf7ea; } .s4 { background: #f1edfb; } .s5 { background: #e7f6f8; }
+  .head { display: flex; align-items: center; gap: 10px; min-height: 58px; }
+  .num { flex: none; width: 44px; height: 44px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 24px;
+         display: flex; align-items: center; justify-content: center; }
+  .head h3 { font-size: 17px; line-height: 1.2; color: var(--navy); }
+  .stack { margin: 10px auto 0; width: 92%; border: 1.5px solid #7d93b8; border-radius: 6px; padding: 6px; background: #fff; }
+  .stack .cap { text-align: center; font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .blk { border: 1px solid #9fb0cc; border-radius: 4px; font-size: 12.5px; text-align: center; padding: 4px 2px; margin: 3px 0; }
+  .blk small { color: var(--muted); }
+  .conv { background: var(--c-conv); } .l1 { background: var(--c-l1); } .l2 { background: var(--c-l2); }
+  .l3 { background: var(--c-l3); } .l4 { background: var(--c-l4); } .pool { background: var(--c-pool); }
+  .fc { background: var(--c-fc); font-weight: 600; }
+  .removed { background: #fff; border: 1.5px dashed #d0453a; color: #b13a30; text-decoration: line-through; }
+  .new { background: var(--c-new); border: 1.5px solid var(--green); font-weight: 700; }
+  .note { font-size: 13px; color: var(--ink); margin-top: 10px; line-height: 1.35; text-align: center; }
+  .note b { color: var(--navy); }
+  .fastai-head { margin-top: 10px; background: #fff; border: 1px dashed var(--green); border-radius: 6px; padding: 7px 8px; font-size: 12px; line-height: 1.4; }
+  .fastai-head b { color: var(--green); }
+
+  .stage { background: #fff; border: 1px solid #c8bdf0; border-radius: 8px; padding: 9px 11px; margin-top: 10px; font-size: 13px; line-height: 1.4; }
+  .stage h4 { font-size: 14px; color: var(--purple); margin-bottom: 3px; }
+  .stage ul { padding-left: 16px; }
+  .lr { display: inline-block; font-family: Menlo, monospace; font-size: 12px; background: #efeafc; padding: 0 5px; border-radius: 3px; }
+
+  .classes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 12px; }
+  .chip { background: #fff; border: 1px solid #9fd3da; border-radius: 14px; font-size: 13px; text-align: center; padding: 4px 0; }
+  .out { margin-top: 12px; text-align: center; font-size: 13px; line-height: 1.4; }
+
+  .code-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .panel { border: 1.5px solid var(--navy); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+  .panel .bar { background: var(--navy); color: #fff; padding: 8px 14px; font-size: 20px; font-weight: 700; }
+  .panel .bar span { font-size: 14px; font-weight: 400; opacity: .9; margin-left: 8px; }
+  pre { font-family: Menlo, Consolas, monospace; font-size: 12.6px; line-height: 1.5; padding: 10px 14px; background: #fbfcfe; flex: 1; white-space: pre; }
+  .c { color: #2f8a46; } .k { color: #b0347a; } .s { color: #b1501b; } .n { color: #c15d00; }
+
+  .why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 14px; }
+  .why div { border: 1px solid var(--line); border-left: 5px solid var(--blue); border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.4; background: #f7faff; }
+  .why b { display: block; color: var(--navy); font-size: 14.5px; margin-bottom: 3px; }
+  .why div:nth-child(2) { border-left-color: var(--orange); }
+  .why div:nth-child(3) { border-left-color: var(--purple); }
+  .why div:nth-child(4) { border-left-color: var(--teal); }
+</style>
+</head>
+<body>
+
+<div class="title">
+  <h1>Transfer Learning</h1>
+  <p>Reuse a pretrained network's features, replace its classifier head, then train in two stages on your own dataset.</p>
+</div>
+
+<div class="steps">
+  <!-- 1 -->
+  <div class="card s1">
+    <div class="head"><div class="num" style="background:var(--blue)">1</div><h3>Start with ResNet18<br>pretrained on ImageNet</h3></div>
+    <div class="stack">
+      <div class="cap">ResNet18</div>
+      <div class="blk conv">Conv 7×7 + BN + ReLU</div>
+      <div class="blk pool">MaxPool</div>
+      <div class="blk l1">Layer1 <small>(2 blocks, 64)</small></div>
+      <div class="blk l2">Layer2 <small>(2 blocks, 128)</small></div>
+      <div class="blk l3">Layer3 <small>(2 blocks, 256)</small></div>
+      <div class="blk l4">Layer4 <small>(2 blocks, 512)</small></div>
+      <div class="blk pool">Global AvgPool → 512</div>
+      <div class="blk fc">FC 512 → 1000</div>
+    </div>
+    <p class="note">Weights learned on <b>1.2M ImageNet images</b>, 1000 classes</p>
+  </div>
+
+  <!-- 2 -->
+  <div class="card s2">
+    <div class="head"><div class="num" style="background:var(--orange)">2</div><h3>Remove the old head<br>(ImageNet-specific)</h3></div>
+    <div class="stack">
+      <div class="cap">ResNet18 body</div>
+      <div class="blk conv">Conv 7×7 + BN + ReLU</div>
+      <div class="blk pool">MaxPool</div>
+      <div class="blk l1">Layer1</div>
+      <div class="blk l2">Layer2</div>
+      <div class="blk l3">Layer3</div>
+      <div class="blk l4">Layer4</div>
+      <div class="blk pool">Global AvgPool → 512</div>
+      <div class="blk removed">FC 512 → 1000</div>
+    </div>
+    <p class="note">Keep the body: its features are general.<br>Drop the 1000-class layer — <b>don't stack a 1000→10 layer on it</b>.</p>
+  </div>
+
+  <!-- 3 -->
+  <div class="card s3">
+    <div class="head"><div class="num" style="background:var(--green)">3</div><h3>Add a new head<br>for your 10 classes</h3></div>
+    <div class="stack">
+      <div class="cap">🔒 Body (frozen at first)</div>
+      <div class="blk conv">Conv + MaxPool + Layer1–4</div>
+      <div class="blk pool">Global AvgPool → 512</div>
+      <div class="blk new">NEW: FC 512 → 10 <small>(random init)</small></div>
+    </div>
+    <div class="fastai-head">
+      <b>fastai's default head is larger:</b><br>
+      ConcatPool (avg+max → 1024) → BN → Dropout → Linear 1024→512 → ReLU → BN → Dropout → Linear 512→10
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="card s4">
+    <div class="head"><div class="num" style="background:var(--purple)">4</div><h3>Train in two stages</h3></div>
+    <div class="stage">
+      <h4>Stage 1 · Feature extraction</h4>
+      <ul>
+        <li>Body <b>frozen</b>, train <b>only the head</b></li>
+        <li>Normal LR, e.g. <span class="lr">1e-3</span></li>
+        <li>Fast; random head can't damage pretrained features</li>
+      </ul>
+    </div>
+    <div class="stage">
+      <h4>Stage 2 · Fine-tuning</h4>
+      <ul>
+        <li><b>Unfreeze</b> body, train all layers</li>
+        <li><b>Lower</b> LR, e.g. <span class="lr">1e-5</span>–<span class="lr">1e-4</span></li>
+        <li>Discriminative LRs: smaller for early layers, larger near the head</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="card s5">
+    <div class="head"><div class="num" style="background:var(--teal)">5</div><h3>Your 10-class model</h3></div>
+    <div class="classes">
+      <div class="chip">airplane</div><div class="chip">bird</div>
+      <div class="chip">car</div><div class="chip">cat</div>
+      <div class="chip">deer</div><div class="chip">dog</div>
+      <div class="chip">frog</div><div class="chip">horse</div>
+      <div class="chip">ship</div><div class="chip">truck</div>
+    </div>
+    <p class="out">Pretrained features,<br>adapted to your data<br>with far less data and compute.</p>
+  </div>
+</div>
+
+<div class="code-row">
+  <div class="panel">
+    <div class="bar">PyTorch <span>explicit control over freezing and trainable params</span></div>
+<pre><span class="k">import</span> torch
+<span class="k">import</span> torch.nn <span class="k">as</span> nn
+<span class="k">from</span> torchvision <span class="k">import</span> models
+<span class="k">from</span> torchvision.models <span class="k">import</span> ResNet18_Weights
+
+<span class="c"># 1. Load pretrained ResNet18 (normalize inputs with ImageNet mean/std)</span>
+model = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+
+<span class="c"># 2. Freeze the pretrained body</span>
+<span class="k">for</span> p <span class="k">in</span> model.parameters():
+    p.requires_grad = <span class="k">False</span>
+
+<span class="c"># 3. Replace the head: 512 features -> 10 classes (new layer is trainable)</span>
+model.fc = nn.Linear(model.fc.in_features, <span class="n">10</span>)
+
+<span class="c"># 4a. Stage 1: train only the head with a normal LR</span>
+optimizer = torch.optim.Adam(model.fc.parameters(), lr=<span class="n">1e-3</span>)
+<span class="c"># ... train a few epochs ...</span>
+
+<span class="c"># 4b. Stage 2: unfreeze everything, fine-tune with lower LRs</span>
+<span class="k">for</span> p <span class="k">in</span> model.parameters():
+    p.requires_grad = <span class="k">True</span>
+body = [p <span class="k">for</span> n, p <span class="k">in</span> model.named_parameters() <span class="k">if not</span> n.startswith(<span class="s">"fc."</span>)]
+optimizer = torch.optim.Adam([
+    {<span class="s">"params"</span>: body,                  <span class="s">"lr"</span>: <span class="n">1e-5</span>},
+    {<span class="s">"params"</span>: model.fc.parameters(), <span class="s">"lr"</span>: <span class="n">1e-4</span>},
+])</pre>
+  </div>
+  <div class="panel">
+    <div class="bar">fastai <span>high-level: head, freezing and LR schedule handled for you</span></div>
+<pre><span class="k">from</span> fastai.vision.all <span class="k">import</span> *
+<span class="k">from</span> torchvision.models <span class="k">import</span> resnet18, ResNet18_Weights
+
+<span class="c"># Your data (fastai adds ImageNet normalization automatically)</span>
+dls = ImageDataLoaders.from_folder(path, valid_pct=<span class="n">0.2</span>,
+                                   item_tfms=Resize(<span class="n">224</span>))
+
+<span class="c"># Cuts off avgpool + fc, adds a new head sized to dls.c,</span>
+<span class="c"># and freezes the pretrained body</span>
+learn = vision_learner(
+    dls,
+    resnet18,
+    weights=ResNet18_Weights.DEFAULT,
+    metrics=[accuracy, F1Score(average=<span class="s">"macro"</span>)]
+)
+
+<span class="c"># Stage 1: 1 epoch, body frozen, head trained at base_lr (2e-3)</span>
+<span class="c"># Stage 2: unfreeze, 5 epochs with discriminative LRs</span>
+<span class="c">#          from 1e-5 (early layers) up to 1e-3 (head)</span>
+learn.fine_tune(<span class="n">5</span>, base_lr=<span class="n">2e-3</span>)
+
+<span class="c"># Note: the argument is base_lr, not lr</span></pre>
+  </div>
+</div>
+
+<div class="why">
+  <div><b>Why freeze the body first?</b>The new head starts random, so its early gradients are large and noisy. Sent through the whole network, they would wreck the pretrained features.</div>
+  <div><b>Why not train everything from the start?</b>Millions of parameters on a small dataset overfit and overwrite the general features. Fine-tune later, gently, with a low LR.</div>
+  <div><b>Why replace the head, not stack on it?</b>The 1000 ImageNet scores are a task-specific bottleneck. Linear-on-linear adds no expressive power. Attach the new head to the 512-d features.</div>
+  <div><b>BatchNorm caveat</b>Setting <code>requires_grad=False</code> doesn't stop BN running stats from updating in <code>train()</code> mode. Put frozen BN layers in <code>eval()</code> to fully freeze them.</div>
+</div>
+
+</body>
+</html>

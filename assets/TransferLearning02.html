@@ -1,0 +1,231 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Selective Fine-Tuning</title>
+<style>
+  :root {
+    --navy: #1f3a68; --ink: #1d2433; --muted: #5b6475; --line: #c9d3e3;
+    --blue: #1e6fd9; --orange: #ef8a1f; --green: #3a9a4b; --purple: #6a4bc4; --teal: #1597a6;
+    --c-conv: #dbe7fb; --c-l1: #cfe3ff; --c-l2: #d8f0cf; --c-l3: #fff0bf; --c-l4: #ffd9b8; --c-pool: #e9edf3; --c-fc: #e3dbfb; --c-new: #c9f0d6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 1600px; background: #ffffff; color: var(--ink);
+         font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 20px; }
+  .title { background: var(--navy); color: #fff; border-radius: 10px; text-align: center; padding: 14px 0 12px; }
+  .title h1 { font-size: 44px; letter-spacing: .5px; }
+  .title p { font-size: 18px; opacity: .92; margin-top: 2px; }
+
+  .steps { display: grid; grid-template-columns: 1fr 1fr 1fr 1.05fr 0.9fr; gap: 12px; margin-top: 14px; }
+  .card { border-radius: 10px; padding: 14px; display: flex; flex-direction: column; }
+  .s1 { background: #eaf3fd; } .s2 { background: #fff4e6; } .s3 { background: #eaf7ea; } .s4 { background: #f1edfb; } .s5 { background: #e7f6f8; }
+  .head { display: flex; align-items: center; gap: 10px; min-height: 58px; }
+  .num { flex: none; width: 44px; height: 44px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 24px;
+         display: flex; align-items: center; justify-content: center; }
+  .head h3 { font-size: 17px; line-height: 1.2; color: var(--navy); }
+  .stack { margin: 10px auto 0; width: 92%; border: 1.5px solid #7d93b8; border-radius: 6px; padding: 6px; background: #fff; }
+  .stack .cap { text-align: center; font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .blk { border: 1px solid #9fb0cc; border-radius: 4px; font-size: 12.5px; text-align: center; padding: 4px 2px; margin: 3px 0; }
+  .blk small { color: var(--muted); }
+  .conv { background: var(--c-conv); } .l1 { background: var(--c-l1); } .l2 { background: var(--c-l2); }
+  .l3 { background: var(--c-l3); } .l4 { background: var(--c-l4); } .pool { background: var(--c-pool); }
+  .fc { background: var(--c-fc); font-weight: 600; }
+  .frozen { background: #eef0f4; color: #6b7384; border: 1px dashed #a8b0bf; }
+  .train { border: 2px solid var(--green); font-weight: 700; }
+  .note { font-size: 13px; color: var(--ink); margin-top: 10px; line-height: 1.35; text-align: center; }
+  .note b { color: var(--navy); }
+
+  .rows { margin: 8px auto 0; width: 92%; background: #fff; border: 1.5px solid #b9a6ee; border-radius: 6px; padding: 6px 8px; font-size: 12px; }
+  .rows .cap { font-weight: 700; text-align: center; margin-bottom: 4px; color: var(--purple); }
+  .rowgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .rowgrid span { font-family: Menlo, monospace; font-size: 11px; text-align: center; background: var(--c-fc); border-radius: 3px; padding: 2px 0; }
+  .arrow { text-align: center; font-size: 18px; color: var(--purple); line-height: 1; margin: 4px 0; }
+  .newfc { margin: 0 auto; width: 92%; background: var(--c-new); border: 1.5px solid var(--green); border-radius: 4px; text-align: center; font-size: 12.5px; font-weight: 700; padding: 4px 0; }
+  .newfc small { font-weight: 400; color: var(--muted); }
+
+  .legend { display: flex; justify-content: center; gap: 14px; font-size: 12px; margin-top: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+
+  .stage { background: #fff; border: 1px solid #c8bdf0; border-radius: 8px; padding: 9px 11px; margin-top: 10px; font-size: 13px; line-height: 1.4; }
+  .stage h4 { font-size: 14px; color: var(--purple); margin-bottom: 3px; }
+  .stage ul { padding-left: 16px; }
+  .lr { display: inline-block; font-family: Menlo, monospace; font-size: 12px; background: #efeafc; padding: 0 5px; border-radius: 3px; }
+
+  .classes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 12px; }
+  .chip { background: #fff; border: 1px solid #9fd3da; border-radius: 14px; font-size: 12.5px; text-align: center; padding: 4px 0; }
+  .out { margin-top: 12px; text-align: center; font-size: 13px; line-height: 1.4; }
+
+  .code-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .panel { border: 1.5px solid var(--navy); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+  .panel .bar { background: var(--navy); color: #fff; padding: 8px 14px; font-size: 20px; font-weight: 700; }
+  .panel .bar span { font-size: 14px; font-weight: 400; opacity: .9; margin-left: 8px; }
+  pre { font-family: Menlo, Consolas, monospace; font-size: 12.3px; line-height: 1.5; padding: 10px 14px; background: #fbfcfe; flex: 1; white-space: pre; }
+  .c { color: #2f8a46; } .k { color: #b0347a; } .s { color: #b1501b; } .n { color: #c15d00; }
+
+  .why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 14px; }
+  .why div { border: 1px solid var(--line); border-left: 5px solid var(--blue); border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.4; background: #f7faff; }
+  .why b { display: block; color: var(--navy); font-size: 14.5px; margin-bottom: 3px; }
+  .why div:nth-child(2) { border-left-color: var(--orange); }
+  .why div:nth-child(3) { border-left-color: var(--purple); }
+  .why div:nth-child(4) { border-left-color: #d0453a; background: #fff6f5; }
+</style>
+</head>
+<body>
+
+<div class="title">
+  <h1>Selective Fine-Tuning on a Class Subset</h1>
+  <p>Keep the pretrained head, keep only your classes' rows, and fine-tune only the top layers.</p>
+</div>
+
+<div class="steps">
+  <!-- 1 -->
+  <div class="card s1">
+    <div class="head"><div class="num" style="background:var(--blue)">1</div><h3>Start with ResNet18<br>pretrained on ImageNet</h3></div>
+    <div class="stack">
+      <div class="cap">ResNet18</div>
+      <div class="blk conv">Conv 7×7 + BN + ReLU</div>
+      <div class="blk pool">MaxPool</div>
+      <div class="blk l1">Layer1 <small>(2 blocks, 64)</small></div>
+      <div class="blk l2">Layer2 <small>(2 blocks, 128)</small></div>
+      <div class="blk l3">Layer3 <small>(2 blocks, 256)</small></div>
+      <div class="blk l4">Layer4 <small>(2 blocks, 512)</small></div>
+      <div class="blk pool">Global AvgPool → 512</div>
+      <div class="blk fc">FC 512 → 1000</div>
+    </div>
+    <p class="note">Your 10 classes <b>already exist</b> among<br>ImageNet's 1000 classes</p>
+  </div>
+
+  <!-- 2 -->
+  <div class="card s2">
+    <div class="head"><div class="num" style="background:var(--orange)">2</div><h3>Keep the head, slice it<br>to your classes</h3></div>
+    <div class="rows">
+      <div class="cap">Pretrained FC 512 → 1000</div>
+      <div style="text-align:center;color:var(--muted);margin-bottom:4px">keep rows (ImageNet ids):</div>
+      <div class="rowgrid">
+        <span>0</span><span>217</span><span>482</span><span>491</span><span>497</span>
+        <span>566</span><span>569</span><span>571</span><span>574</span><span>701</span>
+      </div>
+    </div>
+    <div class="arrow">↓ <span style="font-size:12.5px;font-weight:600">copy weight + bias rows</span></div>
+    <div class="newfc">FC 512 → 10 <small>(pretrained, not random)</small></div>
+    <p class="note">No random head: the model already<br>predicts your classes <b>before any training</b>.<br><span style="color:var(--muted)">Alternative: keep all 1000 logits and mask<br>the other 990 at prediction time.</span></p>
+  </div>
+
+  <!-- 3 -->
+  <div class="card s3">
+    <div class="head"><div class="num" style="background:var(--green)">3</div><h3>Partially freeze<br>the network</h3></div>
+    <div class="stack">
+      <div class="cap">ResNet18 (sliced head)</div>
+      <div class="blk frozen">🔒 Conv 7×7 + BN + ReLU</div>
+      <div class="blk frozen">🔒 MaxPool</div>
+      <div class="blk frozen">🔒 Layer1</div>
+      <div class="blk frozen">🔒 Layer2</div>
+      <div class="blk frozen">🔒 Layer3</div>
+      <div class="blk l4 train">Layer4 · trainable</div>
+      <div class="blk pool">Global AvgPool → 512</div>
+      <div class="blk new train">FC 512 → 10 · trainable</div>
+    </div>
+    <div class="legend"><span><i style="background:#eef0f4;border:1px dashed #a8b0bf"></i>frozen</span><span><i style="background:#fff;border:2px solid var(--green)"></i>trainable</span></div>
+  </div>
+
+  <!-- 4 -->
+  <div class="card s4">
+    <div class="head"><div class="num" style="background:var(--purple)">4</div><h3>Fine-tune in one stage<br>with low learning rates</h3></div>
+    <div class="stage">
+      <h4>What trains</h4>
+      <ul>
+        <li><b>Layer4</b> at <span class="lr">1e-5</span></li>
+        <li><b>FC head</b> at <span class="lr">1e-4</span></li>
+        <li>Stem + Layer1–3 stay frozen</li>
+      </ul>
+    </div>
+    <div class="stage">
+      <h4>Why one stage is enough</h4>
+      <ul>
+        <li>Head is already good, so no head-only warm-up is needed</li>
+        <li>Low LRs adapt gently; large ones would erase what the head already knows</li>
+        <li>Keep frozen BN layers in <span class="lr">eval()</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="card s5">
+    <div class="head"><div class="num" style="background:var(--teal)">5</div><h3>Your 10-class model<br><span style="font-size:13px;font-weight:400">(Imagenette subset)</span></h3></div>
+    <div class="classes">
+      <div class="chip">tench</div><div class="chip">springer</div>
+      <div class="chip">cassette player</div><div class="chip">chain saw</div>
+      <div class="chip">church</div><div class="chip">French horn</div>
+      <div class="chip">garbage truck</div><div class="chip">gas pump</div>
+      <div class="chip">golf ball</div><div class="chip">parachute</div>
+    </div>
+    <p class="out">Accurate from step 0;<br>fine-tuning adapts it to<br>your images and class balance.</p>
+  </div>
+</div>
+
+<div class="code-row">
+  <div class="panel">
+    <div class="bar">PyTorch <span>slice the head, then choose which layers train</span></div>
+<pre><span class="k">import</span> torch
+<span class="k">import</span> torch.nn <span class="k">as</span> nn
+<span class="k">from</span> torchvision <span class="k">import</span> models
+<span class="k">from</span> torchvision.models <span class="k">import</span> ResNet18_Weights
+
+<span class="c"># 1. Load pretrained ResNet18 (normalize inputs with ImageNet mean/std)</span>
+model = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+
+<span class="c"># 2. Keep the head: copy only your classes' rows (label i -> idx[i])</span>
+idx = torch.tensor([<span class="n">0</span>, <span class="n">217</span>, <span class="n">482</span>, <span class="n">491</span>, <span class="n">497</span>, <span class="n">566</span>, <span class="n">569</span>, <span class="n">571</span>, <span class="n">574</span>, <span class="n">701</span>])
+old_fc = model.fc
+model.fc = nn.Linear(old_fc.in_features, <span class="k">len</span>(idx))
+<span class="k">with</span> torch.no_grad():
+    model.fc.weight.copy_(old_fc.weight[idx])
+    model.fc.bias.copy_(old_fc.bias[idx])
+
+<span class="c"># 3. Partially freeze: only layer4 and fc train</span>
+<span class="k">for</span> name, p <span class="k">in</span> model.named_parameters():
+    p.requires_grad = name.startswith((<span class="s">"layer4."</span>, <span class="s">"fc."</span>))
+
+<span class="c"># 4. One stage, low LRs (head needs no warm-up)</span>
+optimizer = torch.optim.Adam([
+    {<span class="s">"params"</span>: model.layer4.parameters(), <span class="s">"lr"</span>: <span class="n">1e-5</span>},
+    {<span class="s">"params"</span>: model.fc.parameters(),     <span class="s">"lr"</span>: <span class="n">1e-4</span>},
+])</pre>
+  </div>
+  <div class="panel">
+    <div class="bar">fastai <span>plain Learner + splitter, since vision_learner replaces the head</span></div>
+<pre><span class="k">from</span> fastai.vision.all <span class="k">import</span> *
+<span class="k">from</span> torchvision.models <span class="k">import</span> resnet18, ResNet18_Weights
+
+<span class="c"># Imagenette folders are ImageNet wnids; sorted vocab matches idx order</span>
+path = untar_data(URLs.IMAGENETTE_160)
+dls = ImageDataLoaders.from_folder(path, valid=<span class="s">"val"</span>, item_tfms=Resize(<span class="n">160</span>),
+                                   batch_tfms=Normalize.from_stats(*imagenet_stats))
+
+model = resnet18(weights=ResNet18_Weights.DEFAULT)
+idx = [<span class="n">0</span>, <span class="n">217</span>, <span class="n">482</span>, <span class="n">491</span>, <span class="n">497</span>, <span class="n">566</span>, <span class="n">569</span>, <span class="n">571</span>, <span class="n">574</span>, <span class="n">701</span>]
+old_fc, model.fc = model.fc, nn.Linear(<span class="n">512</span>, <span class="k">len</span>(idx))
+<span class="k">with</span> torch.no_grad():
+    model.fc.weight.copy_(old_fc.weight[idx]); model.fc.bias.copy_(old_fc.bias[idx])
+
+<span class="c"># Param groups: [stem + layer1-3] [layer4] [fc]</span>
+<span class="k">def</span> splitter(m):
+    <span class="k">return</span> [params(nn.Sequential(m.conv1, m.bn1, m.layer1, m.layer2, m.layer3)),
+            params(m.layer4), params(m.fc)]
+
+learn = Learner(dls, model, splitter=splitter,
+                metrics=[accuracy, F1Score(average=<span class="s">"macro"</span>)])
+learn.freeze_to(<span class="n">1</span>)   <span class="c"># freeze group 0; train layer4 + fc</span>
+learn.fit_one_cycle(<span class="n">3</span>, lr_max=slice(<span class="n">1e-5</span>, <span class="n">1e-4</span>))</pre>
+  </div>
+</div>
+
+<div class="why">
+  <div><b>Why keep the head?</b>Its rows already map 512-d features to your classes. Starting from a good head avoids the noisy random-head gradients that distort pretrained features (the idea behind LP-FT).</div>
+  <div><b>Why partially freeze?</b>Fewer trainable parameters means less overfitting and forgetting on small data. Early layers are generic; which block to tune depends on the shift (surgical fine-tuning).</div>
+  <div><b>Slice vs. mask</b>Slicing gives a true 10-way softmax for training. Masking the other 990 logits gives identical predictions and is the standard way to evaluate on ImageNet-A/R subsets.</div>
+  <div><b>Only when classes overlap</b>This works only if your classes are in the source label set. For new classes (or relabeled ones), replace the head instead. Partial freezing is common; head slicing is a niche choice.</div>
+</div>
+
+</body>
+</html>

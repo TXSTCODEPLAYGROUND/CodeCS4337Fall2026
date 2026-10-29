@@ -1,0 +1,226 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Domain Adaptation</title>
+<style>
+  :root {
+    --navy: #1f3a68; --ink: #1d2433; --muted: #5b6475; --line: #c9d3e3;
+    --blue: #1e6fd9; --orange: #ef8a1f; --green: #3a9a4b; --purple: #6a4bc4; --teal: #1597a6; --red: #d0453a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 1600px; background: #ffffff; color: var(--ink);
+         font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; padding: 20px; }
+  .title { background: var(--navy); color: #fff; border-radius: 10px; text-align: center; padding: 14px 0 12px; }
+  .title h1 { font-size: 44px; letter-spacing: .5px; }
+  .title p { font-size: 18px; opacity: .92; margin-top: 2px; }
+
+  /* problem strip */
+  .problem { display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px; margin-top: 14px; }
+  .box { border-radius: 10px; padding: 14px 16px; }
+  .shift { background: #f4f6fa; border: 1px solid var(--line); }
+  .shift h3, .spectrum h3 { font-size: 18px; color: var(--navy); margin-bottom: 8px; }
+  .domains { display: flex; align-items: center; gap: 10px; }
+  .dom { flex: 1; border-radius: 8px; padding: 9px; text-align: center; font-size: 13px; line-height: 1.35; }
+  .dom b { display: block; font-size: 14.5px; margin-bottom: 2px; }
+  .src { background: #dbe9fd; border: 1.5px solid var(--blue); }
+  .tgt { background: #ffe9d3; border: 1.5px solid var(--orange); }
+  .bigarrow { font-size: 26px; color: var(--muted); }
+  .shift p { font-size: 13px; margin-top: 8px; line-height: 1.4; }
+
+  .spectrum { background: #f4f6fa; border: 1px solid var(--line); }
+  .bar { display: grid; grid-template-columns: repeat(5, 1fr); border-radius: 8px; overflow: hidden; border: 1px solid #b8c4d8; }
+  .bar div { padding: 8px 6px; font-size: 12.5px; text-align: center; line-height: 1.3; }
+  .bar div b { display: block; font-size: 13.5px; }
+  .grad { height: 8px; margin-top: 6px; border-radius: 4px; background: linear-gradient(90deg, #3a9a4b, #1597a6, #6a4bc4, #ef8a1f, #d0453a); }
+  .gradlbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* technique cards */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+  .card { border-radius: 10px; padding: 14px; display: flex; flex-direction: column; }
+  .c1 { background: #eaf7ea; } .c2 { background: #eaf3fd; } .c3 { background: #f1edfb; }
+  .c4 { background: #e7f6f8; } .c5 { background: #fff4e6; } .c6 { background: #fdeeed; }
+  .head { display: flex; align-items: center; gap: 10px; }
+  .num { flex: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 21px;
+         display: flex; align-items: center; justify-content: center; }
+  .head h3 { font-size: 17.5px; color: var(--navy); line-height: 1.2; }
+  .head h3 small { display: block; font-size: 12.5px; font-weight: 400; color: var(--muted); }
+  .needs { margin-top: 8px; font-size: 12.5px; }
+  .tag { display: inline-block; border-radius: 10px; padding: 1px 8px; margin: 2px 3px 0 0; background: #fff; border: 1px solid #b8c4d8; }
+  .tag.s { border-color: var(--blue); color: var(--blue); }
+  .tag.t { border-color: var(--orange); color: #b8650f; }
+  .tag.x { border-color: var(--purple); color: var(--purple); }
+
+  .diag { background: #fff; border: 1px solid #c8d2e2; border-radius: 8px; margin-top: 10px; padding: 10px 8px; min-height: 128px;
+          display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+  .row { display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .n { border-radius: 5px; padding: 5px 8px; font-size: 12px; text-align: center; border: 1px solid #9fb0cc; line-height: 1.25; }
+  .n.s { background: #dbe9fd; border-color: var(--blue); }
+  .n.t { background: #ffe9d3; border-color: var(--orange); }
+  .n.f { background: #e9edf3; }
+  .n.h { background: #d8f0cf; border-color: var(--green); }
+  .n.d { background: #fde0dd; border-color: var(--red); }
+  .n.p { background: #e3dbfb; border-color: var(--purple); }
+  .n.big { padding: 10px 12px; font-weight: 700; }
+  .n.small { padding: 4px 6px; font-weight: 700; }
+  .a { color: var(--muted); font-size: 15px; }
+  .lbl { font-size: 11.5px; color: var(--muted); text-align: center; }
+
+  .idea { font-size: 13px; line-height: 1.4; margin-top: 10px; }
+  .idea b { color: var(--navy); }
+  .ex { font-size: 12.5px; margin-top: 6px; color: var(--muted); line-height: 1.35; }
+  .ex b { color: var(--ink); }
+
+  /* decision guide */
+  .guide { margin-top: 14px; border: 1.5px solid var(--navy); border-radius: 10px; overflow: hidden; }
+  .guide .gbar { background: var(--navy); color: #fff; padding: 8px 14px; font-size: 19px; font-weight: 700; }
+  .guide .gbar span { font-size: 14px; font-weight: 400; opacity: .9; margin-left: 8px; }
+  .qs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 12px; background: #fbfcfe; }
+  .q { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 9px 10px; font-size: 13px; line-height: 1.35; }
+  .q .ask { font-weight: 700; color: var(--ink); }
+  .q .go { margin-top: 6px; color: var(--green); font-weight: 700; }
+  .q .go::before { content: "→ "; }
+
+  .refs { margin-top: 12px; font-size: 11.5px; color: var(--muted); line-height: 1.5; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="title">
+  <h1>Domain Adaptation &amp; Related Techniques</h1>
+  <p>What to do when the data your model was trained on doesn't look like the data it will see.</p>
+</div>
+
+<div class="problem">
+  <div class="box shift">
+    <h3>The problem: domain shift</h3>
+    <div class="domains">
+      <div class="dom src"><b>Source domain</b>Product photos<br>lots of labels</div>
+      <div class="bigarrow">→</div>
+      <div class="dom tgt"><b>Target domain</b>Phone snapshots, sketches<br>few or no labels</div>
+    </div>
+    <p>Same classes, different look (lighting, style, sensor, background). Accuracy can drop sharply even though the task hasn't changed.</p>
+  </div>
+  <div class="box spectrum">
+    <h3>How much target-domain data do you have?</h3>
+    <div class="bar">
+      <div style="background:#d8f0cf"><b>Many labels</b>Fine-tune<br>(LP-FT, surgical)</div>
+      <div style="background:#d3eef2"><b>Few labels + unlabeled</b>Self-training,<br>pseudo-labels</div>
+      <div style="background:#e3dbfb"><b>Unlabeled only</b>Feature alignment<br>(DANN, CORAL)</div>
+      <div style="background:#ffe4c7"><b>Test batches only</b>Test-time adaptation<br>(AdaBN, TENT)</div>
+      <div style="background:#fde0dd"><b>Model too big</b>Distill into<br>a smaller student</div>
+    </div>
+    <div class="grad"></div>
+    <div class="gradlbl"><span>more target supervision</span><span>less target supervision / deployment constraints</span></div>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- 1 fine-tuning -->
+  <div class="card c1">
+    <div class="head"><div class="num" style="background:var(--green)">1</div>
+      <h3>Supervised fine-tuning<small>the baseline when target labels exist</small></h3></div>
+    <div class="needs"><span class="tag s">source model</span><span class="tag t">labeled target data</span></div>
+    <div class="diag">
+      <div class="row"><div class="n s">Pretrained on<br>source</div><div class="a">→</div><div class="n f">train on<br>labeled target</div><div class="a">→</div><div class="n h big">Target<br>model</div></div>
+      <div class="lbl">head first, then unfreeze with low LR (LP-FT) · or tune only one block (surgical)</div>
+    </div>
+    <p class="idea"><b>Idea:</b> the transfer learning recipe from the previous slides. Simplest and usually strongest if you can label enough target data.</p>
+    <p class="ex"><b>Examples:</b> LP-FT (Kumar 2022), surgical fine-tuning (Lee 2023)</p>
+  </div>
+
+  <!-- 2 feature alignment -->
+  <div class="card c2">
+    <div class="head"><div class="num" style="background:var(--blue)">2</div>
+      <h3>Feature alignment<small>unsupervised domain adaptation</small></h3></div>
+    <div class="needs"><span class="tag s">labeled source</span><span class="tag t">unlabeled target</span></div>
+    <div class="diag">
+      <div class="row">
+        <div style="display:flex;flex-direction:column;gap:4px"><div class="n s small">source</div><div class="n t small">target</div></div>
+        <div class="a">→</div><div class="n f big">Feature<br>extractor</div><div class="a">→</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div class="n h">Label classifier <span style="color:var(--muted)">(source labels)</span></div>
+          <div class="n d">Domain classifier <span style="color:var(--muted)">(source or target?)</span></div>
+        </div>
+      </div>
+      <div class="lbl">gradient reversal: the extractor learns features the domain classifier <b>can't</b> tell apart</div>
+    </div>
+    <p class="idea"><b>Idea:</b> make source and target features look the same, so a classifier trained on source labels also works on target.</p>
+    <p class="ex"><b>Examples:</b> DANN (adversarial), DAN (MMD distance), Deep CORAL (match feature covariances)</p>
+  </div>
+
+  <!-- 3 self-training -->
+  <div class="card c3">
+    <div class="head"><div class="num" style="background:var(--purple)">3</div>
+      <h3>Self-training / pseudo-labels<small>semi-supervised adaptation</small></h3></div>
+    <div class="needs"><span class="tag s">source model</span><span class="tag t">unlabeled target</span><span class="tag t">optional few labels</span></div>
+    <div class="diag">
+      <div class="row"><div class="n p">Teacher</div><div class="a">→</div><div class="n t">predict on<br>unlabeled target</div><div class="a">→</div><div class="n f">keep confident<br>predictions</div></div>
+      <div class="row"><div class="a">↺</div><div class="n h">Student trains on pseudo-labels (+ strong augmentation)</div></div>
+      <div class="lbl">repeat: the student becomes the next teacher</div>
+    </div>
+    <p class="idea"><b>Idea:</b> let the model label the target data itself, trust only confident guesses, and retrain. Augmentation and confidence thresholds keep errors from compounding.</p>
+    <p class="ex"><b>Examples:</b> Mean Teacher, FixMatch, Noisy Student</p>
+  </div>
+
+  <!-- 4 TTA -->
+  <div class="card c4">
+    <div class="head"><div class="num" style="background:var(--teal)">4</div>
+      <h3>Test-time adaptation<small>adapt during deployment</small></h3></div>
+    <div class="needs"><span class="tag s">trained model</span><span class="tag t">incoming test batches</span></div>
+    <div class="diag">
+      <div class="row"><div class="n t">Test batch<br>(no labels)</div><div class="a">→</div><div class="n f big">Model</div><div class="a">→</div><div class="n h">Prediction</div></div>
+      <div class="row"><div class="n p">update only BatchNorm: new mean/std (AdaBN) · scale/shift to lower prediction entropy (TENT)</div></div>
+    </div>
+    <p class="idea"><b>Idea:</b> no retraining, no labels. Cheap updates to normalization layers absorb shifts such as new cameras, blur or lighting.</p>
+    <p class="ex"><b>Examples:</b> AdaBN, TENT</p>
+  </div>
+
+  <!-- 5 distillation -->
+  <div class="card c5">
+    <div class="head"><div class="num" style="background:var(--orange)">5</div>
+      <h3>Knowledge distillation<small>transfer knowledge to a smaller model</small></h3></div>
+    <div class="needs"><span class="tag x">trained teacher</span><span class="tag t">unlabeled or labeled data</span></div>
+    <div class="diag">
+      <div class="row"><div class="n p big">Teacher<br><span style="font-weight:400">large, accurate</span></div><div class="a">→</div><div class="n f">soft probabilities<br>(temperature T)</div><div class="a">→</div><div class="n h">Student<br><span style="font-weight:400">small, fast</span></div></div>
+      <div class="row"><div class="n f">dog 0.80 · wolf 0.15 · cat 0.05</div></div>
+      <div class="lbl">soft targets carry "dark knowledge": which wrong classes look similar</div>
+    </div>
+    <p class="idea"><b>Idea:</b> train a small model to match a large model's output distribution, not just the hard label. Fits domain adaptation too: adapt a big teacher, then distill it to a small deployable student.</p>
+    <p class="ex"><b>Examples:</b> Hinton et al. 2015; Noisy Student uses it for self-training</p>
+  </div>
+
+  <!-- 6 PEFT -->
+  <div class="card c6">
+    <div class="head"><div class="num" style="background:var(--red)">6</div>
+      <h3>Parameter-efficient fine-tuning<small>adapt with few trainable parameters</small></h3></div>
+    <div class="needs"><span class="tag s">frozen pretrained model</span><span class="tag t">labeled target data</span></div>
+    <div class="diag">
+      <div class="row"><div class="n f">🔒 frozen layer</div><div class="a">+</div><div class="n h">small adapter / low-rank update</div></div>
+      <div class="row"><div class="n f">🔒 frozen layer</div><div class="a">+</div><div class="n h">small adapter / low-rank update</div></div>
+      <div class="lbl">train ~0.1–5% of the weights · store one small adapter per domain</div>
+    </div>
+    <p class="idea"><b>Idea:</b> keep the backbone frozen and learn small add-on modules. Cheap to train and store, and one backbone can serve many domains.</p>
+    <p class="ex"><b>Examples:</b> Adapters, LoRA, BN-only tuning</p>
+  </div>
+</div>
+
+<div class="guide">
+  <div class="gbar">Which one should I use? <span>start at the left and stop at the first “yes”</span></div>
+  <div class="qs">
+    <div class="q"><div class="ask">Can you label enough target data?</div><div class="go">Fine-tune (1)</div><div style="font-size:12px;color:var(--muted);margin-top:3px">or PEFT (6) if compute or storage is tight</div></div>
+    <div class="q"><div class="ask">A few labels plus lots of unlabeled target data?</div><div class="go">Self-training (3)</div></div>
+    <div class="q"><div class="ask">Only unlabeled target data at training time?</div><div class="go">Feature alignment (2)</div><div style="font-size:12px;color:var(--muted);margin-top:3px">often combined with self-training</div></div>
+    <div class="q"><div class="ask">Target data only appears after deployment?</div><div class="go">Test-time adaptation (4)</div></div>
+    <div class="q"><div class="ask">Adapted model too slow or big to deploy?</div><div class="go">Distill it (5)</div></div>
+  </div>
+</div>
+
+<p class="refs">
+  Ganin &amp; Lempitsky 2015 (DANN) · Long et al. 2015 (DAN) · Sun &amp; Saenko 2016 (Deep CORAL) · Li et al. 2016 (AdaBN) · Wang et al. 2021 (TENT) ·
+  Tarvainen &amp; Valpola 2017 (Mean Teacher) · Sohn et al. 2020 (FixMatch) · Xie et al. 2020 (Noisy Student) · Hinton et al. 2015 (Distillation) ·
+  Houlsby et al. 2019 (Adapters) · Hu et al. 2021 (LoRA) · Kumar et al. 2022 (LP-FT) · Lee et al. 2023 (Surgical fine-tuning)
+</p>
+
+</body>
+</html>
