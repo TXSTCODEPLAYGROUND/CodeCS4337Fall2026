@@ -1,4 +1,4 @@
-colabutilscs4337>=0.1.6
+colabutilscs4337>=0.1.7
 ipywidgets==8.1.9
 lightning==2.6.6
 litlogger==2026.8.28
