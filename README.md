@@ -188,12 +188,33 @@ For training on Google Colab using `google-colab-cli`, follow these steps to con
 
 ##### 1. Environment Setup
 
-1. **Prepare your env file:** Create a plain text file on your Google Drive
-   (here `cs4337.env`, in the Drive root) with one `NAME=value` per line, for
-   example `WANDB_API_KEY=your-key` (the keys the project needs: see the
-   [`.env` section](#the-env-and-envcolab-files); never use `.envcolab` for keys).
-   A Colab CLI (SSH) session cannot read Colab Secrets, so this file is how
-   your keys get into the runtime.
+1. **Prepare your env file:** Create a plain text file named `cs4337.env` in
+   the root of your Google Drive. A Colab CLI (SSH) session cannot read Colab
+   Secrets, so this file is how settings and keys get into the runtime. Never
+   put keys in `.envcolab`, which is in git. Use this template:
+
+   ```text
+   # Settings shared by every project in this repo.
+   # Relative paths are resolved against the repo root, not the current directory.
+
+   # Required
+   # Each project writes to <OUTPUT_DIR>/<ProjectName>/<config>/<timestamp>/.
+   DATA_DIR=/content/data
+   OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs
+
+   # Required
+   # W&B key for LitWBTrainingBasicConvnet, from wandb.ai/authorize (uncomment and paste it):
+   # WANDB_API_KEY=
+
+   # Optional
+   # LitLogger key for LitTrainingBasicConvnet, from lightning.ai/profile (uncomment and paste it):
+   LIGHTNING_USER_ID=
+   LIGHTNING_API_KEY=
+
+   # optional
+   # LABEL_STUDIO_USERNAME=email@email.com   # must look like an email address
+   # LABEL_STUDIO_PASSWORD=password
+   ```
 2. **Start a GPU session:**
    ```bash
    colab new -s train --gpu t4

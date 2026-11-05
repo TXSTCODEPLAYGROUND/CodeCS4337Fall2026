@@ -421,17 +421,31 @@ file named `cs4337.env` in the **root of My Drive** (so its path in the session
 will be `/content/drive/MyDrive/cs4337.env`), with one `NAME=value` per line:
 
 ```text
-# Keys for CodeCS4337Fall2026. Never commit this file to git.
-# Get the W&B key from https://wandb.ai/authorize
+# Settings shared by every project in this repo.
+# Relative paths are resolved against the repo root, not the current directory.
 
-WANDB_API_KEY=your-api-key
+# Required
+# Each project writes to <OUTPUT_DIR>/<ProjectName>/<config>/<timestamp>/.
+DATA_DIR=/content/data
+OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs
 
-# Optional: only for LitTraining* projects that use LitLogger (not this one)
-# LIGHTNING_USER_ID=your-user-id
-# LIGHTNING_API_KEY=your-api-key
+# Required
+# W&B key for LitWBTrainingBasicConvnet, from wandb.ai/authorize (uncomment and paste it):
+# WANDB_API_KEY=
+
+# Optional
+# LitLogger key for LitTrainingBasicConvnet, from lightning.ai/profile (uncomment and paste it):
+LIGHTNING_USER_ID=
+LIGHTNING_API_KEY=
+
+# optional
+# LABEL_STUDIO_USERNAME=email@email.com   # must look like an email address
+# LABEL_STUDIO_PASSWORD=password
 ```
 
-This project needs `WANDB_API_KEY`. Without it the run still trains, but W&B
+`setup_colab` writes `.env` from the repo's `.envcolab` and then appends this
+file, so later lines win when a name appears twice. Uncomment and set
+`WANDB_API_KEY` for this project. Without it the run still trains, but W&B
 logs offline into the run folder; upload it later with the `wandb sync` command
 the run prints. Never put keys in `.envcolab`, which is in git.
 
