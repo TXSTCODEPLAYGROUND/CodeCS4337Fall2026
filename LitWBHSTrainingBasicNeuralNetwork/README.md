@@ -272,76 +272,111 @@ for a quick test of `main()`.
 ## Training with the Colab CLI
 
 Another way to train this project, once everything is final. Its only purpose
-is the training run itself:
+is the search and training run itself:
 
 1. **Work locally** on the project: change the code or a config, run short
    tests, fix bugs.
 2. **Use Google Colab** (this project's notebook) for debugging and interactive work.
 3. **Use the Colab CLI** when everything is final and the only thing left is
-   training. The CLI creates a Colab runtime from your local terminal and opens
-   a shell on it, so there is no notebook or browser tab to keep open. On the
-   runtime you set up the repo with `colabutilscs4337` and run `python -m LitWBHSTrainingBasicNeuralNetwork.search --config search01.json`.
+   search and training. The CLI creates a Colab runtime from your local terminal and opens
+   a shell on it, so there is no notebook or browser tab to keep open.
 
 The Colab CLI works on Linux and macOS (not Windows). For more detail, see
 [google-colab-cli.md](../google-colab-cli.md) at the repo root or the
 [official Colab CLI documentation](https://github.com/googlecolab/google-colab-cli).
 
-### Step 1: Install the CLI
+### Step 1: Install the CLI and sign in
 
 On your own machine:
 
 ```bash
-uv tool install google-colab-cli     # or: pip install google-colab-cli
-colab version                         # check that it works
+pip install google-colab-cli     # or: uv tool install google-colab-cli
+colab version                    # check that it works
 ```
 
-The first command that talks to Colab prints a sign-in link: open it, sign in
-with your Google account, and paste the code it shows back into the terminal.
+The first command that talks to Colab (`colab version`, `colab new`, …) prints a
+sign-in link: open it, sign in with your Google account, and paste the code it
+shows back into the terminal. You only need to do this once per machine.
 
-### Step 2: The basic workflow (sessions)
+### Step 2: Create `cs4337.env` on Google Drive
 
-A **session** is one Colab runtime (a virtual machine) with a name you choose,
-here `cs4337`. These commands run in your **local** terminal:
+Colab Secrets can only be read from a notebook, not from an SSH session, so the
+keys for this project live in a plain text file on your Google Drive. Create a
+file named `cs4337.env` in the **root of My Drive** (so its path in the session
+will be `/content/drive/MyDrive/cs4337.env`), with one `NAME=value` per line:
 
-| What | Command |
-| --- | --- |
-| Create a session with a GPU | `colab new -s cs4337 --gpu T4` (or `L4`, `A100`, `H100`, depending on your plan) |
-| Create a session without a GPU | `colab new -s cs4337` (CPU only) |
-| List your sessions / check one | `colab sessions` / `colab status -s cs4337` |
-| Attach to a session (open a shell on it) | `colab ssh -s cs4337` |
-| Leave the shell; the session keeps running | `exit` |
-| Stop the session (delete the runtime) | `colab stop -s cs4337` |
+```text
+# Keys for CodeCS4337Fall2026. Never commit this file to git.
+# Get the W&B key from https://wandb.ai/authorize
 
-Use a GPU runtime: `--gpu T4` is enough for this project. A CPU session can't be switched to a GPU: stop it and create a new one.
+WANDB_API_KEY=your-api-key
+
+# Optional: only for LitTraining* projects that use LitLogger (not this one)
+# LIGHTNING_USER_ID=your-user-id
+# LIGHTNING_API_KEY=your-api-key
+```
+
+This project needs `WANDB_API_KEY`. Without it the run still trains, but W&B
+logs offline into the run folder; upload it later with the `wandb sync` command
+the run prints. Never put keys in `.envcolab`, which is in git.
+
+You can also create the file from inside the session after Drive is mounted
+(step 4): `read -s` hides the key while you paste it:
+
+```bash
+read -rsp "W&B API key: " key && echo "WANDB_API_KEY=$key" >> /content/drive/MyDrive/cs4337.env && unset key && echo
+```
+
+### Step 3: Start a GPU session
+
+These commands run in your **local** terminal. A **session** is one Colab
+runtime (a virtual machine) with a name you choose, here `cs4337`:
+
+```bash
+colab new -s cs4337 --gpu T4
+```
+
+`--gpu T4` is enough for this project. Other GPUs (`L4`, `A100`, `H100`), CPU
+sessions, high-memory sessions, listing and stopping sessions, and connecting
+from VS Code are covered in [google-colab-cli.md](../google-colab-cli.md) and the
+[official Colab CLI documentation](https://github.com/googlecolab/google-colab-cli):
+read those when you want more than a plain GPU session.
 
 > **Once a session is stopped, nothing on it stays.** The cloned repo, the
 > downloaded data, and every file that is not on Google Drive are deleted.
-> This project writes its runs to Google Drive (step 4), so mount Drive before
+> This project writes its runs to Google Drive (step 5), so mount Drive before
 > training.
 
-### Step 3: Mount Google Drive
+### Step 4: Mount Google Drive and attach
 
-Drive is mounted from your local terminal, not from inside the session. If you
-are attached, `exit` first:
+Drive is mounted from your local terminal, not from inside the session:
 
 ```bash
-exit                                # only if you are inside the session
 colab drivemount -s cs4337          # open the link it prints and allow access
-colab ssh -s cs4337                 # attach again
-ls /content/drive/MyDrive           # check: your Drive files are listed
+colab ssh -s cs4337                 # attach to the session
 ```
 
-Nothing in the project mounts Drive again: the setup in step 4 uses this mount.
+Inside the session, check that the GPU is there and that Drive is mounted:
 
-### Step 4: Set up the repo and train
+```bash
+nvidia-smi                          # GPU name, memory, utilization
+ls /content/drive/MyDrive           # your Drive files, including cs4337.env
+```
+
+Other monitoring tools (`btop`, `gpustat`, `tmux` shortcuts) are listed in the
+[main README](../README.md#3-useful-monitoring-tools) under *Useful Monitoring
+Tools*. Nothing in the project mounts Drive again: the setup in step 5 uses this
+mount.
+
+### Step 5: Set up the repo and train
 
 One call of the course library
 [`colabutilscs4337`](https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html) sets up everything the
 runtime needs: it clones the repo (or pulls it, if it is already there), writes
-`.env`, and installs only the packages Colab doesn't already have (a plain
-`pip install -r requirements.txt` would replace Colab's own versions, which is
-slow and can break other preinstalled packages). The session already has Drive
-mounted (step 3), so nothing is mounted again. Inside the session:
+`.env` (`.envcolab` with your env file added below it), and installs only the
+packages Colab doesn't already have (see [Why only the missing requirements are installed](../README.md#why-only-the-missing-requirements-are-installed)).
+Drive is already mounted from your local terminal, so nothing is mounted again.
+Inside the session:
 
 ```bash
 pip install -q colabutilscs4337
@@ -358,32 +393,12 @@ cd /content/CodeCS4337Fall2026
 ```
 
 The runtime only sees what is on GitHub: if you changed code or a config
-locally, push it to your own fork first and use that URL instead.
+locally, push it to your own fork first and use that URL instead. If
+`cs4337.env` is not on Drive, `setup_colab` stops with an error that names the
+path it looked for.
 
-**You must provide your env file on Google Drive.** Colab Secrets can only be
-read from a notebook, not from an SSH session, so the keys come from a plain
-text file on your Drive: one `NAME=value` per line, e.g. `WANDB_API_KEY=your-key`.
-`env_source` is its path, absolute (`/content/drive/MyDrive/...`) or relative
-to `MyDrive`. If the file is not there, `setup_colab` stops with an error that
-names the path it looked for. The resulting `.env` is `.envcolab` (which sets
-`DATA_DIR=/content/data`, data on the runtime's fast local disk, and
-`OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs`, runs on Drive so they
-are kept after a stop) with your file added below it.
-
-Create the file once, from the session. `read -s` hides the key while you
-paste it, so it is not shown on screen or saved in the shell history. Get the
-W&B API key from [wandb.ai/authorize](https://wandb.ai/authorize):
-
-```bash
-read -rsp "W&B API key: " key && echo "WANDB_API_KEY=$key" >> /content/drive/MyDrive/cs4337.env && unset key && echo
-```
-
-Without a key the run still trains, but W&B logs offline into the run folder;
-upload it later with the `wandb sync` command that the run prints. Never put the key in `.envcolab`, which is in git.
-
-Start a `tmux` session first, so the search keeps going if the SSH connection
-drops or you close your laptop. Then, from the repo root, run the search and
-train the best config it finds, one after the other:
+Start a `tmux` session so search and training keeps going if the SSH connection drops or
+you close your laptop, then run from the repo root:
 
 ```bash
 tmux new -s train                  # if tmux is missing: apt-get install -y tmux
@@ -394,31 +409,50 @@ python -m LitWBHSTrainingBasicNeuralNetwork.search --config search01.json \
 The search saves the best config as `configs/search01_best.json` inside the
 cloned repo, which is deleted when the session stops. Its study (`study.db`)
 and `trials.csv` are on Drive, though: if the session stopped before the final
-training, set up the repo again (step 4) and run
-`python -m LitWBHSTrainingBasicNeuralNetwork.search --config search01.json --n-trials 0` to write
-`search01_best.json` back without running any new trial. Running the same
-search command again (without `--n-trials 0`) continues the saved study.
+training, set up the repo again (step 5) and run
+`python -m LitWBHSTrainingBasicNeuralNetwork.search --config search01.json --n-trials 0`
+to write `search01_best.json` back without running any new trial. Running the
+same search command again (without `--n-trials 0`) continues the saved study.
 
-To leave training running, press `Ctrl+B`, then `D`. To come back later:
-`colab ssh -s cs4337`, then `tmux attach -t train`.
 
-### Step 5: Check that everything was logged
+To leave search and training running, press `Ctrl+B`, then `D` (detach). The process keeps
+going on the runtime. To come back later: `colab ssh -s cs4337`, then
+`tmux attach -t train`.
 
-The run folders are on Google Drive, so they are kept after the session
-stops. From the session:
+### Step 6: Monitor the run
 
-```bash
-ls /content/drive/MyDrive/CodeCS4337Fall2026/runs/LitWBHSTrainingBasicNeuralNetwork/search01_best
-```
+While training (or after you detach from `tmux`):
 
-or on [drive.google.com](https://drive.google.com), under **My Drive >
-CodeCS4337Fall2026 > runs > LitWBHSTrainingBasicNeuralNetwork**. Check that:
+- **W&B:** open the run link that the process prints, or go to your W&B project
+  in the browser. Metrics, the config, and the system charts update there live
+  when the key was present. If the run printed a `wandb sync …` command instead,
+  it logged offline; run that command later from a machine with your key.
+- **Run folder on Google Drive:** every file of the run (config, metrics,
+  checkpoints, W&B's local `wandb/` folder) is under
 
-- each run has its own `<timestamp>` folder (the path is printed when the run starts), with its config, results, plots, and checkpoints;
-- `runs_summary.csv`, next to the run folders, has one new row per run;
-- `/content/drive/MyDrive/CodeCS4337Fall2026/runs/LitWBHSTrainingBasicNeuralNetwork/search01/` has the search's `trials.csv` and `study.db`;
-- the run shows up in your W&B project: the run prints its W&B link. If it printed a `wandb sync` command instead, the run was logged offline (no key or no login); run that command later, from a machine with your key, to upload it;
-- if the session stopped or the run was cut off, start a new session, repeat the steps above, and continue from the last checkpoint on Drive with `--resume-from search01_best`, e.g. `python -m LitWBHSTrainingBasicNeuralNetwork --config search01_best.json --resume-from search01_best`.
+  ```text
+  /content/drive/MyDrive/CodeCS4337Fall2026/runs/LitWBHSTrainingBasicNeuralNetwork/search01_best/2026-11-05_14-30-00/
+  ```
+
+  The timestamp is printed when the run starts. From the session:
+
+  ```bash
+  ls /content/drive/MyDrive/CodeCS4337Fall2026/runs/LitWBHSTrainingBasicNeuralNetwork/search01_best
+  ```
+
+  or on [drive.google.com](https://drive.google.com), under **My Drive >
+  CodeCS4337Fall2026 > runs > LitWBHSTrainingBasicNeuralNetwork**. Check that `runs_summary.csv` next to
+  the run folders has one new row per run.
+
+- The search's own folder is
+  `/content/drive/MyDrive/CodeCS4337Fall2026/runs/LitWBHSTrainingBasicNeuralNetwork/search01/`
+  (`trials.csv`, `study.db`).
+- **Resume a cut-off final training:** start a new session, repeat the steps
+  above, and continue from the last checkpoint on Drive:
+
+  ```bash
+  python -m LitWBHSTrainingBasicNeuralNetwork --config search01_best.json --resume-from search01_best
+  ```
 
 When everything is checked, stop the session so it no longer uses your Colab
 quota:
