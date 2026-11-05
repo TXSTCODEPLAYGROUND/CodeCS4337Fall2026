@@ -59,10 +59,34 @@ count) for the config's ``"epochs"`` more epochs, into a new run folder.
 
 On the command line: ``--resume-from search01_best``.
 
+In a Colab notebook, add the key as a Colab Secret and run the project notebook's
+*Load API keys* cell (``cu.env.load_secrets("WANDB_API_KEY", persist_to=...)``). In a
+Colab CLI (SSH) session, Colab Secrets are not available: put the key in a text file on
+your Google Drive and pass its path as ``env_source`` to
+:func:`colabutilscs4337.project.setup_colab` (the project README shows the commands). The
+run stops with an error if that file is missing.
+
 The project folder has a Colab notebook, ``lit_wbhs_training_basic_neural_network_notebook.ipynb``,
 that runs the search, plots the results, and trains the best config. The
 `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/LitWBHSTrainingBasicNeuralNetwork>`_
 explains the search space, Optuna's sampler and pruner, and the W&B dashboard.
+
+Shared code: colabutilscs4337
+-----------------------------
+
+Setup, paths, configs, run folders, resuming, and the W&B connection used to be copied
+into every project. They now come from the course library
+`colabutilscs4337 <https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html>`__ (listed in
+``requirements.txt``), so this project keeps only what is specific to the experiment:
+
+* ``utils/paths.py`` is one line, ``PROJECT = cu.project.Project(...)``: repo, config,
+  data, and run folders. The search uses ``PROJECT.read_config``, ``runs_dir`` and
+  ``configs_dir``.
+* ``main()`` starts with ``cu.lit.start_run`` (command line, config, resume, run folder,
+  ``CSVLogger``, checkpoint callbacks) and ends with ``run.save`` and
+  ``run.append_summary`` (``config.json``, ``hparams.json``, ``runs_summary.csv``).
+* ``cu.lit.connect_wandb`` starts the W&B run, online or offline, for ``main()`` and for
+  every search trial.
 
 API
 ---
@@ -112,8 +136,5 @@ Utilities
 .. automodule:: LitWBHSTrainingBasicNeuralNetwork.utils.paths
    :members:
 
-.. automodule:: LitWBHSTrainingBasicNeuralNetwork.utils.experiment
-   :members:
-
-.. automodule:: LitWBHSTrainingBasicNeuralNetwork.utils.tracking
-   :members:
+The rest (``runs_summary.csv``, run folders, checkpoint lookup, the W&B connection) is in
+`colabutilscs4337 <https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html>`__.

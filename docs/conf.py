@@ -1,8 +1,8 @@
 """Sphinx configuration for the course code repository.
 
 Heavy libraries (PyTorch, Lightning, torchvision, torchmetrics, Matplotlib,
-NumPy, tqdm, python-dotenv, wandb) are mocked, so ``sphinx-build`` does not need them
-installed.
+NumPy, tqdm, python-dotenv, wandb) and the course helper library colabutilscs4337
+are mocked, so ``sphinx-build`` does not need them installed.
 """
 
 import sys
@@ -41,6 +41,7 @@ html_context = {
 
 # Import names, not pip names: python-dotenv is imported as ``dotenv``.
 autodoc_mock_imports = [
+    "colabutilscs4337",
     "lightning",
     "torch",
     "torchvision",

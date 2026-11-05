@@ -1,23 +1,5 @@
-"""Shared helpers: paths, run summaries, and W&B runs."""
+"""This project's :class:`~colabutilscs4337.project.Project` (paths, configs, run lookup)."""
 
-from .experiment import append_run_summary
-from .paths import (
-    CONFIGS_DIR,
-    PROJECT_DIR,
-    PROJECT_NAME,
-    REPO_DIR,
-    resolve_config_path,
-    resolve_repo_path,
-)
-from .tracking import connect_wandb
+from .paths import PROJECT
 
-__all__ = [
-    "CONFIGS_DIR",
-    "PROJECT_DIR",
-    "PROJECT_NAME",
-    "REPO_DIR",
-    "append_run_summary",
-    "connect_wandb",
-    "resolve_config_path",
-    "resolve_repo_path",
-]
+__all__ = ["PROJECT"]

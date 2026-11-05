@@ -35,6 +35,23 @@ How to set up and run the project and where results go is explained in the
 [main README](../README.md). Function details are in the
 [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/YoloExample.html).
 
+## Boilerplate lives in `colabutilscs4337`
+
+Setting up Colab, finding paths and configs, creating run folders, and
+connecting to W&B were copied into every project. They now come from the
+course library [`colabutilscs4337`](https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html), which is
+in [`requirements.txt`](../requirements.txt), so this project keeps only what is
+specific to the experiment: the dataset conversion, the YOLO strategies, and the evaluation logging.
+
+| Was in this project | Now comes from `colabutilscs4337` |
+| --- | --- |
+| `utils/paths.py`: repo, `configs/`, `.env`, `DATA_DIR`, `OUTPUT_DIR` paths | `cu.project.Project` (`PROJECT` in [`utils/paths.py`](utils/paths.py)) |
+| `utils/experiment.py`: `append_run_summary`, `compare_runs` | `cu.project.append_run_summary`, `cu.project.compare_runs` |
+| `models/loading.py`: finding a run folder | `Project.resolve_run` (the `weights/best.pt` and `last.pt` lookup stays here: Ultralytics keeps them in a `weights/` folder) |
+| `main.py`: command line, config, run folder, `config.json`, `hparams.json` | `cu.lit.parse_cli`, `Project.read_config`, `new_run_dir`, `save_run_files` |
+| `main.py`: `_connect_wandb` | `cu.lit.connect_wandb_run` |
+| Notebook: mount Drive, clone, `.env`, requirements, API keys | `cu.project.setup_colab`, `cu.env.load_secrets`, `cu.env.sync_env_file` |
+
 ## Running
 
 From the repo root, one config at a time, **config01 first** (the others are
@@ -378,7 +395,7 @@ is the training run itself:
 3. **Use the Colab CLI** when everything is final and the only thing left is
    training. The CLI creates a Colab runtime from your local terminal and opens
    a shell on it, so there is no notebook or browser tab to keep open. On the
-   runtime you clone the repo and run `python -m YoloExample --config config01.json`.
+   runtime you set up the repo with `colabutilscs4337` and run `python -m YoloExample --config config01.json`.
 
 The Colab CLI works on Linux and macOS (not Windows). For more detail, see
 [google-colab-cli.md](../google-colab-cli.md) at the repo root or the
@@ -429,47 +446,55 @@ colab ssh -s cs4337                 # attach again
 ls /content/drive/MyDrive           # check: your Drive files are listed
 ```
 
-### Step 4: Clone the repo and train
+Nothing in the project mounts Drive again: the setup in step 4 uses this mount.
 
-Inside the session, clone the repo and go to its root folder:
+### Step 4: Set up the repo and train
+
+One call of the course library
+[`colabutilscs4337`](https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html) sets up everything the
+runtime needs: it clones the repo (or pulls it, if it is already there), writes
+`.env`, and installs only the packages Colab doesn't already have (a plain
+`pip install -r requirements.txt` would replace Colab's own versions, which is
+slow and can break other preinstalled packages). The session already has Drive
+mounted (step 3), so nothing is mounted again. Inside the session:
 
 ```bash
-cd /content
-git clone https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git
-cd CodeCS4337Fall2026
-cp .envcolab .env
+pip install -q colabutilscs4337
+python - <<'EOF'
+import colabutilscs4337 as cu
+
+cu.project.setup_colab(
+    "https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git",
+    env_source="/content/drive/MyDrive/cs4337.env",  # your env file on Google Drive
+    mount=False,  # `colab drivemount` already mounted Drive
+)
+EOF
+cd /content/CodeCS4337Fall2026
 ```
 
 The runtime only sees what is on GitHub: if you changed code or a config
-locally, push it to your own fork first and clone that instead. `.envcolab`
-sets `DATA_DIR=/content/data` (data on the runtime's fast local disk) and
-`OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs` (runs on Drive, so they are kept after a stop).
+locally, push it to your own fork first and use that URL instead.
 
-This project logs to Weights & Biases and reads the key only from `.env`.
-Add your W&B API key (from [wandb.ai/authorize](https://wandb.ai/authorize))
-to the runtime's `.env`. `read -s` hides the key while you paste it, so it is
-not shown on screen or saved in the shell history:
+**You must provide your env file on Google Drive.** Colab Secrets can only be
+read from a notebook, not from an SSH session, so the keys come from a plain
+text file on your Drive: one `NAME=value` per line, e.g. `WANDB_API_KEY=your-key`.
+`env_source` is its path, absolute (`/content/drive/MyDrive/...`) or relative
+to `MyDrive`. If the file is not there, `setup_colab` stops with an error that
+names the path it looked for. The resulting `.env` is `.envcolab` (which sets
+`DATA_DIR=/content/data`, data on the runtime's fast local disk, and
+`OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs`, runs on Drive so they
+are kept after a stop) with your file added below it.
+
+Create the file once, from the session. `read -s` hides the key while you
+paste it, so it is not shown on screen or saved in the shell history. Get the
+W&B API key from [wandb.ai/authorize](https://wandb.ai/authorize):
 
 ```bash
-read -rsp "W&B API key: " key && echo "WANDB_API_KEY=$key" >> .env && unset key && echo
+read -rsp "W&B API key: " key && echo "WANDB_API_KEY=$key" >> /content/drive/MyDrive/cs4337.env && unset key && echo
 ```
 
 Without a key the run still trains, but W&B logs offline into the run folder;
-upload it later with the `wandb sync` command that the run prints. Never put
-the key in `.envcolab`, which is in git.
-
-Install only the packages Colab doesn't already have, as the setup of this project's notebook
-does. A plain `pip install -r requirements.txt` would replace Colab's own
-versions, which is slow and can break other preinstalled packages:
-
-```bash
-grep -vE '^\s*(#|$)' requirements.txt \
-  | sed -E 's/[<>=!~;[ ].*//' \
-  | while read -r pkg; do
-      if pip show "$pkg" > /dev/null 2>&1; then echo "skip $pkg (already installed)"
-      else pip install -q "$pkg" && echo "installed $pkg"; fi
-    done
-```
+upload it later with the `wandb sync` command that the run prints. Never put the key in `.envcolab`, which is in git.
 
 Start a `tmux` session first, so training keeps going if the SSH connection
 drops or you close your laptop, then run the training from the repo root:

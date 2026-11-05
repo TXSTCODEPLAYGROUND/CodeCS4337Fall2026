@@ -1,11 +1,10 @@
 # Google Colab environment, shared by every project in this repo.
-# In Colab, copy this file to .env so main() picks it up automatically.
-# From the repo root (%cd CodeCS4337Fall2026):
-#   !cp .envcolab .env
-# (every project's notebook does this for you.)
+# In Colab, colabutilscs4337.project.setup_colab copies this file to .env, so
+# main() picks it up automatically (every project's notebook calls it for you;
+# in a Colab CLI/SSH session, call it yourself: see the project README).
 # Dataset lives on the fast local VM disk (re-downloaded each session).
-# Outputs go to Google Drive so they survive runtime resets; requires
-#   from google.colab import drive; drive.mount("/content/drive")
+# Outputs go to Google Drive so they survive runtime resets; setup_colab mounts
+# Drive in a notebook (in an SSH session: `colab drivemount -s <session>`).
 # Each project writes to <OUTPUT_DIR>/<ProjectName>/<config>/<timestamp>/.
 DATA_DIR=/content/data
 OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs
@@ -29,6 +28,8 @@ OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs
 # values from lightning.ai -> profile picture -> Global Settings -> Keys ->
 # "Login via CLI". Then run the "Load API keys" cell of the project's notebook
 # (after the setup cells, before running a project): it copies them to .env.
+# In a Colab CLI (SSH) session Secrets are not available: put the two lines in
+# a text file on your Google Drive and pass its path to setup_colab(env_source=...).
 # Locally, put the two lines in .env instead (not tracked by git).
 # -----Lit Logger setup ends here-----:
 
@@ -48,4 +49,7 @@ OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs
 # left sidebar) named WANDB_API_KEY. Then run the "Load API keys" cell of
 # the project's notebook (after the setup cells, before running it): it
 # copies the key to .env, so notebook and terminal runs both find it.
+# In a Colab CLI (SSH) session Secrets are not available: put WANDB_API_KEY=...
+# in a text file on your Google Drive and pass its path to
+# setup_colab(env_source=...).
 # -----W&B setup ends here-----:

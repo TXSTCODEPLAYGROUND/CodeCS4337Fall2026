@@ -22,33 +22,19 @@ if __name__ == "__main__" and not __package__:
     )
     sys.exit()
 
-import argparse
-import json
-import os
-import shutil
 import time
-import warnings
-from datetime import datetime
 from pathlib import Path
 
+import colabutilscs4337 as cu
 import lightning as L
 import torch
 import wandb
-from dotenv import load_dotenv
-from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
-from lightning.pytorch.loggers import CSVLogger, WandbLogger
+from lightning.pytorch.callbacks import LearningRateMonitor
 
 from .callbacks import LogSegmentation, ResumableEarlyStopping
 from .dataloaders import CLASS_NAMES, IMAGENET_MEAN, IMAGENET_STD, KvasirSegDataModule
 from .models import LitUNet, build_net
-from .models.loading import find_resume_checkpoint
-from .utils import (
-    PROJECT_NAME,
-    REPO_DIR,
-    append_run_summary,
-    resolve_config_path,
-    resolve_repo_path,
-)
+from .utils import PROJECT
 
 
 def main(
@@ -84,7 +70,7 @@ def main(
 
     With ``"early_stopping": true`` in the config's ``"training"`` section,
     training stops once ``val_dice`` has not improved for ``"patience"`` epochs
-    (:class:`~UnetSemanticSegmentationExample.callbacks.early_stopping.ResumableEarlyStopping`).
+    (:class:`~colabutilscs4337.lit.ResumableEarlyStopping`).
     ``"precision": "16-mixed"`` trains with mixed precision (faster, less GPU
     memory) when a GPU is available; on a CPU, 32-bit is used.
 
@@ -94,7 +80,7 @@ def main(
         resume_from: Continue an earlier run instead of starting from
             scratch: ``"config01"`` (the newest run of config01), a run folder,
             or a checkpoint, found by
-            :func:`~UnetSemanticSegmentationExample.models.loading.find_resume_checkpoint`.
+            :meth:`~colabutilscs4337.project.Project.find_resume_checkpoint`.
             The weights, the optimizer, the scheduler, and the epoch count come
             from the run's last checkpoint; the config's ``"epochs"`` more
             epochs are then trained into a new run folder. The model settings
@@ -105,40 +91,24 @@ def main(
         Test metrics of the best checkpoint: ``test_loss``, ``test_dice``,
         ``test_iou``, ``test_precision``, ``test_recall``, and ``test_pixel_acc``.
     """
-    load_dotenv(REPO_DIR / ".env")
-    if config_path is None:
-        parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-        parser.add_argument("--config", required=True, help="e.g. config01.json")
-        parser.add_argument(
-            "--resume-from",
-            help="continue an earlier run, e.g. config01 (its newest run)",
-        )
-        args = parser.parse_args()
-        config_path, resume_from = args.config, args.resume_from
-    config_path = resolve_config_path(config_path)
-    config = json.loads(config_path.read_text())
+    run = cu.lit.start_run(
+        PROJECT,
+        config_path,
+        resume_from,
+        description=__doc__.splitlines()[0],
+        monitor="val_dice",
+        metric_label="valdice",
+    )
+    config = run.config
     data_cfg, model_cfg, train_cfg = config["data"], config["model"], config["training"]
-    epochs, resume_checkpoint = train_cfg["epochs"], None
-    if resume_from is not None:
-        resume_checkpoint = find_resume_checkpoint(resume_from)
-        state = torch.load(resume_checkpoint, map_location="cpu", weights_only=False)
-        done = state["epoch"] + 1
-        epochs += done
-        print(
-            f"Resuming {resume_checkpoint} after {done} epochs, up to {epochs} epochs"
-        )
-        # Expected: the new run saves its checkpoints in its own folder.
-        warnings.filterwarnings("ignore", message=".*dirpath has changed.*")
 
     L.seed_everything(config["seed"], workers=True)
 
     data = KvasirSegDataModule(
-        data_dir=str(resolve_repo_path(os.getenv("DATA_DIR", "data"))),
-        seed=config["seed"],
-        **data_cfg,
+        data_dir=str(PROJECT.data_dir()), seed=config["seed"], **data_cfg
     )
     # When resuming, all weights come from the checkpoint.
-    net = build_net(model_cfg, pretrained=resume_checkpoint is None)
+    net = build_net(model_cfg, pretrained=run.resume_checkpoint is None)
     total = sum(p.numel() for p in net.parameters())
     print(f"{model_cfg['architecture']}: {total:,} parameters")
     model = LitUNet(
@@ -153,32 +123,18 @@ def main(
         threshold=train_cfg["threshold"],
     )
 
-    run_id = datetime.now().astimezone().strftime("%Y-%m-%d_%H-%M-%S")
-    csv_logger = CSVLogger(
-        save_dir=resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_NAME,
-        name=config_path.stem,
-        version=run_id,
+    wandb_logger = cu.lit.connect_wandb(
+        project=config["wandb"]["project"],
+        name=f"{run.config_name}-{run.run_id}",
+        group=run.config_name,
+        save_dir=run.run_dir,
+        config=config,
     )
-    run_dir = Path(csv_logger.log_dir)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    wandb_logger = _connect_wandb(config, config_path.stem, run_id, run_dir)
     wandb_logger.experiment.summary["total_params"] = total
-    checkpoint = ModelCheckpoint(
-        dirpath=run_dir,
-        filename="best_epoch{epoch:02d}_valdice{val_dice:.4f}",
-        auto_insert_metric_name=False,
-        monitor="val_dice",
-        mode="max",
-    )
-    # save_last=True would only copy the best checkpoint; this one is rewritten
-    # every epoch, so a stopped run can be resumed from its last epoch.
-    last_checkpoint = ModelCheckpoint(
-        dirpath=run_dir, filename="last", enable_version_counter=False
-    )
 
     callbacks: list[L.Callback] = [
-        checkpoint,
-        last_checkpoint,
+        run.checkpoint,
+        run.last_checkpoint,
         LearningRateMonitor(logging_interval="epoch"),
         LogSegmentation(
             CLASS_NAMES, IMAGENET_MEAN, IMAGENET_STD, train_cfg["threshold"]
@@ -195,22 +151,25 @@ def main(
     gpu = config["accelerator"] in ("auto", "gpu", "cuda") and torch.cuda.is_available()
     precision = train_cfg.get("precision", "32-true") if gpu else "32-true"
     trainer = L.Trainer(
-        max_epochs=epochs,
+        max_epochs=run.epochs,
         accelerator=config["accelerator"],
         precision=precision,
-        logger=[csv_logger, wandb_logger],
+        logger=[run.csv_logger, wandb_logger],
         callbacks=callbacks,
     )
     start = time.perf_counter()
-    trainer.fit(model, datamodule=data, ckpt_path=resume_checkpoint)
+    trainer.fit(model, datamodule=data, ckpt_path=run.resume_checkpoint)
     train_minutes = (time.perf_counter() - start) / 60
     epochs_run = trainer.current_epoch
-    if epochs_run < epochs:
+    if epochs_run < run.epochs:
         print(
             f"Early stopping: val_dice stopped improving, stopped after epoch {epochs_run}"
         )
     best_epoch = torch.load(
-        checkpoint.best_model_path, map_location="cpu", weights_only=False, mmap=True
+        run.checkpoint.best_model_path,
+        map_location="cpu",
+        weights_only=False,
+        mmap=True,
     )["epoch"]
     trainable = sum(p.numel() for p in net.parameters() if p.requires_grad)
     # The best checkpoint again on the validation set, now with the per-image
@@ -234,15 +193,10 @@ def main(
     # Close the run, so calling main() again in a notebook starts a new one.
     wandb.finish()
 
-    shutil.copy(config_path, run_dir / "config.json")
-    hparams = {"model": dict(model.hparams), "data": dict(data.hparams)}
-    if resume_checkpoint:
-        hparams["resumed_from"] = str(resume_checkpoint)
-    (run_dir / "hparams.json").write_text(json.dumps(hparams, indent=2))
-    append_run_summary(
-        run_dir.parent / "runs_summary.csv",
+    run.save({"model": dict(model.hparams), "data": dict(data.hparams)})
+    run.append_summary(
         {
-            "run_id": run_id,
+            "run_id": run.run_id,
             "architecture": model_cfg["architecture"],
             "pretrained": model_cfg["pretrained"],
             "loss": train_cfg["loss"],
@@ -270,9 +224,8 @@ def main(
             "batch_size": data_cfg["batch_size"],
             "precision": precision,
             "seed": config["seed"],
-            "resumed_from": str(resume_checkpoint or ""),
-            "best_checkpoint": Path(checkpoint.best_model_path).name,
-        },
+            "best_checkpoint": Path(run.checkpoint.best_model_path).name,
+        }
     )
     return test_metrics
 
@@ -299,48 +252,3 @@ def _inference_ms_per_image(
         if images.is_cuda:
             torch.cuda.synchronize()
     return (time.perf_counter() - start) / 10 / len(images) * 1000
-
-
-def _connect_wandb(
-    config: dict, config_name: str, run_id: str, run_dir: Path
-) -> WandbLogger:
-    """Start the W&B run online, or offline when there is no key or no login.
-
-    Args:
-        config: The experiment config; ``config["wandb"]["project"]`` names the
-            W&B project, and the whole config is saved with the run.
-        config_name: Config file name without ``.json``, used as the run group.
-        run_id: Timestamp of the run, added to the run name.
-        run_dir: Run folder; W&B writes its local files to ``run_dir/wandb``.
-
-    Returns:
-        A ``WandbLogger`` whose run has already started, online or offline.
-    """
-
-    def start(offline: bool) -> WandbLogger:
-        logger = WandbLogger(
-            project=config["wandb"]["project"],
-            name=f"{config_name}-{run_id}",
-            group=config_name,
-            save_dir=run_dir,
-            config=config,
-            # Passed to wandb.init: unlike offline=True, which only sets WANDB_MODE,
-            # this still works after a failed online attempt.
-            mode="offline" if offline else "online",
-        )
-        _ = logger.experiment
-        return logger
-
-    sync_hint = (
-        "logging to W&B offline. Upload the run later with: "
-        f"wandb sync {run_dir / 'wandb'}/offline-run-*"
-    )
-    if not os.getenv("WANDB_API_KEY"):
-        warnings.warn(f"WANDB_API_KEY is not in .env: {sync_hint}", stacklevel=3)
-        return start(offline=True)
-    try:
-        return start(offline=False)
-    except (wandb.errors.Error, OSError) as error:
-        wandb.finish()
-        warnings.warn(f"Could not log in to W&B ({error}): {sync_hint}", stacklevel=3)
-        return start(offline=True)

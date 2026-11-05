@@ -32,24 +32,16 @@ import copy
 import csv
 import json
 import logging
-import os
 from pathlib import Path
 
+import colabutilscs4337 as cu
 import lightning as L
 import optuna
 import wandb
-from dotenv import load_dotenv
 
 from .callbacks import OptunaPruning
 from .main import build, training_callbacks
-from .utils import (
-    CONFIGS_DIR,
-    PROJECT_NAME,
-    REPO_DIR,
-    connect_wandb,
-    resolve_config_path,
-    resolve_repo_path,
-)
+from .utils import PROJECT
 
 
 def search(
@@ -105,7 +97,7 @@ def search(
         The Optuna study, with every trial so far (``study.trials``) and the
         best one (``study.best_trial``).
     """
-    load_dotenv(REPO_DIR / ".env")
+    PROJECT.load_env()
     if search_config_path is None:
         parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
         parser.add_argument("--config", required=True, help="e.g. search01.json")
@@ -118,15 +110,12 @@ def search(
         args = parser.parse_args()
         search_config_path = args.config
         n_trials, train_fraction = args.n_trials, args.train_fraction
-    search_path = resolve_config_path(search_config_path)
-    search_cfg = json.loads(search_path.read_text())
-    base_config = json.loads(resolve_config_path(search_cfg["base_config"]).read_text())
+    search_path, search_cfg = PROJECT.read_config(search_config_path)
+    _, base_config = PROJECT.read_config(search_cfg["base_config"])
     study_cfg, space = search_cfg["study"], search_cfg["search_space"]
     search_name = search_path.stem
 
-    search_dir = (
-        resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_NAME / search_name
-    )
+    search_dir = PROJECT.runs_dir() / search_name
     search_dir.mkdir(parents=True, exist_ok=True)
     study = optuna.create_study(
         study_name=search_name,
@@ -269,7 +258,7 @@ class _Objective:
 
         logger = False
         if self.use_wandb:
-            logger = connect_wandb(
+            logger = cu.lit.connect_wandb(
                 project=config["wandb"]["project"],
                 name=f"{self.search_name}-trial{trial.number:03d}",
                 group=self.search_name,
@@ -366,13 +355,13 @@ def _save_results(
     text = json.dumps(best_config, indent=2) + "\n"
     (search_dir / "best_config.json").write_text(text)
     config_name = f"{search_path.stem}_best.json"
-    (CONFIGS_DIR / config_name).write_text(text)
+    (PROJECT.configs_dir / config_name).write_text(text)
     print(f"Best trial: {best.number}, val_acc {best.value:.4f}")
     for name, value in best.params.items():
         print(f"  {name}: {value}")
     print(
         f"Saved its config as configs/{config_name}. Train and test it with:\n"
-        f"  python -m {PROJECT_NAME} --config {config_name}"
+        f"  python -m {PROJECT.name} --config {config_name}"
     )
 
 

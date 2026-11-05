@@ -9,6 +9,24 @@ no ``utils/plots.py``. Lightning + W&B is the approach you must follow when trai
 models; :doc:`LitWBTrainingBasicNeuralNetwork` is the same setup with a
 fully connected network.
 
+Shared code: colabutilscs4337
+-----------------------------
+
+Setup, paths, configs, run folders, resuming, and the W&B connection used to be copied
+into every project. They now come from the course library
+`colabutilscs4337 <https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html>`__ (listed in
+``requirements.txt``), so this project keeps only the data, the model, the callback
+that logs predictions, and ``main()``:
+
+* ``utils/paths.py`` is one line, ``PROJECT = cu.project.Project(...)``: repo, config,
+  data, and run folders, plus finding checkpoints (``find_checkpoint``,
+  ``find_resume_checkpoint``, ``run_config``).
+* ``main()`` starts with ``cu.lit.start_run`` (command line, config, resume, run folder,
+  ``CSVLogger``, checkpoint callbacks) and ends with ``run.save`` and
+  ``run.append_summary`` (``config.json``, ``hparams.json``, ``runs_summary.csv``).
+* ``cu.lit.connect_wandb`` starts the W&B run, online or offline.
+* ``ResumableEarlyStopping`` is ``cu.lit.ResumableEarlyStopping``.
+
 Running
 -------
 
@@ -39,7 +57,7 @@ the W&B project the runs are sent to. Its ``"training"`` section also turns on
 early stopping (``"early_stopping": true``, ``"patience": 3``): training stops
 when ``val_acc`` has not improved for ``patience`` epochs, so ``"epochs"`` is
 the most a run can take
-(:class:`~LitWBTrainingBasicConvnet.callbacks.early_stopping.ResumableEarlyStopping`).
+(:class:`~colabutilscs4337.lit.ResumableEarlyStopping`).
 
 The `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/LitWBTrainingBasicConvnet>`_
 explains how to get a W&B key and how to build the dashboard.
@@ -48,10 +66,16 @@ W&B key and offline mode
 ------------------------
 
 Copy your API key from `wandb.ai/authorize <https://wandb.ai/authorize>`_
-into ``.env`` as ``WANDB_API_KEY`` (in Colab: add it as a Colab Secret and run
-the project notebook's *Load API keys* cell). Without it, or if W&B cannot log in (a
-wrong key, no internet), the run is logged offline in the run folder and
-prints the ``wandb sync`` command that uploads it later.
+into ``.env`` as ``WANDB_API_KEY``. Without it, or if W&B cannot log in (a wrong key, no
+internet), the run is logged offline in the run folder and prints the ``wandb sync``
+command that uploads it later.
+
+In a Colab notebook, add the key as a Colab Secret and run the project notebook's
+*Load API keys* cell (``cu.env.load_secrets("WANDB_API_KEY", persist_to=...)``). In a
+Colab CLI (SSH) session, Colab Secrets are not available: put the key in a text file on
+your Google Drive and pass its path as ``env_source`` to
+:func:`colabutilscs4337.project.setup_colab` (the project README shows the commands). The
+run stops with an error if that file is missing.
 
 What is logged
 --------------
@@ -107,8 +131,7 @@ Callbacks
 .. automodule:: LitWBTrainingBasicConvnet.callbacks.wandb_predictions
    :members:
 
-.. automodule:: LitWBTrainingBasicConvnet.callbacks.early_stopping
-   :members:
+``ResumableEarlyStopping`` is in the library: see :class:`colabutilscs4337.lit.ResumableEarlyStopping`.
 
 Models
 ~~~~~~
@@ -134,5 +157,5 @@ Utilities
 .. automodule:: LitWBTrainingBasicConvnet.utils.paths
    :members:
 
-.. automodule:: LitWBTrainingBasicConvnet.utils.experiment
-   :members:
+The rest (``runs_summary.csv``, run folders, checkpoint lookup) is in
+`colabutilscs4337 <https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html>`__.

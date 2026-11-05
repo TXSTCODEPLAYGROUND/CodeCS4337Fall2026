@@ -22,34 +22,24 @@ if __name__ == "__main__" and not __package__:
     )
     sys.exit()
 
-import argparse
 import csv
-import json
-import os
 import shutil
 import time
-import warnings
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import colabutilscs4337 as cu
 import wandb
-from dotenv import load_dotenv
 from ultralytics import YOLO
 from ultralytics.utils.torch_utils import get_flops, get_num_params
 
 from .callbacks import epoch_logger, log_ap_per_iou, log_evaluation, log_predictions
 from .dataloaders import CLASS_NAMES, prepare_pennfudan
 from .models.loading import find_resume_weights, weights_path, yolo_weights_dir
-from .utils import (
-    PROJECT_NAME,
-    REPO_DIR,
-    append_run_summary,
-    compare_runs,
-    resolve_config_path,
-    resolve_repo_path,
-)
+from .utils import PROJECT
 
+BASELINE = "zero-shot"
+"""The ``strategy`` of the run the others are compared with."""
 SPLITS = ("val", "test")
 """The splits evaluated after training."""
 COMPARED = [
@@ -118,27 +108,19 @@ def main(
         The test metrics: ``test_precision``, ``test_recall``, ``test_f1``,
         ``test_mAP50``, ``test_mAP75``, ``test_mAP50-95``, and more.
     """
-    load_dotenv(REPO_DIR / ".env")
+    PROJECT.load_env()
     if config_path is None:
-        parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-        parser.add_argument("--config", required=True, help="e.g. config01.json")
-        parser.add_argument(
-            "--resume-from",
-            help="continue a training run, e.g. config02 (its newest run)",
-        )
-        args = parser.parse_args()
-        config_path, resume_from = args.config, args.resume_from
-    config_path = resolve_config_path(config_path)
-    config = json.loads(config_path.read_text())
+        config_path, resume_from = cu.lit.parse_cli(__doc__.splitlines()[0])
+    config_path, config = PROJECT.read_config(config_path)
     data_cfg, model_cfg = config["data"], config["model"]
     train_cfg, eval_cfg = config["training"], config.get("evaluation", {})
 
-    data_dir = resolve_repo_path(os.getenv("DATA_DIR", "data"))
+    data_dir = PROJECT.data_dir()
     data_yaml = prepare_pennfudan(
         data_dir, tuple(data_cfg["split_sizes"]), config["seed"]
     )
     yolo_weights_dir()
-    project_runs = resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_NAME
+    project_runs = PROJECT.runs_dir()
     interrupted_last = continue_from = source_run = None
     if resume_from is not None:
         resume_weights, interrupted = find_resume_weights(resume_from)
@@ -156,11 +138,7 @@ def main(
         run_dir = source_run
         run_name = f"{run_dir.name}-resumed"
     else:
-        run_dir = (
-            project_runs
-            / config_path.stem
-            / datetime.now().astimezone().strftime("%Y-%m-%d_%H-%M-%S")
-        )
+        run_dir = PROJECT.new_run_dir(config_path.stem).path
         run_name = run_dir.name
     run_dir.mkdir(parents=True, exist_ok=True)
     config_name = run_dir.parent.name
@@ -168,7 +146,13 @@ def main(
         model_cfg["weights"], train_cfg["train"] or resume_from is not None
     )
 
-    run = _connect_wandb(config, config_name, run_name, run_dir)
+    run = cu.lit.connect_wandb_run(
+        project=config["wandb"]["project"],
+        name=f"{config_name}-{run_name}",
+        group=config_name,
+        save_dir=run_dir,
+        config=config,
+    )
     for prefix in ("train/*", "val/*", "lr/*"):
         run.define_metric(prefix, step_metric="epoch")
     run.summary["strategy"] = strategy
@@ -316,7 +300,7 @@ def main(
         "resumed": resume_from is not None,
         "resumed_from": source_run.name if source_run is not None else "",
     }
-    append_run_summary(run_dir.parent / "runs_summary.csv", summary_row)
+    cu.project.append_run_summary(run_dir.parent / "runs_summary.csv", summary_row)
     _log_comparison(run, project_runs)
     if not run.offline:
         print(f"W&B run: {run.url}")
@@ -344,7 +328,11 @@ def _training_progress(results_csv: Path) -> tuple[int, int]:
 
 def _log_comparison(run: Any, project_runs: Path) -> None:
     """Log and print the newest run of every config, with the gain over zero-shot."""
-    rows = compare_runs(project_runs)
+    rows = cu.project.compare_runs(
+        project_runs, "test_mAP50-95", baseline_value=BASELINE
+    )
+    for row in rows:
+        row["gain_vs_zero_shot"] = row.pop("gain_vs_baseline")
     columns = ["config", "strategy", "epochs_run", *COMPARED, "gain_vs_zero_shot"]
     table = [
         [
@@ -378,42 +366,3 @@ def _log_comparison(run: Any, project_runs: Path) -> None:
 def _number(value: Any) -> float | None:
     """Turn a CSV string into a rounded float, or ``None`` when empty."""
     return None if value in (None, "") else round(float(value), 4)
-
-
-def _connect_wandb(config: dict, config_name: str, run_name: str, run_dir: Path) -> Any:
-    """Start the W&B run online, or offline when there is no key or no login.
-
-    Args:
-        config: The experiment config; ``config["wandb"]["project"]`` names the
-            W&B project, and the whole config is saved with the run.
-        config_name: Config file name without ``.json``, used as the run group.
-        run_name: Timestamp of the run, added to the run name.
-        run_dir: Run folder; W&B writes its local files to ``run_dir/wandb``.
-
-    Returns:
-        The started W&B run, online or offline.
-    """
-
-    def start(offline: bool) -> Any:
-        return wandb.init(
-            project=config["wandb"]["project"],
-            name=f"{config_name}-{run_name}",
-            group=config_name,
-            dir=run_dir,
-            config=config,
-            mode="offline" if offline else "online",
-        )
-
-    sync_hint = (
-        "logging to W&B offline. Upload the run later with: "
-        f"wandb sync {run_dir / 'wandb'}/offline-run-*"
-    )
-    if not os.getenv("WANDB_API_KEY"):
-        warnings.warn(f"WANDB_API_KEY is not in .env: {sync_hint}", stacklevel=3)
-        return start(offline=True)
-    try:
-        return start(offline=False)
-    except (wandb.errors.Error, OSError) as error:
-        wandb.finish()
-        warnings.warn(f"Could not log in to W&B ({error}): {sync_hint}", stacklevel=3)
-        return start(offline=True)

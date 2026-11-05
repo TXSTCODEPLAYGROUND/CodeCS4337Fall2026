@@ -71,10 +71,17 @@ What is logged
   (:func:`~LitWBTransferLearningYolo.callbacks.wandb_logging.log_predictions`).
 * A ``results`` table of the run, and a ``comparison`` table of the newest run
   of every config
-  (:func:`~LitWBTransferLearningYolo.utils.experiment.compare_runs`).
+  (:func:`colabutilscs4337.project.compare_runs`).
 
 Without ``WANDB_API_KEY`` in ``.env``, or if W&B cannot log in, the run is
 logged offline, as in :doc:`LitWBTrainingBasicConvnet`.
+
+In a Colab notebook, add the key as a Colab Secret and run the project notebook's
+*Load API keys* cell (``cu.env.load_secrets("WANDB_API_KEY", persist_to=...)``). In a
+Colab CLI (SSH) session, Colab Secrets are not available: put the key in a text file on
+your Google Drive and pass its path as ``env_source`` to
+:func:`colabutilscs4337.project.setup_colab` (the project README shows the commands). The
+run stops with an error if that file is missing.
 
 Outputs
 -------
@@ -106,6 +113,23 @@ On the command line: ``--resume-from config02``. An interrupted run is
 finished in its own folder from ``weights/last.pt``; a finished run is trained
 the config's ``"epochs"`` more epochs from its ``weights/best.pt``, in a new
 run folder (:func:`~LitWBTransferLearningYolo.models.loading.find_resume_weights`).
+
+Shared code: colabutilscs4337
+-----------------------------
+
+Setup, paths, configs, run folders, resuming, and the W&B connection used to be copied
+into every project. They now come from the course library
+`colabutilscs4337 <https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html>`__ (listed in
+``requirements.txt``), so this project keeps only what is specific to the experiment:
+
+* ``utils/paths.py`` is one line, ``PROJECT = cu.project.Project(...)``: repo, config,
+  data, and run folders.
+* ``main()`` uses ``cu.lit.parse_cli`` (command line), ``PROJECT.read_config`` and
+  ``new_run_dir``, ``cu.lit.connect_wandb_run`` (the W&B run, online or offline), and
+  ``cu.project.append_run_summary`` and ``compare_runs`` (``runs_summary.csv`` and the
+  comparison table).
+* Finding ``weights/best.pt`` and ``last.pt`` stays in ``models/loading.py``, because
+  Ultralytics keeps them in a ``weights/`` folder; it uses ``PROJECT.resolve_run``.
 
 API
 ---
@@ -140,5 +164,5 @@ Utilities
 .. automodule:: LitWBTransferLearningYolo.utils.paths
    :members:
 
-.. automodule:: LitWBTransferLearningYolo.utils.experiment
-   :members:
+The rest (``runs_summary.csv``, run folders, the comparison of configs) is in
+`colabutilscs4337 <https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html>`__.

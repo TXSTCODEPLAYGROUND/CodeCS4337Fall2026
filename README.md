@@ -139,6 +139,21 @@ project (`lit_wb_training_basic_convnet_notebook.ipynb` for
 `Trainer` replaces the hand-written training loop; their layout is explained
 in the [LitTrainingBasicConvnet README](LitTrainingBasicConvnet/README.md).
 
+### Shared code: the `colabutilscs4337` library
+
+The code that every project needs (setting up Colab, finding the repo, data,
+and config folders, creating run folders, resuming, the W&B connection, and
+`runs_summary.csv`) lives in the course library
+[`colabutilscs4337`](https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html), listed in `requirements.txt`. The projects
+`LitWBTrainingBasicConvnet`, `LitWBTrainingBasicNeuralNetwork`,
+`LitWBHSTrainingBasicNeuralNetwork`, `LitWBTransferLearningResnet`,
+`LitWBTransferLearningYolo`, `YoloExample`, and `UnetSemanticSegmentationExample`
+already use it, so their `utils/paths.py` is one line (`PROJECT = Project(...)`) and
+their README has a section that lists what moved to the library. In a Colab CLI
+(SSH) session, the library's `setup_colab` is also how the repo is set up, with
+your env file loaded from Google Drive (see
+[Training with the Colab CLI](#training-with-the-colab-cli)).
+
 ### The `.env` and `.envcolab` files
 
 One settings file at the repo root is shared by every project:
@@ -173,7 +188,12 @@ For training on Google Colab using `google-colab-cli`, follow these steps to con
 
 ##### 1. Environment Setup
 
-1. **Prepare environment variables:** Create `envcolab.txt` containing all required keys (refer to `.envcolab`) and upload it to your Google Drive root.
+1. **Prepare your env file:** Create a plain text file on your Google Drive
+   (here `cs4337.env`, in the Drive root) with one `NAME=value` per line, for
+   example `WANDB_API_KEY=your-key` (the keys the project needs: see the
+   [`.env` section](#the-env-and-envcolab-files); never use `.envcolab` for keys).
+   A Colab CLI (SSH) session cannot read Colab Secrets, so this file is how
+   your keys get into the runtime.
 2. **Start a GPU session:**
    ```bash
    colab new -s train --gpu t4
@@ -186,19 +206,23 @@ For training on Google Colab using `google-colab-cli`, follow these steps to con
    ```bash
    colab ssh -s train
    ```
-5. **Clone the repository:**
+5. **Set up the repository** with the course library
+   [`colabutilscs4337`](https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html). One call clones the repo (or pulls it, if
+   it is already there), writes `.env` (`.envcolab` followed by your env file),
+   and installs only the packages Colab doesn't already have. Drive is already
+   mounted (step 3), so `mount=False`:
    ```bash
-   cd /content
-   git clone https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git
-   cd CodeCS4337Fall2026
-   ```
-6. **Copy environment variables:**
-   ```bash
-   cp /content/drive/MyDrive/envcolab.txt .env
-   ```
-7. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
+   pip install -q colabutilscs4337
+   python - <<'EOF'
+   import colabutilscs4337 as cu
+
+   cu.project.setup_colab(
+       "https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git",
+       env_source="/content/drive/MyDrive/cs4337.env",  # your env file on Google Drive
+       mount=False,  # `colab drivemount` already mounted Drive
+   )
+   EOF
+   cd /content/CodeCS4337Fall2026
    ```
 
 ##### 2. Training with tmux
@@ -686,32 +710,47 @@ colab drivemount -s cs4337          # open the link it prints and allow access
 colab ssh -s cs4337                 # attach again
 ```
 
-**Clone the repo and train.** Inside the session:
+**Set up the repo and train.** One call of the course library
+[`colabutilscs4337`](https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html) sets up everything the runtime needs: it clones
+the repo (or pulls it, if it is already there), writes `.env` (`.envcolab` with
+your env file added below it), and installs only the packages Colab doesn't
+already have (see
+[Why only the missing requirements are installed](#why-only-the-missing-requirements-are-installed)).
+Drive is already mounted from your local terminal, so nothing is mounted again.
+Inside the session:
 
 ```bash
-cd /content
-git clone https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git
-cd CodeCS4337Fall2026
-cp .envcolab .env
-grep -vE '^\s*(#|$)' requirements.txt \
-  | sed -E 's/[<>=!~;[ ].*//' \
-  | while read -r pkg; do
-      if pip show "$pkg" > /dev/null 2>&1; then echo "skip $pkg (already installed)"
-      else pip install -q "$pkg" && echo "installed $pkg"; fi
-    done
+pip install -q colabutilscs4337
+python - <<'EOF'
+import colabutilscs4337 as cu
+
+cu.project.setup_colab(
+    "https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026.git",
+    env_source="/content/drive/MyDrive/cs4337.env",  # your env file on Google Drive
+    mount=False,  # `colab drivemount` already mounted Drive
+)
+EOF
+cd /content/CodeCS4337Fall2026
 tmux new -s train                  # if tmux is missing: apt-get install -y tmux
 python -m ProjectName --config configname.json
 ```
 
-For example `python -m TrainingBasicConvnet --config config01.json`. The
-install loop installs only what Colab doesn't already have (see
-[Why only the missing requirements are installed](#why-only-the-missing-requirements-are-installed)), and
+For example `python -m TrainingBasicConvnet --config config01.json`.
+
+**You must provide your env file on Google Drive.** Colab Secrets can only be
+read from a notebook, not from an SSH session, so the keys come from a plain
+text file on your Drive: one `NAME=value` per line, e.g.
+`WANDB_API_KEY=your-key`. `env_source` is its path, absolute
+(`/content/drive/MyDrive/...`) or relative to `MyDrive`. If the file is not
+there, `setup_colab` stops with an error that names the path it looked for.
+Create it once, from the session (`read -s` hides the key while you paste it);
+the project's README shows the exact command for its key. Never put keys in
+`.envcolab`, which is in git.
+
 `tmux` keeps training going if the SSH connection drops: press `Ctrl+B`, then
 `D` to leave it running, and `tmux attach -t train` to come back. The runtime
 only sees what is on GitHub, so push your final code and configs (to your own
-fork) before cloning. Projects that log to W&B or LitLogger read their keys
-from `.env`: add them to the runtime's `.env` as the project's README shows,
-never to `.envcolab`.
+fork) and use that URL in `setup_colab` before training.
 
 **Make sure everything is logged.** `.envcolab` sets
 `OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs`, so each run folder and each

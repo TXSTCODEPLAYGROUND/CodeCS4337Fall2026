@@ -9,6 +9,23 @@ This project uses the same Ultralytics trainer, run folders, resume, and W&B wir
 
 How to set up the repo, where `DATA_DIR` and `OUTPUT_DIR` point, and how Google Drive is mounted in Colab is in the [main README](../README.md). Function details are in the [API reference](https://txstcodeplayground.github.io/CodeCS4337Fall2026/LitWBTransferLearningYolo.html).
 
+## Boilerplate lives in `colabutilscs4337`
+
+Setting up Colab, finding paths and configs, creating run folders, and
+connecting to W&B were copied into every project. They now come from the
+course library [`colabutilscs4337`](https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html), which is
+in [`requirements.txt`](../requirements.txt), so this project keeps only what is
+specific to the experiment: the dataset, the YOLO training strategies, and the evaluation logging.
+
+| Was in this project | Now comes from `colabutilscs4337` |
+| --- | --- |
+| `utils/paths.py`: repo, `configs/`, `.env`, `DATA_DIR`, `OUTPUT_DIR` paths | `cu.project.Project` (`PROJECT` in [`utils/paths.py`](utils/paths.py)) |
+| `utils/experiment.py`: `append_run_summary`, `compare_runs` | `cu.project.append_run_summary`, `cu.project.compare_runs` |
+| `models/loading.py`: finding a run folder | `Project.resolve_run` (the `weights/best.pt` and `last.pt` lookup stays here: Ultralytics keeps them in a `weights/` folder) |
+| `main.py`: command line, config, run folder, `config.json`, `hparams.json` | `cu.lit.parse_cli`, `Project.read_config`, `new_run_dir`, `save_run_files` |
+| `main.py`: `_connect_wandb` | `cu.lit.connect_wandb_run` |
+| Notebook: mount Drive, clone, `.env`, requirements, API keys | `cu.project.setup_colab`, `cu.env.load_secrets`, `cu.env.sync_env_file` |
+
 ## Running
 
 From the repo root, one config at a time. Run config03 as well if you want the comparison table's gain over training from scratch:
@@ -21,7 +38,7 @@ python -m LitWBTransferLearningYolo --config config03.json   # from scratch
 
 The dataset zip is about 166 MB. The first run downloads it to `data/pothole_ivcnz/` and writes the YOLO layout to `data/pothole_yolo/`. The COCO weights (about 6 MB) go to `data/yolo_weights/`. Later runs read both from there.
 
-In Colab, the notebook mounts Google Drive and copies `.envcolab` to `.env`. Datasets stay on the runtime's disk (`DATA_DIR=/content/data`). Every run folder is written under `OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs`, so `weights/best.pt` and `weights/last.pt` survive a disconnect. Resume reads those folders.
+In Colab, the notebook installs `colabutilscs4337`, whose `setup_colab` mounts Google Drive, clones the repo, and copies `.envcolab` to `.env`. Datasets stay on the runtime's disk (`DATA_DIR=/content/data`). Every run folder is written under `OUTPUT_DIR=/content/drive/MyDrive/CodeCS4337Fall2026/runs`, so `weights/best.pt` and `weights/last.pt` survive a disconnect. Resume reads those folders.
 
 A GPU is worth using. On a Colab T4, config01 and config02 are on the order of 10 to 20 minutes and config03 longer; a CPU run of all three is an overnight job. Ultralytics augments the training images itself (mosaic, flips, scale, color). The validation and test images are not augmented.
 

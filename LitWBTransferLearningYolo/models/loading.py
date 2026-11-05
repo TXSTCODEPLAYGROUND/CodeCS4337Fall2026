@@ -1,15 +1,13 @@
 """Find runs and load trained YOLO models back from them."""
 
 import json
-import os
 from pathlib import Path
 
 import torch
 import ultralytics.utils
-from dotenv import load_dotenv
 from ultralytics import YOLO
 
-from ..utils.paths import PROJECT_NAME, REPO_DIR, resolve_repo_path
+from ..utils import PROJECT
 
 YOLO_WEIGHTS_FOLDER = "yolo_weights"
 """Folder of ``DATA_DIR`` holding the downloaded YOLO weights."""
@@ -28,8 +26,7 @@ def yolo_weights_dir() -> Path:
     Returns:
         The folder, created if needed.
     """
-    load_dotenv(REPO_DIR / ".env")
-    folder = resolve_repo_path(os.getenv("DATA_DIR", "data")) / YOLO_WEIGHTS_FOLDER
+    folder = PROJECT.data_dir(YOLO_WEIGHTS_FOLDER)
     folder.mkdir(parents=True, exist_ok=True)
     ultralytics.utils.WEIGHTS_DIR = folder
     # dict.__setitem__ skips SettingsManager.__setitem__, which would save to settings.json.
@@ -58,26 +55,6 @@ def weights_path(weights: str) -> str:
     return str(folder / weights)
 
 
-def _resolve(run: str | Path) -> Path:
-    """Find ``run`` as given, in the repo root, or in ``<OUTPUT_DIR>/LitWBTransferLearningYolo``."""
-    load_dotenv(REPO_DIR / ".env")
-    path = Path(run).expanduser()
-    outputs = resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_NAME
-    for candidate in (path, REPO_DIR / path, outputs / path):
-        if candidate.exists():
-            return candidate.resolve()
-    found = (
-        sorted(d.name for d in outputs.iterdir() if d.is_dir())
-        if outputs.is_dir()
-        else []
-    )
-    raise FileNotFoundError(
-        f"{str(run)!r} not found here, in {REPO_DIR}, or in {outputs}. "
-        f"Runs saved for this project: {found or 'none yet'}. In Colab, mount "
-        "Google Drive before training and before loading."
-    )
-
-
 def find_run(run: str | Path) -> Path:
     """Locate a run folder saved by :func:`~LitWBTransferLearningYolo.main.main`.
 
@@ -90,7 +67,7 @@ def find_run(run: str | Path) -> Path:
     Returns:
         The run folder.
     """
-    path = _resolve(run)
+    path = PROJECT.resolve_run(run)
     if path.is_file():
         return path.parent.parent if path.parent.name == "weights" else path.parent
     if (path / "config.json").is_file() or (path / "weights").is_dir():
@@ -114,7 +91,7 @@ def find_weights(run: str | Path, which: str = "best") -> Path | None:
     """
     if which not in ("best", "last"):
         raise ValueError(f"which must be 'best' or 'last', got {which!r}")
-    path = _resolve(run)
+    path = PROJECT.resolve_run(run)
     if path.is_file():
         return path
     if not ((path / "weights").is_dir() or (path / "config.json").is_file()):

@@ -59,7 +59,7 @@ same keys, so every experiment is a change of values:
   learning rate.
 
 All three use early stopping on ``val_dice``
-(:class:`~UnetSemanticSegmentationExample.callbacks.early_stopping.ResumableEarlyStopping`)
+(:class:`~colabutilscs4337.lit.ResumableEarlyStopping`)
 and mixed precision when a GPU is available.
 
 The `project README <https://github.com/TXSTCODEPLAYGROUND/CodeCS4337Fall2026/tree/main/UnetSemanticSegmentationExample>`_
@@ -85,6 +85,13 @@ What is logged
 
 Without ``WANDB_API_KEY`` in ``.env``, or if W&B cannot log in, the run is
 logged offline, as in :doc:`LitWBTrainingBasicConvnet`.
+
+In a Colab notebook, add the key as a Colab Secret and run the project notebook's
+*Load API keys* cell (``cu.env.load_secrets("WANDB_API_KEY", persist_to=...)``). In a
+Colab CLI (SSH) session, Colab Secrets are not available: put the key in a text file on
+your Google Drive and pass its path as ``env_source`` to
+:func:`colabutilscs4337.project.setup_colab` (the project README shows the commands). The
+run stops with an error if that file is missing.
 
 Outputs
 -------
@@ -116,6 +123,22 @@ To train a run further, pass ``resume_from`` to
 
 On the command line: ``--resume-from config02``.
 
+Shared code: colabutilscs4337
+-----------------------------
+
+Setup, paths, configs, run folders, resuming, and the W&B connection used to be copied
+into every project. They now come from the course library
+`colabutilscs4337 <https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html>`__ (listed in
+``requirements.txt``), so this project keeps only what is specific to the experiment:
+
+* ``utils/paths.py`` is one line, ``PROJECT = cu.project.Project(...)``: repo, config,
+  data, and run folders, plus finding checkpoints.
+* ``main()`` starts with ``cu.lit.start_run`` (command line, config, resume, run folder,
+  ``CSVLogger``, checkpoint callbacks) and ends with ``run.save`` and
+  ``run.append_summary`` (``config.json``, ``hparams.json``, ``runs_summary.csv``).
+* ``cu.lit.connect_wandb`` starts the W&B run, online or offline.
+* ``ResumableEarlyStopping`` is ``cu.lit.ResumableEarlyStopping``.
+
 API
 ---
 
@@ -131,8 +154,7 @@ Callbacks
 .. automodule:: UnetSemanticSegmentationExample.callbacks.wandb_segmentation
    :members:
 
-.. automodule:: UnetSemanticSegmentationExample.callbacks.early_stopping
-   :members:
+``ResumableEarlyStopping`` is in the library: see :class:`colabutilscs4337.lit.ResumableEarlyStopping`.
 
 Models
 ~~~~~~
@@ -167,5 +189,5 @@ Utilities
 .. automodule:: UnetSemanticSegmentationExample.utils.paths
    :members:
 
-.. automodule:: UnetSemanticSegmentationExample.utils.experiment
-   :members:
+The rest (``runs_summary.csv``, run folders, checkpoint lookup) is in
+`colabutilscs4337 <https://txstcodeplayground.github.io/ColabUtilsCS4337/guide/course_projects.html>`__.
