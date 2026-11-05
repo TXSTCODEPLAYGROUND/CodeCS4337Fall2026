@@ -37,6 +37,7 @@ TensorBoard.
    :caption: Object detection (YOLO)
 
    YoloExample
+   LitWBTransferLearningYolo
 
 .. toctree::
    :maxdepth: 2

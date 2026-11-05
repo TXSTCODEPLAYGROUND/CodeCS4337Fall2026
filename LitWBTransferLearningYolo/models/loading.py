@@ -1,0 +1,185 @@
+"""Find runs and load trained YOLO models back from them."""
+
+import json
+import os
+from pathlib import Path
+
+import torch
+import ultralytics.utils
+from dotenv import load_dotenv
+from ultralytics import YOLO
+
+from ..utils.paths import PROJECT_NAME, REPO_DIR, resolve_repo_path
+
+YOLO_WEIGHTS_FOLDER = "yolo_weights"
+"""Folder of ``DATA_DIR`` holding the downloaded YOLO weights."""
+
+
+def yolo_weights_dir() -> Path:
+    """Use ``<DATA_DIR>/yolo_weights/`` for every YOLO weights file Ultralytics downloads.
+
+    This covers the pretrained models of the configs (``yolov8n.pt``) and the
+    small ``yolo26n.pt`` Ultralytics downloads once to check mixed precision
+    before training. Ultralytics would otherwise put the latter in its
+    ``weights_dir`` setting, ``<repo>/weights/`` when its settings were
+    created inside this repo. The setting is changed only for the current
+    Python process: Ultralytics' ``settings.json`` is not modified.
+
+    Returns:
+        The folder, created if needed.
+    """
+    load_dotenv(REPO_DIR / ".env")
+    folder = resolve_repo_path(os.getenv("DATA_DIR", "data")) / YOLO_WEIGHTS_FOLDER
+    folder.mkdir(parents=True, exist_ok=True)
+    ultralytics.utils.WEIGHTS_DIR = folder
+    # dict.__setitem__ skips SettingsManager.__setitem__, which would save to settings.json.
+    dict.__setitem__(ultralytics.utils.SETTINGS, "weights_dir", str(folder))
+    return folder
+
+
+def weights_path(weights: str) -> str:
+    """Where the starting weights of a config are, or are downloaded to.
+
+    A pretrained Ultralytics name such as ``"yolov8n.pt"`` becomes
+    ``<DATA_DIR>/yolo_weights/yolov8n.pt`` (:func:`yolo_weights_dir`);
+    Ultralytics downloads the file there the first time, and later runs read
+    it from there. An architecture file such as ``"yolov8n.yaml"`` (training
+    from scratch) and an existing path are returned unchanged.
+
+    Args:
+        weights: The config's ``"model": {"weights": ...}``.
+
+    Returns:
+        The path or name to pass to ``YOLO(...)``.
+    """
+    folder = yolo_weights_dir()
+    if not weights.endswith(".pt") or Path(weights).expanduser().is_file():
+        return weights
+    return str(folder / weights)
+
+
+def _resolve(run: str | Path) -> Path:
+    """Find ``run`` as given, in the repo root, or in ``<OUTPUT_DIR>/LitWBTransferLearningYolo``."""
+    load_dotenv(REPO_DIR / ".env")
+    path = Path(run).expanduser()
+    outputs = resolve_repo_path(os.getenv("OUTPUT_DIR", "runs")) / PROJECT_NAME
+    for candidate in (path, REPO_DIR / path, outputs / path):
+        if candidate.exists():
+            return candidate.resolve()
+    found = (
+        sorted(d.name for d in outputs.iterdir() if d.is_dir())
+        if outputs.is_dir()
+        else []
+    )
+    raise FileNotFoundError(
+        f"{str(run)!r} not found here, in {REPO_DIR}, or in {outputs}. "
+        f"Runs saved for this project: {found or 'none yet'}. In Colab, mount "
+        "Google Drive before training and before loading."
+    )
+
+
+def find_run(run: str | Path) -> Path:
+    """Locate a run folder saved by :func:`~LitWBTransferLearningYolo.main.main`.
+
+    Args:
+        run: A run folder (``config02/2026-10-04_17-30-00``), or a config
+            folder (``config02``), which picks its newest run. Relative paths
+            are tried from the current folder, the repo root, and
+            ``<OUTPUT_DIR>/LitWBTransferLearningYolo``.
+
+    Returns:
+        The run folder.
+    """
+    path = _resolve(run)
+    if path.is_file():
+        return path.parent.parent if path.parent.name == "weights" else path.parent
+    if (path / "config.json").is_file() or (path / "weights").is_dir():
+        return path
+    runs = sorted(d for d in path.iterdir() if d.is_dir())
+    if not runs:
+        raise FileNotFoundError(f"No run folder in {path}")
+    return runs[-1]
+
+
+def find_weights(run: str | Path, which: str = "best") -> Path | None:
+    """Locate the trained weights of a run.
+
+    Args:
+        run: A weights file, a run folder, or a config folder (its newest run
+            with weights); see :func:`find_run`.
+        which: ``"best"`` (highest validation mAP50-95) or ``"last"`` (last epoch).
+
+    Returns:
+        ``<run>/weights/<which>.pt``, or ``None`` when the run saved no weights.
+    """
+    if which not in ("best", "last"):
+        raise ValueError(f"which must be 'best' or 'last', got {which!r}")
+    path = _resolve(run)
+    if path.is_file():
+        return path
+    if not ((path / "weights").is_dir() or (path / "config.json").is_file()):
+        with_weights = sorted(path.glob(f"*/weights/{which}.pt"))
+        if with_weights:
+            return with_weights[-1]
+    weights = find_run(path) / "weights" / f"{which}.pt"
+    return weights if weights.is_file() else None
+
+
+def load_model(run: str | Path, which: str = "best") -> YOLO:
+    """Load the YOLO model of a run, ready for ``model.predict(...)`` or ``model.val(...)``.
+
+    Example:
+
+    .. code-block:: python
+
+        from LitWBTransferLearningYolo import load_model
+
+        model = load_model("config02")          # newest fine-tuned run, best weights
+        results = model.predict("road.jpg", conf=0.25)
+        results[0].boxes.xyxy                   # (num_boxes, 4) in pixels
+
+    Args:
+        run: A weights file, a run folder, or a config folder; see :func:`find_weights`.
+        which: ``"best"`` or ``"last"`` weights.
+
+    Returns:
+        The Ultralytics ``YOLO`` model.
+    """
+    weights = find_weights(run, which)
+    if weights is None:
+        config = json.loads((find_run(run) / "config.json").read_text())
+        weights = Path(weights_path(config["model"]["weights"]))
+        print(f"{run} has no trained weights; loading the config's starting model")
+    print(f"Loaded {weights}")
+    return YOLO(str(weights))
+
+
+def find_resume_weights(run: str | Path) -> tuple[Path, bool]:
+    """Locate the weights to resume a training run from.
+
+    An **interrupted** run (a disconnect, a crash) still has its optimizer
+    state and epoch in ``last.pt``, so Ultralytics can finish it. A
+    **finished** run (all epochs done, or early stopping) has neither: its
+    ``best.pt`` is the starting point of a new training stage.
+
+    Args:
+        run: A ``last.pt`` file, a run folder, or a config folder (its newest
+            run with a ``last.pt``).
+
+    Returns:
+        ``(weights, interrupted)``: ``last.pt`` and ``True`` for an
+        interrupted run; ``best.pt`` and ``False`` for a finished one.
+
+    Raises:
+        FileNotFoundError: If the run has no ``last.pt``.
+    """
+    last = find_weights(run, "last")
+    if last is None:
+        raise FileNotFoundError(
+            f"No weights/last.pt in {find_run(run)}: nothing to resume"
+        )
+    # Ultralytics sets "epoch" to -1 when it finalizes the weights of a finished run.
+    if torch.load(last, map_location="cpu", weights_only=False).get("epoch") != -1:
+        return last, True
+    best = last.with_name("best.pt")
+    return (best if best.is_file() else last), False
